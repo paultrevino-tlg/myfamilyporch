@@ -33,5 +33,3 @@ it at `TODO.md`. Begin at **Phase 0**.
 ## Layout
 See `CLAUDE.md` → "Repo map" and `docs/ARCHITECTURE.md`.
 
-<!-- deploy check: main → Cloudflare auto-deploy verified 2026-05-31 -->
-
