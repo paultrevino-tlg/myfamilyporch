@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storyteller Flow — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF5EA; --paper-2:#F3E9D6; --ink:#2B2218; --ink-soft:#6B5E4C;
+    --answer:#3E7A52; --answer-deep:#2F5E3F; --accent:#C8743A; --line:#E3D6BE; --shadow:rgba(43,34,24,.16);
+    --sans:"Atkinson Hyperlegible",system-ui,sans-serif; --serif:"Fraunces",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);
+    background:radial-gradient(1200px 600px at 80% -10%, #FFF9EF 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #F0E4CC 0%, transparent 55%),var(--paper);
+    color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 64px}
+  .pagehead{text-align:center;max-width:560px;margin-bottom:14px}
+  .pagehead h1{font-family:var(--serif);font-weight:600;font-size:28px;letter-spacing:-.01em}
+  .pagehead p{color:var(--ink-soft);font-size:15px;margin-top:6px;line-height:1.5}
+  .langtoggle{display:inline-flex;align-items:center;gap:10px;border:1px dashed #cdbfa8;border-radius:11px;
+    padding:6px 6px 6px 14px;margin-bottom:22px;font-size:12px;color:#9c8e78;font-weight:700;letter-spacing:.06em}
+  .langtoggle .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .langtoggle .seg button{border:none;background:#FFFDF8;font-family:var(--sans);font-weight:700;font-size:13px;
+    cursor:pointer;padding:7px 14px;color:var(--ink-soft);border-right:1px solid var(--line)}
+  .langtoggle .seg button:last-child{border-right:none}
+  .langtoggle .seg button.sel{background:var(--ink);color:var(--paper)}
+
+  .phone{width:340px;height:710px;border-radius:46px;background:#161310;padding:13px;
+    box-shadow:0 30px 60px -20px var(--shadow),0 0 0 2px #0c0a08,inset 0 0 0 2px #2a2520;position:relative}
+  .notch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#161310;border-radius:0 0 18px 18px;z-index:30}
+  .screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--paper);position:relative}
+  .view{position:absolute;inset:0;display:none;flex-direction:column;animation:fade .45s ease both}
+  .view.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .statusbar{height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:13px;color:var(--ink-soft);font-weight:700}
+  .pad{padding:18px 26px 26px;flex:1;display:flex;flex-direction:column}
+  .avatar{width:108px;height:108px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#9c5325);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-size:46px;font-weight:600;box-shadow:0 12px 24px -8px rgba(156,83,37,.6)}
+  .big-btn{width:100%;border:none;border-radius:22px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:23px;color:#fff;
+    background:var(--answer);padding:24px;min-height:78px;box-shadow:0 10px 20px -8px rgba(47,94,63,.7);
+    transition:transform .12s ease,filter .12s ease;display:flex;align-items:center;justify-content:center;gap:12px}
+  .big-btn:active{transform:scale(.97);filter:brightness(.95)}
+  .big-btn.amber{background:var(--accent);box-shadow:0 10px 20px -8px rgba(156,83,37,.6)}
+  .quiet{background:none;border:none;color:var(--ink-soft);font-family:var(--sans);font-size:17px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:14px;width:100%;font-weight:400}
+  .lock{height:100%;background:linear-gradient(180deg,rgba(22,19,16,0),rgba(22,19,16,.35)),
+      radial-gradient(700px 360px at 70% 12%,#5e4a32,transparent 60%),#2a2218;color:#fff;display:flex;flex-direction:column}
+  .lock .time{font-family:var(--serif);font-size:62px;font-weight:400;text-align:center;margin-top:64px;letter-spacing:.01em}
+  .lock .date{text-align:center;opacity:.8;font-size:15px;margin-top:2px}
+  .notif{margin:auto 14px 26px;background:rgba(251,245,234,.96);color:var(--ink);border-radius:22px;padding:16px 16px 18px;cursor:pointer;box-shadow:0 16px 30px -12px rgba(0,0,0,.5)}
+  .notif:active{transform:scale(.98)}
+  .notif .row{display:flex;align-items:center;gap:11px}
+  .notif .ico{width:40px;height:40px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#9c5325);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-size:21px;font-weight:600}
+  .notif .app{font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+  .notif .when{font-size:13px;color:var(--ink-soft);margin-left:auto}
+  .notif .msg{font-size:19px;margin-top:11px;line-height:1.35}
+  .tap-hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:13px;color:rgba(255,255,255,.65);animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center}
+  .speaking{position:relative;display:flex;align-items:center;justify-content:center}
+  .speaking .ring{position:absolute;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:ring 2.6s ease-out infinite}
+  .speaking .ring:nth-child(2){animation-delay:.8s}.speaking .ring:nth-child(3){animation-delay:1.6s}
+  @keyframes ring{0%{width:108px;height:108px;opacity:.55}100%{width:230px;height:230px;opacity:0}}
+  .label{font-size:15px;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+  .question{font-family:var(--serif);font-size:30px;line-height:1.28;font-weight:600;padding:0 6px}
+  .voicechip{display:inline-flex;align-items:center;gap:9px;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:15px;color:var(--ink-soft)}
+  .eq{display:inline-flex;gap:3px;align-items:flex-end;height:16px}
+  .eq i{width:3px;background:var(--accent);border-radius:2px;animation:eq 1s ease-in-out infinite}
+  .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}
+  @keyframes eq{0%,100%{height:5px}50%{height:16px}}
+  .mic{width:130px;height:130px;border-radius:50%;background:var(--answer);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 0 0 rgba(62,122,82,.5);animation:pulse 1.8s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(62,122,82,.45)}100%{box-shadow:0 0 0 40px rgba(62,122,82,0)}}
+  .mic svg{width:54px;height:54px;fill:#fff}
+  .hint{color:var(--ink-soft);font-size:18px;line-height:1.45}
+  .followtag{display:inline-block;background:#EDE0C6;color:#7a6033;border:1px solid var(--line);font-size:13px;font-weight:700;border-radius:999px;padding:6px 13px;letter-spacing:.02em}
+  .check{width:120px;height:120px;border-radius:50%;background:var(--answer);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 28px -10px rgba(47,94,63,.6)}
+  .check svg{width:58px;height:58px;stroke:#fff;stroke-width:3.5;fill:none;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .7s .2s ease forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .count{font-size:15px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:8px 15px}
+  .controls{margin-top:24px;display:flex;gap:10px;align-items:center}
+  .controls button{font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:11px 18px;transition:background .15s}
+  .controls button:hover{background:var(--paper-2)}
+  .controls button:disabled{opacity:.4;cursor:default}
+  .stepname{font-family:var(--serif);font-size:18px;min-width:150px;text-align:center}
+  .note{margin-top:18px;max-width:430px;background:#FFFDF8;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 17px;font-size:14.5px;line-height:1.55;color:var(--ink-soft)}
+  .note b{color:var(--ink)}
+  .dots{display:flex;gap:7px;margin-top:18px;justify-content:center}
+  .dots span{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .dots span.on{background:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="pagehead">
+    <h1>The storyteller's flow</h1>
+    <p>One session, start to finish. Tap the screen or use the controls to step through.</p>
+  </div>
+
+  <div class="langtoggle">LANGUAGE
+    <div class="seg">
+      <button class="sel" onclick="setLang('en',this)">English</button>
+      <button onclick="setLang('es',this)">Espa&ntilde;ol</button>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="view active" data-step="0">
+        <div class="lock">
+          <div class="time">9:40</div>
+          <div class="date" id="notif_date">Tuesday, June 2</div>
+          <div class="notif" onclick="go(1)">
+            <div class="row"><div class="ico">P</div><span class="app">Storyline</span><span class="when" id="notif_when">now</span></div>
+            <div class="msg" id="notif_msg"></div>
+          </div>
+          <div class="tap-hint" id="notif_hint"></div>
+        </div>
+      </div>
+
+      <div class="view" data-step="1">
+        <div class="statusbar"><span>9:40</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="avatar">P</div>
+            <div><div class="question" id="w_greet" style="font-size:28px"></div><p class="hint" id="w_sub" style="margin-top:12px"></p></div>
+          </div>
+          <button class="big-btn" id="w_btn" onclick="go(2)"></button>
+          <button class="quiet" id="w_later" onclick="go(0)"></button>
+        </div>
+      </div>
+
+      <div class="view" data-step="2">
+        <div class="statusbar"><span>9:41</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="speaking"><span class="ring"></span><span class="ring"></span><span class="ring"></span><div class="avatar">P</div></div>
+            <div class="label" id="q_label"></div>
+            <div class="question" id="q_text"></div>
+            <div class="voicechip"><span class="eq"><i></i><i></i><i></i><i></i></span> <span id="q_voice"></span></div>
+          </div>
+          <button class="big-btn amber" id="q_btn" onclick="go(3)"></button>
+        </div>
+      </div>
+
+      <div class="view" data-step="3">
+        <div class="statusbar"><span>9:41</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="mic"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></div>
+            <div class="label" id="r_label" style="color:var(--answer)"></div>
+            <div class="question" id="r_title" style="font-size:26px"></div>
+            <p class="hint" id="r_hint"></p>
+          </div>
+          <button class="big-btn" id="r_btn" onclick="go(4)"></button>
+          <button class="quiet" id="r_skip" onclick="go(6)"></button>
+        </div>
+      </div>
+
+      <div class="view" data-step="4">
+        <div class="statusbar"><span>9:43</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="speaking"><span class="ring"></span><span class="ring"></span><span class="ring"></span><div class="avatar">P</div></div>
+            <span class="followtag" id="f_tag"></span>
+            <div class="question" id="f_text"></div>
+            <div class="voicechip"><span class="eq"><i></i><i></i><i></i><i></i></span> <span id="f_voice"></span></div>
+          </div>
+          <button class="big-btn amber" id="f_btn" onclick="go(5)"></button>
+        </div>
+      </div>
+
+      <div class="view" data-step="5">
+        <div class="statusbar"><span>9:43</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="mic"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></div>
+            <div class="label" id="r2_label" style="color:var(--answer)"></div>
+            <div class="question" id="r2_title" style="font-size:26px"></div>
+            <p class="hint" id="r2_hint"></p>
+          </div>
+          <button class="big-btn" id="r2_btn" onclick="go(6)"></button>
+        </div>
+      </div>
+
+      <div class="view" data-step="6">
+        <div class="statusbar"><span>9:45</span><span>&bull;&bull;&bull;</span></div>
+        <div class="pad">
+          <div class="stage">
+            <div class="check"><svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg></div>
+            <div class="question" id="wr_title"></div>
+            <p class="hint" id="wr_hint"></p>
+            <div class="count" id="wr_count"></div>
+          </div>
+          <button class="big-btn" id="wr_btn" onclick="go(0)"></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+  <div class="controls">
+    <button id="back" onclick="step(-1)">&larr; Back</button>
+    <span class="stepname" id="stepname"></span>
+    <button id="next" onclick="step(1)">Next &rarr;</button>
+  </div>
+  <div class="note" id="note"></div>
+
+<script>
+  const STR = {
+    en:{
+      notif_date:"Tuesday, June 2", notif_when:"now",
+      notif_msg:"Paul would love to hear a story \uD83D\uDCAC",
+      notif_hint:"tap the message to open \u2191",
+      w_greet:"Hi Dad \uD83D\uDC4B", w_sub:"I've got a question for you<br>whenever you're ready.",
+      w_btn:"Let's talk", w_later:"Maybe later",
+      q_label:"Paul is asking", q_text:"What was your first car?", q_voice:"in Paul's voice", q_btn:"I'm ready to answer",
+      r_label:"Listening", r_title:"Your turn \u2014 just talk.", r_hint:"Take all the time you need.", r_btn:"I'm finished", r_skip:"Skip this one",
+      f_tag:"\u21B3 a question about what you just said",
+      f_text:"You mentioned road trips with your brother \u2014 where's the farthest you two ever drove?",
+      f_voice:"in Paul's voice", f_btn:"I'm ready to answer",
+      r2_label:"Listening", r2_title:"Go ahead, Dad.", r2_hint:"No rush at all.", r2_btn:"I'm finished",
+      wr_title:"That's a good one, Dad.", wr_hint:"Saved. We'll talk again soon. \u2764\uFE0F",
+      wr_count:"2 questions today \u2014 that's plenty", wr_btn:"Done"
+    },
+    es:{
+      notif_date:"Martes, 2 de junio", notif_when:"ahora",
+      notif_msg:"A Paul le encantar\u00EDa escuchar una de tus historias \uD83D\uDCAC",
+      notif_hint:"toca el mensaje para abrir \u2191",
+      w_greet:"Hola, pap\u00E1 \uD83D\uDC4B", w_sub:"Tengo una pregunta para ti<br>cuando quieras.",
+      w_btn:"Hablemos", w_later:"Quiz\u00E1s m\u00E1s tarde",
+      q_label:"Paul te pregunta", q_text:"\u00BFCu\u00E1l fue tu primer carro?", q_voice:"con la voz de Paul", q_btn:"Estoy listo para responder",
+      r_label:"Escuchando", r_title:"Es tu turno \u2014 solo habla.", r_hint:"T\u00F3mate todo el tiempo que necesites.", r_btn:"Ya termin\u00E9", r_skip:"Saltar esta",
+      f_tag:"\u21B3 una pregunta sobre lo que acabas de decir",
+      f_text:"Mencionaste los viajes en carro con tu hermano \u2014 \u00BFcu\u00E1l es el lugar m\u00E1s lejano al que llegaron juntos?",
+      f_voice:"con la voz de Paul", f_btn:"Estoy listo para responder",
+      r2_label:"Escuchando", r2_title:"Adelante, pap\u00E1.", r2_hint:"Sin ninguna prisa.", r2_btn:"Ya termin\u00E9",
+      wr_title:"Esa estuvo muy buena, pap\u00E1.", wr_hint:"Guardada. Hablamos pronto. \u2764\uFE0F",
+      wr_count:"Dos preguntas hoy \u2014 con eso basta", wr_btn:"Listo"
+    }
+  };
+  const names = ["Notification","Welcome","Question","Your turn","AI follow-up","Your turn","All done"];
+  const notes = [
+    "<b>Notification.</b> A gentle scheduled nudge, framed as coming <i>from you</i> \u2014 in his language. One tap on the message is the only thing he has to recognize.",
+    "<b>Welcome.</b> Your face and a warm greeting in his language and your words. One full-width action, plus a no-pressure exit \u2014 nothing can go wrong here.",
+    "<b>Question.</b> Your voice asks it aloud (in Spanish, if that's his language); the large text is a backup, not the main channel. He answers only when he taps that he's ready.",
+    "<b>Your turn.</b> The whole screen becomes \u201Ctalk.\u201D He can answer in Spanish, or mix the two \u2014 the speech-to-text and the AI handle code-switching.",
+    "<b>AI follow-up.</b> The heart of it. The agent understood his Spanish answer and asked a natural Spanish follow-up that chases the thread \u2014 still in your voice.",
+    "<b>Your turn, again.</b> Identical to the first answer screen. Radical consistency is what keeps it effortless, in any language.",
+    "<b>All done.</b> A warm close in your voice, confirmation it's saved, and a reminder that two questions is the whole session."
+  ];
+  let cur = 0, lang = 'en';
+  function fill(){ const s = STR[lang]; for(const k in s){ const el=document.getElementById(k); if(el) el.innerHTML = s[k]; } }
+  function setLang(l, btn){
+    lang = l;
+    [...btn.parentElement.children].forEach(x=>x.classList.toggle('sel', x===btn));
+    document.documentElement.lang = l;
+    fill();
+  }
+  function render(){
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', +v.dataset.step===cur));
+    document.getElementById('stepname').textContent = names[cur];
+    document.getElementById('note').innerHTML = notes[cur];
+    document.getElementById('back').disabled = cur===0;
+    document.getElementById('dots').innerHTML = names.map((_,i)=>'<span class="'+(i===cur?'on':'')+'"></span>').join('');
+  }
+  function go(i){ cur=i; render(); }
+  function step(n){ cur=Math.max(0,Math.min(names.length-1,cur+n)); render(); }
+  fill(); render();
+</script>
+</body>
+</html>

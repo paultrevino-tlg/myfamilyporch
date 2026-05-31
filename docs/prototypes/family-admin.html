@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storyline — Family Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF5EA; --panel:#FFFDF8; --paper-2:#F3E9D6;
+    --ink:#2B2218; --ink-soft:#6B5E4C; --ink-faint:#9c8e78;
+    --answer:#3E7A52; --answer-soft:#E6EFE6;
+    --accent:#C8743A; --accent-soft:#F6E7D6;
+    --warn:#B4622B; --warn-soft:#F8E2CF;
+    --line:#E7DBC4; --line-soft:#F0E7D5;
+    --sans:"Atkinson Hyperlegible",system-ui,sans-serif;
+    --serif:"Fraunces",Georgia,serif;
+    --shadow:0 14px 34px -18px rgba(43,34,24,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);min-height:100vh}
+  .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+  /* sidebar */
+  .side{background:#241D15;color:#EFE6D6;padding:24px 16px;display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 20px}
+  .brand .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#9c5325);
+    display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;font-weight:600;color:#fff}
+  .brand .name{font-family:var(--serif);font-size:21px;font-weight:600}
+  .who{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:13px;
+    padding:11px 12px;display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .who .pic{width:38px;height:38px;border-radius:50%;background:linear-gradient(150deg,var(--accent),#9c5325);
+    display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;color:#fff}
+  .who small{color:#b6a890;font-size:12px;display:block}
+  .who b{font-size:15px}
+  .nav{display:flex;flex-direction:column;gap:3px}
+  .nav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+    background:none;border:none;color:#cdbfa8;font-family:var(--sans);font-size:15.5px;font-weight:700;
+    padding:12px 13px;border-radius:11px;transition:.15s}
+  .nav button:hover{background:rgba(255,255,255,.05);color:#fff}
+  .nav button.on{background:var(--accent);color:#fff}
+  .nav .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);margin-left:auto}
+  .side .foot{margin-top:auto;font-size:12px;color:#897c66;padding:8px}
+
+  /* main */
+  .main{padding:34px 44px 60px;overflow:auto}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:14px}
+  .head h1{font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.01em}
+  .head p{color:var(--ink-soft);margin-top:3px;font-size:15px}
+  .btn{font-family:var(--sans);font-weight:700;font-size:15px;cursor:pointer;border-radius:12px;
+    padding:13px 20px;border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s;display:inline-flex;gap:9px;align-items:center}
+  .btn:hover{background:var(--paper-2)}
+  .btn.primary{background:var(--answer);color:#fff;border-color:var(--answer)}
+  .btn.primary:hover{filter:brightness(1.05)}
+
+  .panel{display:none;animation:fade .35s ease both}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* alert */
+  .alert{display:flex;align-items:center;gap:14px;background:var(--warn-soft);border:1px solid #ecc8a6;
+    border-left:5px solid var(--warn);border-radius:14px;padding:15px 18px;margin-bottom:22px}
+  .alert .ic{font-size:22px}
+  .alert b{color:var(--warn)}
+  .alert .body{flex:1;font-size:15px;line-height:1.4}
+  .alert small{display:block;color:var(--ink-soft);margin-top:2px}
+  .insight{display:flex;align-items:center;gap:14px;background:var(--answer-soft);border:1px solid #b7d2bd;
+    border-left:5px solid var(--answer);border-radius:14px;padding:15px 18px;margin-bottom:22px}
+  .insight .ic{font-size:22px}
+  .insight b{color:#2F5E3F}
+  .insight .body{flex:1;font-size:15px;line-height:1.42}
+  .insight small{display:block;color:var(--ink-soft);margin-top:3px}
+  .insight .acts2{display:flex;gap:9px;flex:none}
+  .insight.calm{background:#F1ECE1;border-color:#E0D4BD;border-left-color:#9c8e78}
+  .insight.calm b{color:var(--ink)}
+  .demo{display:inline-flex;align-items:center;gap:11px;border:1px dashed #cdbfa8;border-radius:11px;
+    padding:6px 6px 6px 14px;margin-bottom:18px;font-size:12px;color:var(--ink-faint);font-weight:700;letter-spacing:.06em}
+  .demo .segd{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .demo .segd button{border:none;background:var(--panel);font-family:var(--sans);font-weight:700;font-size:13px;
+    cursor:pointer;padding:7px 13px;color:var(--ink-soft);border-right:1px solid var(--line)}
+  .demo .segd button:last-child{border-right:none}
+  .demo .segd button.sel{background:var(--ink);color:var(--paper)}
+
+  /* cards */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .card .k{font-size:13px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .card .v{font-family:var(--serif);font-size:32px;font-weight:600;margin-top:8px;line-height:1}
+  .card .v small{font-size:15px;color:var(--ink-faint);font-family:var(--sans);font-weight:400}
+  .card.good .v{color:var(--answer)}
+
+  .sectitle{font-family:var(--serif);font-size:21px;font-weight:600;margin:6px 0 14px}
+
+  /* story rows */
+  .story{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:14px}
+  .story .top{display:flex;align-items:center;gap:14px}
+  .play{width:46px;height:46px;border-radius:50%;background:var(--answer);border:none;cursor:pointer;flex:none;
+    display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{filter:brightness(1.06)}
+  .play svg{width:18px;height:18px;fill:#fff;margin-left:2px}
+  .play.playing svg{margin-left:0}
+  .story .q{font-family:var(--serif);font-size:19px;font-weight:600}
+  .story .meta{font-size:13px;color:var(--ink-faint);margin-top:2px}
+  .story .meta .tag{display:inline-block;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;
+    padding:2px 9px;margin-right:6px;color:var(--ink-soft);font-weight:700}
+  .story .tx{margin-top:13px;color:var(--ink-soft);font-size:15px;line-height:1.6;
+    border-left:3px solid var(--line);padding-left:14px}
+  .story .followthread{margin-top:13px;background:var(--accent-soft);border-radius:12px;padding:13px 15px}
+  .story .followthread .fq{font-size:14px;font-weight:700;color:var(--warn)}
+  .story .followthread .fa{font-size:14.5px;color:var(--ink-soft);margin-top:5px;line-height:1.55}
+  .story .acts{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .chip{font-size:13.5px;font-weight:700;border:1px solid var(--line);background:var(--paper);border-radius:10px;
+    padding:8px 13px;cursor:pointer;color:var(--ink-soft);transition:.15s}
+  .chip:hover{background:var(--paper-2)}
+  .chip.in{background:var(--answer-soft);border-color:#b7d2bd;color:var(--answer-deep,#2F5E3F)}
+  .skip{opacity:.62}
+  .skip .q::after{content:" · skipped";font-family:var(--sans);font-size:13px;color:var(--ink-faint);font-weight:400}
+
+  /* topics */
+  .topic{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:11px;
+    display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .topic .name{font-family:var(--serif);font-size:17px;font-weight:600}
+  .bar{height:8px;background:var(--paper-2);border-radius:5px;margin-top:9px;overflow:hidden;max-width:340px}
+  .bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+  .topic .count{font-size:13px;color:var(--ink-faint);margin-top:6px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{border:none;background:var(--panel);font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer;
+    padding:9px 13px;color:var(--ink-soft);border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none}
+  .seg button.sel{background:var(--accent);color:#fff}
+  .seg button.sel.avoid{background:var(--warn)}
+
+  .lede{background:var(--accent-soft);border:1px solid #ecd9c2;border-radius:13px;padding:15px 17px;margin-bottom:20px;
+    font-size:14.5px;line-height:1.6;color:#7a5a36}
+  .lede b{color:var(--warn)}
+
+  /* book */
+  .book{display:grid;grid-template-columns:1fr 300px;gap:24px}
+  .chapter{margin-bottom:22px}
+  .chapter h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--accent);
+    border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:10px}
+  .brow{display:flex;align-items:center;gap:11px;padding:9px 0;font-size:15px;color:var(--ink-soft)}
+  .brow .grip{color:var(--ink-faint);cursor:grab}
+  .brow .qr{margin-left:auto;font-size:12px;color:var(--ink-faint);display:flex;align-items:center;gap:5px}
+  .bookcover{background:linear-gradient(160deg,#3a2c1c,#5a4327);border-radius:14px;color:#f3e7d2;
+    padding:30px 24px;height:380px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow)}
+  .bookcover .t{font-family:var(--serif);font-size:27px;font-weight:600;line-height:1.2}
+  .bookcover small{color:#cdbb9c}
+
+  /* schedule / settings */
+  .field{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:13px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .field .l b{font-family:var(--serif);font-size:16px;font-weight:600}
+  .field .l small{display:block;color:var(--ink-soft);font-size:13.5px;margin-top:2px}
+  .pill{font-size:14px;font-weight:700;color:var(--ink);background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+  .toggle{width:50px;height:29px;border-radius:999px;background:var(--answer);position:relative;border:none;cursor:pointer}
+  .toggle::after{content:"";position:absolute;top:3px;left:24px;width:23px;height:23px;border-radius:50%;background:#fff}
+  .toggle.off{background:#cdbfa8}.toggle.off::after{left:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="mark">S</div><div class="name">Storyline</div></div>
+    <div class="who">
+      <div class="pic">D</div>
+      <div><small>Storyteller</small><b>Dad</b></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="on" data-p="overview">􀎟 Overview <span class="dot"></span></button>
+      <button data-p="stories">􀉞 Stories</button>
+      <button data-p="topics">􀋲 Topics</button>
+      <button data-p="schedule">􀐫 Schedule</button>
+      <button data-p="book">􀫊 The Book</button>
+      <button data-p="settings">􀍟 Settings</button>
+    </nav>
+    <div class="foot">Signed in as Paul</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section class="panel on" data-panel="overview">
+      <div class="head">
+        <div><h1>How's Dad doing?</h1><p>A quick read on his stories and this week's rhythm.</p></div>
+        <button class="btn primary">􀌪 Ask Dad now</button>
+      </div>
+
+      <div class="demo">PROTOTYPE
+        <div class="segd">
+          <button class="sel" onclick="demo('well',this)">Doing well</button>
+          <button onclick="demo('quiet',this)">Quieter lately</button>
+        </div>
+      </div>
+
+      <div class="alert">
+        <span class="ic">⚠️</span>
+        <div class="body"><b>Dad's microphone didn't go through.</b>
+          <small>Tuesday 9:42am · he may need it enabled in Settings. We also texted you.</small></div>
+        <button class="btn">Help him fix it</button>
+      </div>
+
+      <div class="insight calm" id="ins-quiet" style="display:none">
+        <span class="ic">💬</span>
+        <div class="body"><b>Dad's recorded less than usual lately.</b>
+          <small>About one session a week this month, down from his usual two. Could well be nothing — might be a nice moment to give him a call. We sent you a quiet text too.</small></div>
+        <div class="acts2"><button class="btn primary">Call Dad</button><button class="btn">Pause for a while</button></div>
+      </div>
+
+      <div class="cards">
+        <div class="card good" id="card-last"><div class="k">Last session</div><div class="v">Fri ✓</div></div>
+        <div class="card" id="card-week"><div class="k">This week</div><div class="v">2 <small>of 2</small></div></div>
+        <div class="card"><div class="k">Stories saved</div><div class="v">14</div></div>
+        <div class="card"><div class="k">Topics touched</div><div class="v">6 <small>/ 12</small></div></div>
+      </div>
+
+      <div class="insight" id="ins-well">
+        <span class="ic">💡</span>
+        <div class="body"><b>Dad records best in the early afternoon.</b>
+          <small>He's finished 5 of his last 6 sessions — but usually around 2:30 PM, hours after the 10 AM text. Moving his nudges to ~2 PM could make this even easier for him. We texted you this too.</small></div>
+        <div class="acts2"><button class="btn primary">Switch to 2 PM</button><button class="btn">Keep mornings</button></div>
+      </div>
+
+      <div class="sectitle">Lately</div>
+      <div class="story">
+        <div class="top">
+          <button class="play" onclick="pp(this)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><div class="q">What was your first car?</div>
+          <div class="meta"><span class="tag">Warm-ups</span> Tuesday · 2 min 14 sec · 1 follow-up</div></div>
+        </div>
+      </div>
+      <div class="story">
+        <div class="top">
+          <button class="play" onclick="pp(this)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><div class="q">What was your childhood home like?</div>
+          <div class="meta"><span class="tag">Childhood</span> Last Friday · 3 min 01 sec</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORIES -->
+    <section class="panel" data-panel="stories">
+      <div class="head"><div><h1>Dad's stories</h1><p>Listen in his voice, read the transcript, fix anything, choose what goes in the book.</p></div></div>
+
+      <div class="story">
+        <div class="top">
+          <button class="play" onclick="pp(this)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><div class="q">What was your first car?</div>
+          <div class="meta"><span class="tag">Warm-ups</span> Tuesday · 2:14</div></div>
+        </div>
+        <div class="tx">It was a 1968 Ford Galaxie, this faded blue thing I bought for ninety dollars off a fella down the street. The radio only got one station but my brother and I didn't care — we'd just drive…</div>
+        <div class="followthread">
+          <div class="fq">↳ AI follow-up · "You mentioned road trips with your brother — where's the farthest you two ever drove?"</div>
+          <div class="fa">Oh, we made it all the way to the Grand Canyon one summer. Ran out of money in Flagstaff and slept in the car…</div>
+        </div>
+        <div class="acts">
+          <button class="chip in" onclick="this.classList.toggle('in')">✓ In the book</button>
+          <button class="chip">✎ Edit transcript</button>
+          <button class="chip">􀏅 Add a photo</button>
+        </div>
+      </div>
+
+      <div class="story">
+        <div class="top">
+          <button class="play" onclick="pp(this)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><div class="q">How did you meet Mom?</div>
+          <div class="meta"><span class="tag">Love &amp; relationships</span> May 24 · 4:22</div></div>
+        </div>
+        <div class="tx">At a dance hall in '71. She was with somebody else that night, but I asked her to dance anyway, and her friend told me later I didn't stand a chance…</div>
+        <div class="acts">
+          <button class="chip in" onclick="this.classList.toggle('in')">✓ In the book</button>
+          <button class="chip">✎ Edit transcript</button>
+          <button class="chip">􀏅 Add a photo</button>
+        </div>
+      </div>
+
+      <div class="story skip">
+        <div class="top">
+          <button class="play" style="background:#cdbfa8" disabled><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><div class="q">What's the hardest thing you've been through?</div>
+          <div class="meta"><span class="tag">Hard times</span> May 24 · he chose to skip this one</div></div>
+        </div>
+        <div class="acts"><button class="chip">Don't ask this again</button></div>
+      </div>
+    </section>
+
+    <!-- TOPICS -->
+    <section class="panel" data-panel="topics">
+      <div class="head"><div><h1>What should we ask about?</h1><p>Nudge where the AI leans next. It still follows whatever thread Dad opens.</p></div></div>
+      <div class="lede">Set the weight, not a script. The interview always chases what Dad actually says — this just tells it which corners of his life you most want covered, and which to <b>leave alone</b>.</div>
+
+      <div class="topic">
+        <div><div class="name">Family &amp; roots</div>
+          <div class="bar"><i style="width:10%"></i></div><div class="count">1 of 10 explored</div></div>
+        <div class="seg"><button>Ease off</button><button class="sel">Focus next</button><button class="avoid">Avoid</button></div>
+      </div>
+      <div class="topic">
+        <div><div class="name">Young adulthood &amp; work</div>
+          <div class="bar"><i style="width:0%"></i></div><div class="count">untouched</div></div>
+        <div class="seg"><button>Ease off</button><button class="sel">Focus next</button><button class="avoid">Avoid</button></div>
+      </div>
+      <div class="topic">
+        <div><div class="name">Love &amp; relationships</div>
+          <div class="bar"><i style="width:30%"></i></div><div class="count">2 of 7 explored</div></div>
+        <div class="seg"><button>Ease off</button><button>Focus next</button><button class="avoid">Avoid</button></div>
+      </div>
+      <div class="topic">
+        <div><div class="name">Hard times &amp; loss</div>
+          <div class="bar"><i style="width:0%"></i></div><div class="count">he skipped the last one</div></div>
+        <div class="seg"><button>Ease off</button><button>Focus next</button><button class="sel avoid">Avoid</button></div>
+      </div>
+      <div style="margin-top:18px"><button class="btn">＋ Write a question of your own</button></div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="panel" data-panel="schedule">
+      <div class="head"><div><h1>When we reach out</h1><p>A gentle weekly rhythm — never more than this.</p></div></div>
+      <div class="field"><div class="l"><b>Days</b><small>The text arrives these mornings</small></div><span class="pill">Tue &amp; Fri</span></div>
+      <div class="field"><div class="l"><b>Time</b><small>His local time</small></div><span class="pill">10:00 AM</span></div>
+      <div class="field"><div class="l"><b>Questions per session</b><small>Kept short on purpose</small></div><span class="pill">1–2</span></div>
+      <div class="field"><div class="l"><b>Quiet hours</b><small>Never ring outside these</small></div><span class="pill">After 6 PM</span></div>
+      <div class="field"><div class="l"><b>Pause everything</b><small>If he's traveling or unwell</small></div><button class="toggle off"></button></div>
+    </section>
+
+    <!-- BOOK -->
+    <section class="panel" data-panel="book">
+      <div class="head"><div><h1>The keepsake</h1><p>Everything marked "in the book," arranged into chapters. Each story keeps a QR to his real voice.</p></div>
+        <button class="btn primary">Order printed book</button></div>
+      <div class="book">
+        <div>
+          <div class="chapter"><h3>Early years</h3>
+            <div class="brow"><span class="grip">⠿</span> What was your first car? <span class="qr">🔊 voice QR</span></div>
+            <div class="brow"><span class="grip">⠿</span> What was your childhood home like? <span class="qr">🔊 voice QR</span></div>
+          </div>
+          <div class="chapter"><h3>Love &amp; family</h3>
+            <div class="brow"><span class="grip">⠿</span> How did you meet Mom? <span class="qr">🔊 voice QR</span></div>
+          </div>
+        </div>
+        <div class="bookcover">
+          <div><small>The life &amp; stories of</small><div class="t">Dad</div></div>
+          <small>14 stories · in his own voice<br>compiled by Paul</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="panel" data-panel="settings">
+      <div class="head"><div><h1>Settings</h1><p>People, contact details, and your voice.</p></div></div>
+      <div class="field"><div class="l"><b>Dad's phone</b><small>Where the story texts go</small></div><span class="pill">(602) •••‑4471</span></div>
+      <div class="field"><div class="l"><b>Alert me by text</b><small>If a session fails to connect</small></div><span class="pill">Paul · (480) •••‑2208</span></div>
+      <div class="field"><div class="l"><b>Your voice</b><small>What Dad hears asking the questions</small></div><span class="pill" style="color:var(--answer)">✓ Cloned</span></div>
+      <div class="field"><div class="l"><b>Family who can listen</b><small>They can view stories, not change settings</small></div><span class="pill">2 invited</span></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const nav=document.getElementById('nav');
+  nav.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    [...nav.children].forEach(x=>x.classList.toggle('on',x===b));
+    const p=b.dataset.p;
+    document.querySelectorAll('.panel').forEach(s=>s.classList.toggle('on',s.dataset.panel===p));
+    document.querySelector('.main').scrollTop=0;
+  });
+  function demo(state, btn){
+    [...btn.parentElement.children].forEach(x=>x.classList.toggle('sel', x===btn));
+    const well = state==='well';
+    document.getElementById('ins-well').style.display = well ? '' : 'none';
+    document.getElementById('ins-quiet').style.display = well ? 'none' : '';
+    const last=document.getElementById('card-last'), week=document.getElementById('card-week');
+    if(well){
+      last.className='card good'; last.querySelector('.v').textContent='Fri ✓';
+      week.querySelector('.v').innerHTML='2 <small>of 2</small>';
+    } else {
+      last.className='card'; last.querySelector('.v').textContent='12 days ago';
+      week.querySelector('.v').innerHTML='0 <small>of 2</small>';
+    }
+  }
+  function pp(btn){
+    const playing=btn.classList.toggle('playing');
+    btn.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  }
+</script>
+</body>
+</html>
