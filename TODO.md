@@ -12,7 +12,7 @@ spec. Each phase should leave the app building and deployable.
 - [x] 0.4 `npm run db:types`
 - [x] 0.5 `npm run seed:prompts` (bilingual global library)
 - [x] 0.6 Confirm `npm run preview` runs on the Cloudflare runtime
-- [ ] 0.7 Connect repo to Cloudflare for auto-deploy (or set the GitHub Action secrets)
+- [x] 0.7 Connect repo to Cloudflare for auto-deploy — verified live at myfamilyporch.paul-trevino.workers.dev (build cmd `npx opennextjs-cloudflare build`, deploy from `main`)
 
 ## Phase 1 — Auth, tenancy, membership
 → read: SPEC § Multi-tenancy & roles · `docs/ARCHITECTURE.md`
