@@ -1,0 +1,113 @@
+{
+  "schema": {
+    "id": "stable unique key",
+    "category": "thematic grouping for UI sections",
+    "applies_to": "which storyteller relationships this prompt fits — gate so only relevant prompts surface. Vocabulary: any | parent | grandparent | aunt_uncle (sibling | spouse | other reserved for later)",
+    "prompt": "question text, with tokens resolved at assembly time (see tokens below)",
+    "emotional_weight": "light | medium | heavy — pace sessions and gate sensitive prompts",
+    "photo_friendly": "true if it works attached to a photo ('tell me about this picture')",
+    "warm_up": "true for low-pressure openers",
+    "follow_ups": "optional probing questions; empty array if none"
+  },
+  "tokens": {
+    "{address}": "how the interviewer addresses this storyteller — 'Dad', 'Grandma', 'Uncle Joe'",
+    "{name}": "storyteller's first name",
+    "{they}": "subject pronoun — he / she / they",
+    "{them}": "object pronoun — him / her / them",
+    "{their}": "possessive pronoun — his / her / their",
+    "{partner}": "how the interviewer refers to the storyteller's spouse/partner — 'Mom', 'Grandpa', 'Aunt Rosa', or generic 'your wife/husband'",
+    "{asker_relation}": "how the interviewer stands to the storyteller, from the storyteller's view — 'your son', 'your niece', 'your grandson'",
+    "{asker_parent}": "the relative linking a grandchild/niece/nephew to the storyteller — for a grandparent, their child (the asker's parent); for an aunt/uncle, their sibling (the asker's parent)"
+  },
+  "notes": "Tokens are resolved when a session is assembled, using the storyteller record (name, pronouns) and the relationship row (address term, asker_relation). The same resolved context is handed to the AI interviewer so its generated follow-ups are phrased correctly. Universal prompts use applies_to ['any']; relationship-specific ones are gated. A duplicate Spanish set keyed by lang can be seeded alongside these (English shown here).",
+  "categories_order": [
+    "Warm-Ups & Icebreakers","Childhood & Early Years","Family & Roots","School & Coming of Age",
+    "Young Adulthood & Work","Love & Relationships","Parenthood & the Next Generation",
+    "Friendship & Community","Hobbies, Joys & Everyday Life","Hard Times & Resilience",
+    "Reflection & Wisdom","Legacy & Things Left to Say"
+  ],
+  "prompts": [
+    { "id":"warm-001","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What was your first car?","emotional_weight":"light","photo_friendly":true,"warm_up":true,"follow_ups":["Where did you go in it?","What happened to it in the end?"] },
+    { "id":"warm-002","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What music did you love when you were twenty?","emotional_weight":"light","photo_friendly":false,"warm_up":true,"follow_ups":["Did you ever see them live?"] },
+    { "id":"warm-003","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What did a great Saturday look like in your prime?","emotional_weight":"light","photo_friendly":false,"warm_up":true,"follow_ups":[] },
+    { "id":"warm-004","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What's a meal that instantly brings back a memory?","emotional_weight":"light","photo_friendly":true,"warm_up":true,"follow_ups":["Who made it?"] },
+    { "id":"warm-005","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What shows or movies did you never miss?","emotional_weight":"light","photo_friendly":false,"warm_up":true,"follow_ups":[] },
+    { "id":"warm-006","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What's a hairstyle or outfit you wore that you'd never admit to now?","emotional_weight":"light","photo_friendly":true,"warm_up":true,"follow_ups":[] },
+    { "id":"warm-007","category":"Warm-Ups & Icebreakers","applies_to":["any"],"prompt":"What's something you were really good at that might surprise me?","emotional_weight":"light","photo_friendly":false,"warm_up":true,"follow_ups":[] },
+
+    { "id":"child-001","category":"Childhood & Early Years","applies_to":["any"],"prompt":"Where did you grow up, and what do you remember most about it?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":["What did the neighborhood sound like?"] },
+    { "id":"child-002","category":"Childhood & Early Years","applies_to":["any"],"prompt":"What was your childhood home like? Describe a room you can still picture.","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"child-003","category":"Childhood & Early Years","applies_to":["any"],"prompt":"What's the first memory you can reach back and grab?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"child-004","category":"Childhood & Early Years","applies_to":["any"],"prompt":"What did you get in trouble for most often?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":["Did you deserve it?"] },
+    { "id":"child-005","category":"Childhood & Early Years","applies_to":["any"],"prompt":"What were you afraid of as a kid?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"child-006","category":"Childhood & Early Years","applies_to":["any"],"prompt":"Is there a smell or sound from childhood that takes you right back?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"child-007","category":"Childhood & Early Years","applies_to":["any"],"prompt":"Did you have a pet? Tell me about them.","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"child-008","category":"Childhood & Early Years","applies_to":["any"],"prompt":"What's a place from childhood you wish you could visit one more time?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+
+    { "id":"fam-001","category":"Family & Roots","applies_to":["any"],"prompt":"What were your own parents like to be around?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":["What did you get from each of them?"] },
+    { "id":"fam-002","category":"Family & Roots","applies_to":["any"],"prompt":"Was there a relative everyone talked about? What was their story?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"fam-003","category":"Family & Roots","applies_to":["any"],"prompt":"What traditions did your family have that you loved — or couldn't stand?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"fam-004","category":"Family & Roots","applies_to":["any"],"prompt":"Where did our family come from, and how did they end up where they did?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"fam-005","category":"Family & Roots","applies_to":["any"],"prompt":"What was your relationship with your brothers and sisters like?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"fam-006","category":"Family & Roots","applies_to":["any"],"prompt":"What do you remember about your grandparents?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+
+    { "id":"school-001","category":"School & Coming of Age","applies_to":["any"],"prompt":"What kind of student were you, honestly?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"school-002","category":"School & Coming of Age","applies_to":["any"],"prompt":"Was there a teacher who changed something for you?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":["Did you ever tell them?"] },
+    { "id":"school-003","category":"School & Coming of Age","applies_to":["any"],"prompt":"What did you think you were going to be when you grew up?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"school-004","category":"School & Coming of Age","applies_to":["any"],"prompt":"Tell me about a friend from back then I've never heard about.","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":["Do you know what became of them?"] },
+    { "id":"school-005","category":"School & Coming of Age","applies_to":["any"],"prompt":"What's something you did as a teenager that you'd be horrified if I did?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"school-006","category":"School & Coming of Age","applies_to":["any"],"prompt":"What was a risk you took young that somehow worked out?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"work-001","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"What was your first job, and what did it teach you?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":["What did you spend that first paycheck on?"] },
+    { "id":"work-002","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"When did you first feel like an actual adult?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"work-003","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"What's a work moment you're proud of that no one really knows about?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"work-004","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"Was there a path you almost took but didn't?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":["Do you ever wonder about that other life?"] },
+    { "id":"work-005","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"Who was the best boss or mentor you ever had?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"work-006","category":"Young Adulthood & Work","applies_to":["any"],"prompt":"What was your first place of your own like?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+
+    { "id":"love-001","category":"Love & Relationships","applies_to":["any"],"prompt":"How did you meet {partner}?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":["What was your first impression?","When did you know?"] },
+    { "id":"love-002","category":"Love & Relationships","applies_to":["any"],"prompt":"What do you remember about your wedding day — the real stuff, not the photos?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"love-003","category":"Love & Relationships","applies_to":["any"],"prompt":"What's something you learned about marriage the hard way?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"love-004","category":"Love & Relationships","applies_to":["any"],"prompt":"Who was the first person you ever loved?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"love-005","category":"Love & Relationships","applies_to":["any"],"prompt":"What does loving someone for a long time actually take?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"par-001","category":"Parenthood & the Next Generation","applies_to":["parent"],"prompt":"What were you thinking the day I was born?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"par-002","category":"Parenthood & the Next Generation","applies_to":["parent"],"prompt":"Is there anything you wish you'd done differently raising me?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"par-003","category":"Parenthood & the Next Generation","applies_to":["parent"],"prompt":"What's something I did as a kid that you still laugh about?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"par-004","category":"Parenthood & the Next Generation","applies_to":["parent"],"prompt":"What did you hope for me before you even knew who I'd become?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"par-005","category":"Parenthood & the Next Generation","applies_to":["any"],"prompt":"What was it like becoming a parent for the first time?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":["How did it change you?"] },
+    { "id":"par-006","category":"Parenthood & the Next Generation","applies_to":["grandparent"],"prompt":"What do you remember about the day {asker_parent} was born?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"par-007","category":"Parenthood & the Next Generation","applies_to":["grandparent"],"prompt":"What was {asker_parent} like as a child?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":["Were they trouble?"] },
+    { "id":"par-008","category":"Parenthood & the Next Generation","applies_to":["grandparent"],"prompt":"What do you remember about becoming a grandparent?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"par-009","category":"Parenthood & the Next Generation","applies_to":["aunt_uncle"],"prompt":"What was {asker_parent} like growing up?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"par-010","category":"Parenthood & the Next Generation","applies_to":["aunt_uncle"],"prompt":"What's a story about {asker_parent} they'd never tell me themselves?","emotional_weight":"light","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"friend-001","category":"Friendship & Community","applies_to":["any"],"prompt":"Who's the best friend you ever had, and what made them that?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"friend-002","category":"Friendship & Community","applies_to":["any"],"prompt":"Was there a place where everyone knew you?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"friend-003","category":"Friendship & Community","applies_to":["any"],"prompt":"Who do you miss that's no longer around?","emotional_weight":"heavy","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"friend-004","category":"Friendship & Community","applies_to":["any"],"prompt":"What's the best trip you ever took?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+
+    { "id":"hobby-001","category":"Hobbies, Joys & Everyday Life","applies_to":["any"],"prompt":"What's something you could do for hours and never tire of?","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"hobby-002","category":"Hobbies, Joys & Everyday Life","applies_to":["any"],"prompt":"Tell me about something you were proud of building or fixing with your hands.","emotional_weight":"light","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"hobby-003","category":"Hobbies, Joys & Everyday Life","applies_to":["any"],"prompt":"What's the most beautiful place you've ever been?","emotional_weight":"medium","photo_friendly":true,"warm_up":false,"follow_ups":[] },
+    { "id":"hobby-004","category":"Hobbies, Joys & Everyday Life","applies_to":["any"],"prompt":"Is there a song that changes your whole mood the second it comes on?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"hard-001","category":"Hard Times & Resilience","applies_to":["any"],"prompt":"What's the hardest thing you've ever been through?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":["What got you through it?"] },
+    { "id":"hard-002","category":"Hard Times & Resilience","applies_to":["any"],"prompt":"Was there a time you weren't sure things would work out, but they did?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"hard-003","category":"Hard Times & Resilience","applies_to":["any"],"prompt":"Who did you lean on in your worst moment?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"hard-004","category":"Hard Times & Resilience","applies_to":["any"],"prompt":"Is there a regret you've made peace with?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"wisdom-001","category":"Reflection & Wisdom","applies_to":["any"],"prompt":"What's something you believed strongly at 25 that you've completely changed your mind about?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"wisdom-002","category":"Reflection & Wisdom","applies_to":["any"],"prompt":"What's the best decision you ever made? The worst?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"wisdom-003","category":"Reflection & Wisdom","applies_to":["any"],"prompt":"What does a good life look like to you now?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"wisdom-004","category":"Reflection & Wisdom","applies_to":["any"],"prompt":"What's something it took you most of your life to understand?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"wisdom-005","category":"Reflection & Wisdom","applies_to":["any"],"prompt":"What advice would you give your 20-year-old self?","emotional_weight":"medium","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+
+    { "id":"legacy-001","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"What do you want the younger people in this family to know about you?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"legacy-002","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"Is there anything you've never told me that you'd want me to know?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"legacy-003","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"When you're remembered, what do you hope people say?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"legacy-004","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"What values do you hope get passed down through the family?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"legacy-005","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"If you could leave me with one piece of advice, what would it be?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] },
+    { "id":"legacy-006","category":"Legacy & Things Left to Say","applies_to":["any"],"prompt":"What made your life a good one?","emotional_weight":"heavy","photo_friendly":false,"warm_up":false,"follow_ups":[] }
+  ]
+}

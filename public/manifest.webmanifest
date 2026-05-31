@@ -1,0 +1,9 @@
+{
+  "name": "Storyline",
+  "short_name": "Storyline",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF5EA",
+  "theme_color": "#3E7A52",
+  "icons": []
+}

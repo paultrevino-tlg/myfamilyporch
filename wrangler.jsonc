@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "storyline",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  // Bindings (fill in via dashboard or `wrangler secret put`):
+  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "storyline-media" }],
+  // Secrets used at runtime are set with `wrangler secret put NAME`
+  // and mirrored in .dev.vars for local dev (see .env.example).
+  "vars": {}
+}
