@@ -1,6 +1,8 @@
 // SSR client bound to the signed-in family member's cookies (RLS enforced).
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function supabaseServer() {
   const store = await cookies();
@@ -10,7 +12,8 @@ export async function supabaseServer() {
     {
       cookies: {
         getAll: () => store.getAll(),
-        setAll: (all) => all.forEach(({ name, value, options }) => store.set(name, value, options)),
+        setAll: (all: CookieToSet[]) =>
+          all.forEach(({ name, value, options }) => store.set(name, value, options)),
       },
     },
   );

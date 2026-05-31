@@ -6,12 +6,12 @@ spec. Each phase should leave the app building and deployable.
 
 ## Phase 0 — Project setup
 → read: `docs/ARCHITECTURE.md`
-- [ ] 0.1 `npm install`; if any package fails to resolve, install latest and update package.json
-- [ ] 0.2 Create/link the Supabase project; set env in `.env.local` + `.dev.vars`
-- [ ] 0.3 Apply `supabase/migrations/0001_init.sql` (Supabase MCP or `npm run db:push`)
-- [ ] 0.4 `npm run db:types`
-- [ ] 0.5 `npm run seed:prompts` (bilingual global library)
-- [ ] 0.6 Confirm `npm run preview` runs on the Cloudflare runtime
+- [x] 0.1 `npm install`; if any package fails to resolve, install latest and update package.json
+- [x] 0.2 Create/link the Supabase project; set env in `.env.local` + `.dev.vars`
+- [x] 0.3 Apply `supabase/migrations/0001_init.sql` (Supabase MCP or `npm run db:push`)
+- [x] 0.4 `npm run db:types`
+- [x] 0.5 `npm run seed:prompts` (bilingual global library)
+- [x] 0.6 Confirm `npm run preview` runs on the Cloudflare runtime
 - [ ] 0.7 Connect repo to Cloudflare for auto-deploy (or set the GitHub Action secrets)
 
 ## Phase 1 — Auth, tenancy, membership
