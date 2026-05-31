@@ -1,4 +1,4 @@
-# Storyline — build plan
+# My Family Porch — build plan
 
 Work top to bottom. Check items off as you go. Each phase has a **→ read** line:
 open those `docs/SPEC.md` sections and prototypes before building, not the whole

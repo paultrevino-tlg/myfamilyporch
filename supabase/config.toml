@@ -1,2 +1,2 @@
 # Minimal Supabase CLI config. Run `supabase link --project-ref <ref>` to link.
-project_id = "storyline"
+project_id = "myfamilyporch"

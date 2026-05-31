@@ -1,4 +1,4 @@
-# Storyline — product spec (consolidated decisions)
+# My Family Porch — product spec (consolidated decisions)
 
 Reference doc. `CLAUDE.md` holds the always-on rules and points here; `TODO.md`
 names the exact section(s) + prototype to read for each phase. Read the relevant

@@ -1,4 +1,4 @@
-# Storyline — Claude Code project brief
+# My Family Porch — Claude Code project brief
 
 > **On startup: read `TODO.md` and continue from the first unchecked task.**
 > Check tasks off as you finish them and keep the file current. Prefer small,
@@ -7,7 +7,7 @@
 > not the whole spec, when you start a task.
 
 ## What this is
-Storyline records a family elder's life stories as a short, AI-guided **voice
+My Family Porch records a family elder's life stories as a short, AI-guided **voice
 interview** in a family member's cloned voice, and turns them into a keepsake.
 Multi-tenant: many unrelated families, each with multiple storytellers across
 generations (parent, grandparent, aunt/uncle).

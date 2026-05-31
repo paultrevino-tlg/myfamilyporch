@@ -1,5 +1,5 @@
 -- ============================================================================
--- Storyline — multi-tenant schema (Supabase / Postgres)
+-- My Family Porch — multi-tenant schema (Supabase / Postgres)
 -- Tenancy: `family` is the tenant. `family_id` on every domain row.
 -- Separation enforced by Row-Level Security, not application code.
 -- Two auth surfaces:
