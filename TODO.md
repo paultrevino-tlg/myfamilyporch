@@ -16,8 +16,8 @@ spec. Each phase should leave the app building and deployable.
 
 ## Phase 1 — Auth, tenancy, membership
 → read: SPEC § Multi-tenancy & roles · `docs/ARCHITECTURE.md`
-- [ ] 1.1 Supabase Auth (passwordless/email) for family members
-- [ ] 1.2 `create_family` onboarding (caller becomes owner)
+- [x] 1.1 Supabase Auth (passwordless/email) for family members — magic-link via Supabase Send Email hook → EmailJS (branded template); verified end-to-end (link → /dashboard → sign-out). Deliverability hardening (authenticated sending domain) tracked separately.
+- [x] 1.2 `create_family` onboarding (caller becomes owner) — no-family members are routed to `/onboarding`; name form calls the `create_family` RPC (security-definer, makes caller owner) via a server action, then lands on `/dashboard`
 - [ ] 1.3 Family switcher; invitations + accept; roles (owner/admin/viewer)
 - [ ] 1.4 Verify RLS: a member of family A cannot read family B (write a test)
 

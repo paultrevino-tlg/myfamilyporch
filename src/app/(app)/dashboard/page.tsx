@@ -1,7 +1,12 @@
+import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { getMemberships } from "@/lib/auth";
 
 // Overview. RLS scopes everything to the member's families automatically.
 export default async function Dashboard() {
+  // No family yet → send the member through onboarding (TODO 1.2).
+  if ((await getMemberships()).length === 0) redirect("/onboarding");
+
   const sb = await supabaseServer();
   const { data: storytellers } = await sb.from("storytellers").select("id,name,language");
   return (
