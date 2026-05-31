@@ -6,7 +6,9 @@ import { supabaseServer } from "@/lib/supabase/server";
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/dashboard";
+  // Only allow safe relative redirects — never an absolute/off-site URL.
+  const rawNext = url.searchParams.get("next");
+  const next = rawNext && rawNext.startsWith("/") ? rawNext : "/dashboard";
 
   if (code) {
     const sb = await supabaseServer();

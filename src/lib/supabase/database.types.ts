@@ -594,6 +594,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { p_token: string }; Returns: string }
       create_family: { Args: { p_name: string }; Returns: string }
       has_family_role: {
         Args: {

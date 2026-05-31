@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
-import { getMemberships } from "@/lib/auth";
+import { getFamilies } from "@/lib/auth";
 
 // First-run onboarding (TODO 1.2). A newly authenticated member has no family
 // yet; here they name one and the create_family RPC makes them its owner
 // atomically (security-definer; clients never insert into families directly).
 export default async function OnboardingPage() {
   // Already in a family? Nothing to onboard — go to the dashboard.
-  if ((await getMemberships()).length > 0) redirect("/dashboard");
+  if ((await getFamilies()).length > 0) redirect("/dashboard");
 
   async function createFamily(formData: FormData) {
     "use server";

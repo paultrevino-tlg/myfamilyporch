@@ -16,10 +16,17 @@ export default function LoginPage() {
     e.preventDefault();
     setStatus("sending");
     setError("");
+    // Carry a safe relative ?next through the magic link (e.g. /invite/<token>),
+    // so an invited member lands back on the accept page after signing in.
+    const next = new URLSearchParams(window.location.search).get("next");
+    const safeNext = next && next.startsWith("/") ? next : null;
+    const callback = `${window.location.origin}/auth/callback${
+      safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""
+    }`;
     const sb = supabaseBrowser();
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: callback },
     });
     if (error) {
       setError(error.message);
