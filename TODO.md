@@ -66,7 +66,25 @@ spec. Each phase should leave the app building and deployable.
 - [ ] 7.3 Export / print order
 - [ ] 7.4 Optional English translation view of Spanish transcripts
 
-## Phase 8 — Billing & launch
-- [ ] 8.1 Stripe subscription per family (tiered)
-- [ ] 8.2 Resend transactional email
-- [ ] 8.3 Hardening: rate limits, audit, media backups
+## Phase 8 — Public marketing site & signup funnel
+→ read: SPEC § Marketing, signup & billing · placeholder `src/app/(marketing)/page.tsx`
+English only for v1; bilingual marketing is deferred.
+- [ ] 8.1 Marketing shell: nav + footer + legal links; OG/SEO metadata; shared layout
+- [ ] 8.2 Landing page (hero, how-it-works, sample story, social proof)
+- [ ] 8.3 Pricing page (tier cards + one-time book add-on → CTA)
+- [ ] 8.4 FAQ + legal/contact pages (privacy, terms, contact)
+- [ ] 8.5 Signup CTA → Stripe Checkout → on success run `create_family` onboarding → dashboard
+
+## Phase 9 — Subscriptions & billing
+→ read: SPEC § Marketing, signup & billing · SPEC § Multi-tenancy & roles
+Pay-during-signup; subscription (tiered) + one-time book add-on; owner holds billing.
+- [ ] 9.1 Stripe products/prices: subscription tiers + one-time book add-on; env + webhook secret on Cloudflare
+- [ ] 9.2 Checkout session from pricing/signup CTA (creates customer, ties to `family_id`/owner)
+- [ ] 9.3 Webhook handler → persist subscription + entitlement state on the family (migration)
+- [ ] 9.4 Billing portal (owner-only: upgrade/downgrade/cancel/update card)
+- [ ] 9.5 Feature gating from entitlement state (block dashboard/interviews when unpaid) + optional trial
+- [ ] 9.6 One-time book add-on checkout wired to the keepsake export (Phase 7)
+
+## Phase 10 — Launch hardening
+- [ ] 10.1 Resend transactional + billing email (migrate off EmailJS where appropriate)
+- [ ] 10.2 Rate limits, audit logging, media backups

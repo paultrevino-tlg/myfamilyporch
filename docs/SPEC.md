@@ -92,6 +92,24 @@ photos. Each story gets a **voice QR** to the recording. Lesson from competitor
 reviews: **bundle the audio** with the export, don't only link to our servers, so
 the keepsake survives independently.
 
+## Marketing, signup & billing
+- The public marketing site lives in `src/app/(marketing)`. **English only for v1**
+  (revisit ES later); the storyteller surface stays bilingual regardless.
+- Pages: **landing** (hero, how-it-works, sample story, social proof), **pricing**,
+  **FAQ**, plus **legal** (privacy, terms) and **contact**. Shared marketing shell
+  (nav + footer + legal links) and OG/SEO metadata.
+- **Billing model:** a recurring **subscription per family** (tiered) covers ongoing
+  interviews + storage, **plus a one-time book add-on** charge to print/export a
+  keepsake. The **owner** role holds billing (see Multi-tenancy & roles).
+- **Paywall placement:** **pay during signup** — Stripe Checkout is part of the
+  signup funnel; a new family subscribes *before* reaching the dashboard (trial
+  optional). On successful checkout, reuse the existing `create_family` onboarding
+  to create the account/family.
+- **Stripe** is the processor: Checkout (subscription + one-time add-on), the
+  customer **billing portal** (upgrade/downgrade/cancel/update card), and
+  **webhooks** that persist subscription/entitlement state on the family. Billing
+  and transactional email move to **Resend** at launch.
+
 ## Elder-facing UX principles
 Large targets, single tap, no precision gestures, high-contrast large type, speak
 everything (don't rely on reading), radical consistency, forgiving (no scolding
