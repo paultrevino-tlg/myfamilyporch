@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateStorytellerToken } from "@/lib/storyteller/token";
 import { supabaseService } from "@/lib/supabase/service";
+import { transcribe } from "@/lib/voice/stt";
 
-// Storyteller writes (TODO 2.5). The ONLY place storyteller answers are written.
-// Validate the magic-link token, THEN upload the audio + insert the answer row
-// via the service role. No Supabase Auth here; family_id/storyteller_id come
-// straight from the validated token, never from the client.
+// Storyteller writes (TODO 2.5, 3.4). The ONLY place storyteller answers are
+// written. Validate the magic-link token, THEN upload the audio + insert the
+// answer row via the service role. No Supabase Auth here; family_id/storyteller_id
+// come straight from the validated token, never from the client.
 //
-// Seams kept intact: transcript stays null (STT → 3.4); admin playback mints
-// signed URLs after a membership check (→ 5.2). As of 3.1 the opening answer
-// carries the assembled prompt's resolved question_text + prompt_id; the
-// follow-up's text is generated in 3.2.
+// 3.4: we transcribe the clip (Deepgram nova-3, EN/ES code-switch aware) here so
+// every answer — opener, follow-up, final — gets a transcript for Stories review
+// and the keepsake, and so the immediate api/ai/interview call sees a transcript
+// and fires the AI follow-up. STT is fail-soft: if it errors or the key is unset,
+// transcript stays null and the follow-up degrades to pre-authored (3.2 behavior).
+//
+// Seam kept intact: admin playback mints signed URLs after a membership check
+// (→ 5.2).
 
 const BUCKET = "story-audio";
 
@@ -85,17 +90,26 @@ export async function POST(req: NextRequest) {
   const contentType = audio.type || "audio/webm";
   const ext = extFor(contentType);
   const objectKey = `${session.family_id}/${session.storyteller_id}/${sessionId}/${crypto.randomUUID()}.${ext}`;
-  const bytes = new Uint8Array(await audio.arrayBuffer());
+  const buffer = await audio.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
 
-  const { error: upErr } = await db.storage
-    .from(BUCKET)
-    .upload(objectKey, bytes, { contentType, upsert: false });
-  if (upErr) {
-    console.error("[storyteller/answer] audio upload failed", upErr);
+  // Upload and transcribe concurrently — they're independent, so STT adds no
+  // latency on top of the upload. STT is fail-soft (see header): any miss leaves
+  // transcript null and the answer still saves.
+  const sttLang = lang === "es" ? "es" : "en";
+  const [upRes, transcript] = await Promise.all([
+    db.storage.from(BUCKET).upload(objectKey, bytes, { contentType, upsert: false }),
+    transcribe({ audio: buffer, contentType, lang: sttLang }).catch((e) => {
+      console.error("[storyteller/answer] transcription failed (saving without)", e);
+      return null;
+    }),
+  ]);
+  if (upRes.error) {
+    console.error("[storyteller/answer] audio upload failed", upRes.error);
     return NextResponse.json({ error: "could not save audio" }, { status: 500 });
   }
 
-  // Persist the answer. transcript is deliberately null until STT (3.4).
+  // Persist the answer with its transcript (null if STT was unset/failed).
   const { data: ans, error: ansErr } = await db
     .from("answers")
     .insert({
@@ -106,6 +120,7 @@ export async function POST(req: NextRequest) {
       parent_answer_id: parentAnswerId,
       is_followup: isFollowup,
       question_text: questionText,
+      transcript,
       lang,
       audio_path: objectKey,
       duration_sec: durationSec,
