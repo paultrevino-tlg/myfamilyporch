@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
@@ -7,6 +8,8 @@ import {
   updateStoryteller,
   updateMyRelationship,
   deleteStoryteller,
+  createRecordingLink,
+  revokeRecordingLinks,
 } from "./actions";
 
 // Storyteller + relationship management (TODO 2.1). RLS scopes every read to the
@@ -31,7 +34,11 @@ const KIND_LABEL: Record<string, string> = {
 const KINDS = Object.keys(KIND_LABEL);
 const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
 
-export default async function StorytellersPage() {
+export default async function StorytellersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ link?: string; for?: string; error?: string }>;
+}) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
 
@@ -41,6 +48,8 @@ export default async function StorytellersPage() {
     data: { user },
   } = await sb.auth.getUser();
   if (!user) redirect("/login");
+
+  const sp = await searchParams;
 
   // Each storyteller with the current member's own relationship (if any).
   // Filtering the embedded resource by user_id keeps other members' edges out.
@@ -52,6 +61,28 @@ export default async function StorytellersPage() {
     .eq("family_id", active.family_id)
     .eq("storyteller_relationships.user_id", user.id)
     .order("created_at", { ascending: true });
+
+  // Active (un-revoked) recording links per storyteller — readable via tok_select
+  // RLS. We only store hashes, so we can show status/usage, never the raw URL.
+  const { data: tokenRows } = await sb
+    .from("storyteller_tokens")
+    .select("storyteller_id,last_used_at")
+    .eq("family_id", active.family_id)
+    .is("revoked_at", null);
+  const linkStatus = new Map<string, { count: number; lastUsed: string | null }>();
+  for (const t of tokenRows ?? []) {
+    const cur = linkStatus.get(t.storyteller_id) ?? { count: 0, lastUsed: null };
+    cur.count += 1;
+    if (t.last_used_at && (!cur.lastUsed || t.last_used_at > cur.lastUsed)) {
+      cur.lastUsed = t.last_used_at;
+    }
+    linkStatus.set(t.storyteller_id, cur);
+  }
+
+  // Build the full /s/<token> URL once, only for the storyteller just minted.
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const mintedUrl = sp.link ? `${origin}/s/${sp.link}` : null;
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -66,6 +97,13 @@ export default async function StorytellersPage() {
           ← Dashboard
         </Link>
       </div>
+
+      {sp.error === "link" && (
+        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          Couldn&apos;t create the recording link. The storyteller-token secret may not be
+          configured.
+        </p>
+      )}
 
       {/* Existing storytellers ------------------------------------------------ */}
       <section className="mt-8 space-y-4">
@@ -206,6 +244,54 @@ export default async function StorytellersPage() {
                   </details>
                 </div>
               )}
+
+              {/* Recording link (magic-link token). Status visible to all;
+                  mint/revoke admin-only. The raw URL shows once, right after mint. */}
+              <div className="mt-3 border-t pt-3 text-sm">
+                {(() => {
+                  const status = linkStatus.get(s.id);
+                  return (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-ink/60">
+                        {status
+                          ? `${status.count} active link${status.count === 1 ? "" : "s"}` +
+                            (status.lastUsed
+                              ? ` · last opened ${new Date(status.lastUsed).toLocaleDateString()}`
+                              : " · not opened yet")
+                          : "No recording link yet"}
+                      </span>
+                      {canManage && (
+                        <span className="flex gap-3">
+                          <form action={createRecordingLink}>
+                            <input type="hidden" name="storyteller_id" value={s.id} />
+                            <button type="submit" className="text-ink/70 underline">
+                              Create recording link
+                            </button>
+                          </form>
+                          {status && (
+                            <form action={revokeRecordingLinks}>
+                              <input type="hidden" name="storyteller_id" value={s.id} />
+                              <button type="submit" className="text-red-600 underline">
+                                Revoke links
+                              </button>
+                            </form>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {mintedUrl && sp.for === s.id && (
+                  <div className="mt-2 rounded-lg bg-amber-50 p-3">
+                    <p className="text-ink/70">
+                      Copy this link now — for {s.name}&apos;s privacy it won&apos;t be shown
+                      again:
+                    </p>
+                    <code className="mt-1 block break-all text-ink">{mintedUrl}</code>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

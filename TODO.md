@@ -24,7 +24,7 @@ spec. Each phase should leave the app building and deployable.
 ## Phase 2 — Storyteller surface
 → read: SPEC § Storyteller onboarding & auth, Storyteller session flow, Localization, Elder-facing UX · prototype `docs/prototypes/storyteller-flow.html`
 - [x] 2.1 Storyteller + relationship CRUD (name, pronouns, birth year, language, address term) — admin-gated server actions (`storytellers/actions.ts`) + management page (`/storytellers`); storyteller holds shared facts, the per-member relationship holds address term/kind/asker_relation/interviewer (filtered to the signed-in member); dashboard links to it. RLS-conformant (admin writes), no schema change.
-- [ ] 2.2 Magic-link token mint/validate (HMAC, revocable) at `/s/[token]`
+- [x] 2.2 Magic-link token mint/validate (HMAC, revocable) at `/s/[token]` — `lib/storyteller/token.ts` (Web Crypto HMAC; store only the hash; fail-closed validate; revoke). `/s/[token]` validates and welcomes (or shows a calm dead-link screen); `api/storyteller/answer` gates on the token. Admin mint/revoke buttons on `/storytellers` (raw URL shown once). Round-trip incl. tamper + revoke verified against the DB. Needs `STORYTELLER_TOKEN_SECRET` as a Cloudflare Worker secret for live use.
 - [ ] 2.3 Seven-screen flow (notification→welcome→question→answer→follow-up→answer→done)
 - [ ] 2.4 Mic priming + denial recovery; emit mic-failed signal + SMS to admin
 - [ ] 2.5 Audio capture → private Storage; `api/storyteller/answer` writes via service role

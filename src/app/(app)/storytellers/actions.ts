@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Pronouns = Database["public"]["Enums"]["pronoun_set"];
@@ -137,6 +138,55 @@ export async function updateMyRelationship(formData: FormData) {
   );
   if (error) throw error;
 
+  revalidatePath("/storytellers");
+  redirect("/storytellers");
+}
+
+// Mint a recording link (magic-link token) for a storyteller. We authorize via
+// the RLS-scoped SSR client first (the storyteller must be visible to this admin
+// in the active family), THEN mint with the service role. The raw token is shown
+// to the admin ONCE — we only ever persist its hash — so it rides back on the
+// redirect's ?link= param for a single copy.
+export async function createRecordingLink(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const storytellerId = String(formData.get("storyteller_id") ?? "");
+  if (!storytellerId) return;
+
+  const sb = await supabaseServer();
+  const { data: storyteller } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!storyteller) return; // not visible to this admin → refuse
+
+  const token = await mintStorytellerToken(storytellerId, active.family_id);
+  revalidatePath("/storytellers");
+  if (!token) redirect("/storytellers?error=link"); // secret unset / mint failed
+  redirect(`/storytellers?link=${encodeURIComponent(token)}&for=${storytellerId}`);
+}
+
+// Revoke all active recording links for a storyteller (same authorization path).
+export async function revokeRecordingLinks(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const storytellerId = String(formData.get("storyteller_id") ?? "");
+  if (!storytellerId) return;
+
+  const sb = await supabaseServer();
+  const { data: storyteller } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!storyteller) return;
+
+  await revokeStorytellerTokens(storytellerId);
   revalidatePath("/storytellers");
   redirect("/storytellers");
 }
