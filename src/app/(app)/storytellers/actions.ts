@@ -144,9 +144,9 @@ export async function updateMyRelationship(formData: FormData) {
 
 // Mint a recording link (magic-link token) for a storyteller. We authorize via
 // the RLS-scoped SSR client first (the storyteller must be visible to this admin
-// in the active family), THEN mint with the service role. The raw token is shown
-// to the admin ONCE — we only ever persist its hash — so it rides back on the
-// redirect's ?link= param for a single copy.
+// in the active family), THEN mint with the service role. The token is stored
+// both hashed (for validation) and encrypted-at-rest (for re-display), so the
+// page renders the shareable URL persistently — no one-time ?link= round-trip.
 export async function createRecordingLink(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;
@@ -166,7 +166,7 @@ export async function createRecordingLink(formData: FormData) {
   const token = await mintStorytellerToken(storytellerId, active.family_id);
   revalidatePath("/storytellers");
   if (!token) redirect("/storytellers?error=link"); // secret unset / mint failed
-  redirect(`/storytellers?link=${encodeURIComponent(token)}&for=${storytellerId}`);
+  redirect("/storytellers");
 }
 
 // Revoke all active recording links for a storyteller (same authorization path).

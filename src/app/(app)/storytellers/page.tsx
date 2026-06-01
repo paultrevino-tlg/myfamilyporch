@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { decryptToken } from "@/lib/storyteller/crypto";
 import {
   createStoryteller,
   updateStoryteller,
@@ -37,7 +38,7 @@ const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
 export default async function StorytellersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ link?: string; for?: string; error?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
@@ -63,26 +64,35 @@ export default async function StorytellersPage({
     .order("created_at", { ascending: true });
 
   // Active (un-revoked) recording links per storyteller — readable via tok_select
-  // RLS. We only store hashes, so we can show status/usage, never the raw URL.
+  // RLS. Newest-first so the first decryptable token_enc wins as the shareable
+  // URL. Legacy rows (token_enc null, minted before migration 0004) still count
+  // and validate, but can't be re-displayed — the UI prompts to regenerate.
   const { data: tokenRows } = await sb
     .from("storyteller_tokens")
-    .select("storyteller_id,last_used_at")
+    .select("storyteller_id,created_at,last_used_at,token_enc")
     .eq("family_id", active.family_id)
-    .is("revoked_at", null);
-  const linkStatus = new Map<string, { count: number; lastUsed: string | null }>();
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false });
+
+  // Origin for building the full /s/<token> URL from a decrypted token.
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+
+  type LinkInfo = { count: number; lastUsed: string | null; url: string | null };
+  const linkStatus = new Map<string, LinkInfo>();
   for (const t of tokenRows ?? []) {
-    const cur = linkStatus.get(t.storyteller_id) ?? { count: 0, lastUsed: null };
+    const cur = linkStatus.get(t.storyteller_id) ?? { count: 0, lastUsed: null, url: null };
     cur.count += 1;
     if (t.last_used_at && (!cur.lastUsed || t.last_used_at > cur.lastUsed)) {
       cur.lastUsed = t.last_used_at;
     }
+    // Decrypt the newest link that has an encrypted copy → the shareable URL.
+    if (!cur.url && t.token_enc) {
+      const raw = await decryptToken(t.token_enc);
+      if (raw) cur.url = `${origin}/s/${raw}`;
+    }
     linkStatus.set(t.storyteller_id, cur);
   }
-
-  // Build the full /s/<token> URL once, only for the storyteller just minted.
-  const h = await headers();
-  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
-  const mintedUrl = sp.link ? `${origin}/s/${sp.link}` : null;
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -245,52 +255,62 @@ export default async function StorytellersPage({
                 </div>
               )}
 
-              {/* Recording link (magic-link token). Status visible to all;
-                  mint/revoke admin-only. The raw URL shows once, right after mint. */}
+              {/* Recording link (magic-link token). Status + shareable URL
+                  visible to all members; mint/revoke admin-only. The URL is
+                  rebuilt each visit from the encrypted-at-rest token copy. */}
               <div className="mt-3 border-t pt-3 text-sm">
                 {(() => {
                   const status = linkStatus.get(s.id);
                   return (
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-ink/60">
-                        {status
-                          ? `${status.count} active link${status.count === 1 ? "" : "s"}` +
-                            (status.lastUsed
-                              ? ` · last opened ${new Date(status.lastUsed).toLocaleDateString()}`
-                              : " · not opened yet")
-                          : "No recording link yet"}
-                      </span>
-                      {canManage && (
-                        <span className="flex gap-3">
-                          <form action={createRecordingLink}>
-                            <input type="hidden" name="storyteller_id" value={s.id} />
-                            <button type="submit" className="text-ink/70 underline">
-                              Create recording link
-                            </button>
-                          </form>
-                          {status && (
-                            <form action={revokeRecordingLinks}>
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-ink/60">
+                          {status
+                            ? `${status.count} active link${status.count === 1 ? "" : "s"}` +
+                              (status.lastUsed
+                                ? ` · last opened ${new Date(status.lastUsed).toLocaleDateString()}`
+                                : " · not opened yet")
+                            : "No recording link yet"}
+                        </span>
+                        {canManage && (
+                          <span className="flex gap-3">
+                            <form action={createRecordingLink}>
                               <input type="hidden" name="storyteller_id" value={s.id} />
-                              <button type="submit" className="text-red-600 underline">
-                                Revoke links
+                              <button type="submit" className="text-ink/70 underline">
+                                {status ? "New link" : "Create recording link"}
                               </button>
                             </form>
-                          )}
-                        </span>
+                            {status && (
+                              <form action={revokeRecordingLinks}>
+                                <input type="hidden" name="storyteller_id" value={s.id} />
+                                <button type="submit" className="text-red-600 underline">
+                                  Revoke links
+                                </button>
+                              </form>
+                            )}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Shareable URL — always shown when we can rebuild it. */}
+                      {status?.url && (
+                        <div className="mt-2 rounded-lg bg-black/[0.03] p-3">
+                          <p className="text-ink/60">Recording link for {s.name}:</p>
+                          <code className="mt-1 block break-all text-ink">{status.url}</code>
+                        </div>
                       )}
-                    </div>
+
+                      {/* Legacy link (hash-only) — can't be re-displayed. */}
+                      {status && !status.url && (
+                        <div className="mt-2 rounded-lg bg-amber-50 p-3 text-ink/70">
+                          {canManage
+                            ? `This link predates shareable URLs. Tap “New link” to get a copyable URL for ${s.name}.`
+                            : `An admin can create a shareable link for ${s.name}.`}
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
-
-                {mintedUrl && sp.for === s.id && (
-                  <div className="mt-2 rounded-lg bg-amber-50 p-3">
-                    <p className="text-ink/70">
-                      Copy this link now — for {s.name}&apos;s privacy it won&apos;t be shown
-                      again:
-                    </p>
-                    <code className="mt-1 block break-all text-ink">{mintedUrl}</code>
-                  </div>
-                )}
               </div>
             </div>
           );

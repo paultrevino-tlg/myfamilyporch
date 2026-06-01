@@ -7,22 +7,11 @@
 // SERVER-ONLY: uses the service-role client (bypasses RLS) and the app secret.
 // Never import this into a client component.
 import { supabaseService } from "@/lib/supabase/service";
+import { utf8, toBase64Url, encryptToken } from "./crypto";
 
 // --- Web Crypto helpers (mirrors lib/webhooks/standard-webhooks.ts) ----------
-
-function utf8(s: string): Uint8Array<ArrayBuffer> {
-  const enc = new TextEncoder().encode(s);
-  const bytes = new Uint8Array(new ArrayBuffer(enc.byteLength));
-  bytes.set(enc);
-  return bytes;
-}
-
-function toBase64Url(buf: ArrayBuffer): string {
-  const bytes = new Uint8Array(buf);
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+// Shared primitives (utf8/base64url) and the AES encrypt/decrypt live in
+// ./crypto so the storyteller page can import them without the service client.
 
 // HMAC-SHA256(secret, token) → base64url. Returns null if the secret is unset,
 // so callers fail CLOSED rather than minting/validating with a missing key.
@@ -62,12 +51,17 @@ export async function mintStorytellerToken(
   const raw = toBase64Url(crypto.getRandomValues(new Uint8Array(32)).buffer);
   const token_hash = await hmac(raw);
   if (!token_hash) return null;
+  // Encrypted-at-rest copy so the shareable URL can be re-displayed later (the
+  // hash alone is one-way). Null only if the secret is unset, but we already
+  // proved it's set by computing token_hash above.
+  const token_enc = await encryptToken(raw);
 
   const db = supabaseService();
   const { error } = await db.from("storyteller_tokens").insert({
     family_id: familyId,
     storyteller_id: storytellerId,
     token_hash,
+    token_enc,
   });
   if (error) throw error;
   return raw;

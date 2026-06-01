@@ -464,6 +464,7 @@ export type Database = {
           last_used_at: string | null
           revoked_at: string | null
           storyteller_id: string
+          token_enc: string | null
           token_hash: string
         }
         Insert: {
@@ -473,6 +474,7 @@ export type Database = {
           last_used_at?: string | null
           revoked_at?: string | null
           storyteller_id: string
+          token_enc?: string | null
           token_hash: string
         }
         Update: {
@@ -482,6 +484,7 @@ export type Database = {
           last_used_at?: string | null
           revoked_at?: string | null
           storyteller_id?: string
+          token_enc?: string | null
           token_hash?: string
         }
         Relationships: [
