@@ -19,7 +19,7 @@ spec. Each phase should leave the app building and deployable.
 - [x] 1.1 Supabase Auth (passwordless/email) for family members — magic-link via Supabase Send Email hook → EmailJS (branded template); verified end-to-end (link → /dashboard → sign-out). Deliverability hardening (authenticated sending domain) tracked separately.
 - [x] 1.2 `create_family` onboarding (caller becomes owner) — no-family members are routed to `/onboarding`; name form calls the `create_family` RPC (security-definer, makes caller owner) via a server action, then lands on `/dashboard`
 - [x] 1.3 Family switcher; invitations + accept; roles (owner/admin/viewer) — active-family cookie + switcher; admins invite by email (EmailJS) → `/invite/[token]` accept via `accept_invitation` security-definer RPC (migration `0002`); login/callback honor a safe `?next`
-- [ ] 1.4 Verify RLS: a member of family A cannot read family B (write a test)
+- [x] 1.4 Verify RLS: a member of family A cannot read family B — `supabase/tests/rls_tenancy.test.sql` (impersonates authenticated users via JWT claims; asserts cross-family read+write isolation; runs in BEGIN…ROLLBACK). Passed against the linked project; a negative-control run confirms the assertions actually fire.
 
 ## Phase 2 — Storyteller surface
 → read: SPEC § Storyteller onboarding & auth, Storyteller session flow, Localization, Elder-facing UX · prototype `docs/prototypes/storyteller-flow.html`
