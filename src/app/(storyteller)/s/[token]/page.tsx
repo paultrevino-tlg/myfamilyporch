@@ -1,9 +1,10 @@
 import { validateStorytellerToken } from "@/lib/storyteller/token";
+import SessionFlow from "./SessionFlow";
 
 // Token-scoped storyteller flow. No login — the token in the URL is validated
-// server-side (HMAC → storyteller_tokens). This page is the entry to the
-// 7-screen voice flow. TODO 2.3 builds the full flow; for now it confirms the
-// link is valid and welcomes the storyteller, or fails soft on a dead link.
+// server-side (HMAC → storyteller_tokens). On a valid link we hand the resolved
+// session to the client state machine (SessionFlow, TODO 2.3); on a dead link
+// we fail soft and point to a human — never scold, never strand.
 export default async function StorytellerSession({
   params,
 }: {
@@ -27,19 +28,5 @@ export default async function StorytellerSession({
     );
   }
 
-  const es = session.language === "es";
-  return (
-    <main className="flex min-h-screen items-center justify-center p-6 text-center">
-      <div className="max-w-sm">
-        <p className="text-lg text-ink/60">{es ? "Hola" : "Hello"}</p>
-        <p className="mt-2 text-3xl font-semibold">{session.name}</p>
-        <p className="mt-4 text-lg text-ink/70">
-          {es
-            ? "Es un buen momento para contar una historia."
-            : "It's a good moment to tell a story."}
-        </p>
-        {/* TODO 2.3: prime mic → welcome → question (cloned voice) → record → AI follow-up → done */}
-      </div>
-    </main>
-  );
+  return <SessionFlow name={session.name} language={session.language} />;
 }
