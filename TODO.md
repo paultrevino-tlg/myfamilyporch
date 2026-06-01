@@ -46,7 +46,8 @@ spec. Each phase should leave the app building and deployable.
 ## Phase 5 — Family/admin dashboard
 → read: SPEC § Admin dashboard surfaces · prototype `docs/prototypes/family-admin.html`
 - [ ] 5.1 Overview (status cards + recent stories)
-- [ ] 5.2 Stories review (audio + transcript + follow-up thread + edit + in-book + photo)
+- [ ] 5.2 Stories review (audio + transcript + follow-up thread + edit + in-book + photo) — audio playback serves the already-stored private recording (`answers.audio_path`) via short-lived **signed URLs** minted server-side, gated by an RLS membership read (any role can listen; viewer = hear+read). No new capture/schema; the recording is already stored + linked to the answer.
+  - [ ] 5.2a Deletion cascade for media: when an answer/story is deleted (or a session/storyteller/family is removed), delete the corresponding `story-audio` Storage object(s) so we never orphan private recordings. DB cascades remove the `answers` rows but NOT Storage objects, so this needs an explicit cleanup path (service-role `storage.remove` on delete, or a trigger/edge function). Privacy-relevant — a "delete the story" must actually erase the voice file.
 - [ ] 5.3 Topics steering (focus/ease-off/avoid)
 - [ ] 5.4 Schedule (days/time/quiet hours/pause/ask-now)
 - [ ] 5.5 Settings (numbers, voice, family access)
