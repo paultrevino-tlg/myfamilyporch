@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, getFamilies, roleAtLeast } from "@/lib/auth";
 import { createInvitation, switchFamily } from "../actions";
@@ -66,8 +67,32 @@ export default async function Dashboard() {
 
       {/* TODO 5.1: status cards + 3 signals + recent stories */}
       <section className="mt-8">
-        <h2 className="font-medium text-lg">Storytellers</h2>
-        <pre className="mt-2 text-sm text-ink/60">{JSON.stringify(storytellers ?? [], null, 2)}</pre>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-lg">Storytellers</h2>
+          <Link href="/storytellers" className="text-sm text-ink/60 underline">
+            Manage storytellers
+          </Link>
+        </div>
+        <ul className="mt-3 space-y-2">
+          {(storytellers ?? []).map((s) => (
+            <li key={s.id} className="rounded-lg border px-3 py-2 text-sm">
+              {s.name}
+              <span className="text-ink/50">
+                {" · "}
+                {s.language === "es" ? "Español" : "English"}
+              </span>
+            </li>
+          ))}
+          {(storytellers ?? []).length === 0 && (
+            <li className="text-sm text-ink/50">
+              No storytellers yet.{" "}
+              <Link href="/storytellers" className="underline">
+                Add one
+              </Link>
+              .
+            </li>
+          )}
+        </ul>
       </section>
 
       {/* Family access (TODO 1.3). Full Settings surface lands in Phase 5.5. */}
