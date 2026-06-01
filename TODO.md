@@ -67,23 +67,35 @@ spec. Each phase should leave the app building and deployable.
 - [ ] 7.4 Optional English translation view of Spanish transcripts
 
 ## Phase 8 — Public marketing site & signup funnel
-→ read: SPEC § Marketing, signup & billing · placeholder `src/app/(marketing)/page.tsx`
-English only for v1; bilingual marketing is deferred.
-- [ ] 8.1 Marketing shell: nav + footer + legal links; OG/SEO metadata; shared layout
-- [ ] 8.2 Landing page (hero, how-it-works, sample story, social proof)
-- [ ] 8.3 Pricing page (tier cards + one-time book add-on → CTA)
-- [ ] 8.4 FAQ + legal/contact pages (privacy, terms, contact)
-- [ ] 8.5 Signup CTA → Stripe Checkout → on success run `create_family` onboarding → dashboard
+→ read: SPEC § Marketing, signup & billing · `myfamilyporch-website-brief.md` (full brief) · placeholder `src/app/(marketing)/page.tsx`
+English only for v1; bilingual marketing is deferred. **Built in Next under
+`src/app/(marketing)`**, reusing app brand tokens/fonts — the brief's
+Astro/Cloudflare-Pages recommendation is **overridden** (decided 2026-06-01: one
+codebase + one deploy, app stays on the apex). Confirm with the owner before
+finalizing (brief §1, §13): pricing/tiers, prompt cadence, keepsake format, real
+testimonials, real photos, email provider, final CTA destination.
+- [ ] 8.1 Marketing shell + SEO wrapper: sticky nav (How-it-works/Pricing/Stories/FAQ + CTA, mobile hamburger), footer (link columns + privacy reassurance), skip-to-content, shared container/spacing tokens; per-page title/description + OG/Twitter cards (brief §3, §8)
+- [ ] 8.2 Landing page sections: hero, the-problem-gently, how-it-works (3 steps), why-voice-matters, what-you-get, social proof, pricing, FAQ, final CTA band; thread the "porch" motif (brief §4, §5)
+- [ ] 8.3 Pricing page (tier cards + one-time book add-on + gift option, recommended plan highlighted → CTA) (brief §4.7)
+- [ ] 8.4 FAQ + legal/contact pages — privacy/terms must spell out how voice recordings are stored, who can access them, and that they're never sold; contact/help (brief §4, §10)
+- [ ] 8.5 Signup CTA → Stripe Checkout → on success run `create_family` onboarding → dashboard (CTA target = `APP_BASE_URL` from config, no hardcoded URLs)
+- [ ] 8.6 `/how-it-works` (expanded), `/stories` or `/about` (brand story — "why the porch"), and a custom on-brand 404 (brief §4)
+- [ ] 8.7 `/gift` gifting landing page (gifting is a primary use case) → Gift CTA into the gift flow (brief §1, §4, §7; gift purchase itself is 9.7)
+- [ ] 8.8 Email capture for not-ready visitors (name+email, validation, honeypot, loading/success/error) → Worker route + email provider; `.dev.vars.example` (brief §7)
+- [ ] 8.9 Brand assets: wordmark/logo SVG + porch mark, favicon set, OG/social image (1200×630), hero/section illustrations + phone & keepsake mockups (brief §6)
+- [ ] 8.10 SEO files + structured data: `sitemap.xml`, `robots.txt`, JSON-LD (Organization/FAQ/Product-Offer), canonical URLs, meaningful alt text (brief §8)
+- [ ] 8.11 Performance & a11y pass: Lighthouse 90+ mobile, no layout shift (size/preload LCP), WCAG AA (AAA body text), `prefers-reduced-motion`, responsive 320–1440px, no console errors (brief §9, §12)
 
 ## Phase 9 — Subscriptions & billing
 → read: SPEC § Marketing, signup & billing · SPEC § Multi-tenancy & roles
 Pay-during-signup; subscription (tiered) + one-time book add-on; owner holds billing.
-- [ ] 9.1 Stripe products/prices: subscription tiers + one-time book add-on; env + webhook secret on Cloudflare
+- [ ] 9.1 Stripe products/prices: subscription tiers + one-time book add-on + gift SKU; env + webhook secret on Cloudflare (exact tiers/pricing pending owner confirmation — brief §1)
 - [ ] 9.2 Checkout session from pricing/signup CTA (creates customer, ties to `family_id`/owner)
 - [ ] 9.3 Webhook handler → persist subscription + entitlement state on the family (migration)
 - [ ] 9.4 Billing portal (owner-only: upgrade/downgrade/cancel/update card)
 - [ ] 9.5 Feature gating from entitlement state (block dashboard/interviews when unpaid) + optional trial
 - [ ] 9.6 One-time book add-on checkout wired to the keepsake export (Phase 7)
+- [ ] 9.7 Gift purchase + redemption: one-time gift checkout (from `/gift`, 8.7) mints a redeemable code/link; recipient redeems → runs `create_family` onboarding → becomes owner; gift payment tied to the redeeming family (brief §1, §4, §7)
 
 ## Phase 10 — Launch hardening
 - [ ] 10.1 Resend transactional + billing email (migrate off EmailJS where appropriate)
