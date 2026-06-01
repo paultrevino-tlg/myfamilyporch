@@ -32,7 +32,7 @@ spec. Each phase should leave the app building and deployable.
 
 ## Phase 3 — The AI interview loop
 → read: SPEC § The AI interview loop, Multi-generation relationship model
-- [ ] 3.1 Session assembly: resolve prompt tokens from storyteller + relationship
+- [x] 3.1 Session assembly: resolve prompt tokens from storyteller + relationship — `lib/ai/assembly.ts` (server-only, service role) builds the `RelationshipContext` from the storyteller + interviewer relationship (prefers `is_interviewer`), picks a warm-up-first, not-already-asked prompt in the storyteller language, skips `{partner}`/`{asker_parent}` prompts (no data source yet → 3.3), and resolves tokens via `interviewer.resolveTokens`. `/s/[token]` assembles server-side and hands `address`/`question`/`promptId` to `SessionFlow` (greets by address term, shows the real opening question, sends `question_text`+`prompt_id` on the opening answer; null → placeholders, never dead-ends). `answer` route stores a UUID-validated `prompt_id`. Verified: type-check clean; selection query against the linked DB returns warm-ups first for a real storyteller; `resolveTokens` resolves `{address}/{name}/{they}/{them}/{their}` correctly for a `he_him` context.
 - [ ] 3.2 `api/ai/interview`: generate a natural follow-up from answer + coverage
 - [ ] 3.3 Topic weighting + `applies_to` gating + emotional-weight pacing/avoid rules
 - [ ] 3.4 STT transcription (incl. code-switching tolerance)
