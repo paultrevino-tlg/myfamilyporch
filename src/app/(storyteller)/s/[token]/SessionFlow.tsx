@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { t, type Lang } from "@/lib/i18n";
 
 // The storyteller's voice session as a client-side state machine. Matches
@@ -12,10 +12,11 @@ import { t, type Lang } from "@/lib/i18n";
 // always a forgiving exit, never a dead-end. See SPEC § Elder-facing UX.
 //
 // SEAMS for later tasks — kept deliberately inert here:
-//  - Real audio capture + answer write (api/storyteller/answer) → 2.5
 //  - Real question + AI follow-up text (placeholders for now) → 3.1 / 3.2
 //  - Cloned-voice playback (the voice chip is visual only) → 4.2
 //  - {address} term resolution (we greet by name for now) → 3.1
+// LIVE as of 2.5: the two "Your turn" screens record real audio and upload it to
+// api/storyteller/answer, which stores it privately and writes the answer row.
 
 type Step =
   | "welcome"
@@ -41,28 +42,75 @@ export default function SessionFlow({
   const [step, setStep] = useState<Step>("welcome");
   const tr = (key: string, vars?: Record<string, string>) => t(lang, key, vars);
 
+  // The captured answers ground in a session and thread together. The first
+  // answer's POST returns these; later answers send them back so the follow-up
+  // links to its parent and reuses the same session.
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [firstAnswerId, setFirstAnswerId] = useState<string | null>(null);
+
+  // Mic-failed beacon (TODO 2.4). Fire-and-forget; the elder's flow never waits
+  // on it. Used both when priming is denied and if capture later fails to start.
+  function beaconMicFailed() {
+    setStep("denied");
+    try {
+      void fetch("/api/storyteller/mic-failed", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token, user_agent: navigator.userAgent }),
+        keepalive: true,
+      });
+    } catch {
+      // ignore — best effort
+    }
+  }
+
   // Prime the mic (TODO 2.4). iOS gives one clean shot, so we ask only after the
   // friendly priming screen. On grant we stop the tracks immediately — real
-  // capture is wired in 2.5 — and proceed. On denial/failure we drop to the calm
-  // recovery screen and beacon a mic-failed signal (fail-soft; UI never waits).
+  // capture re-acquires per answer screen (2.5) — and proceed. On denial we drop
+  // to the calm recovery screen and beacon a mic-failed signal.
   async function requestMic() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((tk) => tk.stop());
       setStep("question");
     } catch {
-      setStep("denied");
-      // Fire-and-forget; the elder's flow does not depend on this.
-      try {
-        void fetch("/api/storyteller/mic-failed", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ token, user_agent: navigator.userAgent }),
-          keepalive: true,
-        });
-      } catch {
-        // ignore — best effort
+      beaconMicFailed();
+    }
+  }
+
+  // Upload one captured answer to the service-role route (TODO 2.5). Fail-soft:
+  // a null/empty blob (skip, or capture that never started) uploads nothing, and
+  // a network/server error never strands the elder — we log and let them move on.
+  async function uploadAnswer(
+    blob: Blob | null,
+    durationSec: number,
+    opts: { isFollowup: boolean; isFinal: boolean },
+  ) {
+    if (!blob || blob.size === 0) return;
+    const fd = new FormData();
+    fd.set("token", token);
+    fd.set("audio", blob, `answer.${blob.type.includes("mp4") ? "mp4" : "webm"}`);
+    fd.set("is_followup", String(opts.isFollowup));
+    fd.set("final", String(opts.isFinal));
+    fd.set("lang", lang);
+    fd.set("duration_sec", String(durationSec));
+    fd.set(
+      "question_text",
+      opts.isFollowup ? tr("follow_placeholder") : tr("q_placeholder"),
+    );
+    if (sessionId) fd.set("session_id", sessionId);
+    if (opts.isFollowup && firstAnswerId) fd.set("parent_answer_id", firstAnswerId);
+    try {
+      const res = await fetch("/api/storyteller/answer", { method: "POST", body: fd });
+      if (res.ok) {
+        const data = (await res.json()) as { session_id?: string; answer_id?: string };
+        if (data.session_id) setSessionId(data.session_id);
+        if (!opts.isFollowup && data.answer_id) setFirstAnswerId(data.answer_id);
+      } else {
+        console.error("[storyteller] answer upload rejected", res.status);
       }
+    } catch (e) {
+      console.error("[storyteller] answer upload failed", e);
     }
   }
 
@@ -131,7 +179,12 @@ export default function SessionFlow({
             title={tr("your_turn")}
             hint={tr("take_time")}
             finishedLabel={tr("finished")}
-            onFinished={() => setStep("followup")}
+            savingLabel={tr("saving")}
+            onMicFail={beaconMicFailed}
+            onFinished={async (blob, dur) => {
+              await uploadAnswer(blob, dur, { isFollowup: false, isFinal: false });
+              setStep("followup");
+            }}
             skipLabel={tr("skip")}
             onSkip={() => setStep("done")}
           />
@@ -156,7 +209,12 @@ export default function SessionFlow({
             title={tr("your_turn_again")}
             hint={tr("no_rush")}
             finishedLabel={tr("finished")}
-            onFinished={() => setStep("done")}
+            savingLabel={tr("saving")}
+            onMicFail={beaconMicFailed}
+            onFinished={async (blob, dur) => {
+              await uploadAnswer(blob, dur, { isFollowup: true, isFinal: true });
+              setStep("done");
+            }}
           />
         )}
 
@@ -185,14 +243,29 @@ export default function SessionFlow({
 }
 
 // --- Answer screen (shared so the two "Your turn" steps are identical) --------
-// Radical consistency keeps it effortless. Recording itself is wired in 2.4/2.5.
+// Radical consistency keeps it effortless. Records real audio (2.5): the mic was
+// already granted at priming (2.4), so re-acquiring a stream here is silent. We
+// start a MediaRecorder on mount and stop+hand back the blob on "I'm finished".
+
+// Pick a container/codec the browser actually records. iOS Safari records
+// audio/mp4; Chromium prefers webm/opus. Empty string → let the UA choose.
+function pickRecorderMime(): string {
+  if (typeof MediaRecorder === "undefined") return "";
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
+  for (const c of candidates) {
+    if (MediaRecorder.isTypeSupported(c)) return c;
+  }
+  return "";
+}
 
 function AnswerScreen({
   listening,
   title,
   hint,
   finishedLabel,
+  savingLabel,
   onFinished,
+  onMicFail,
   skipLabel,
   onSkip,
 }: {
@@ -200,10 +273,114 @@ function AnswerScreen({
   title: string;
   hint: string;
   finishedLabel: string;
-  onFinished: () => void;
+  savingLabel: string;
+  onFinished: (blob: Blob | null, durationSec: number) => void | Promise<void>;
+  onMicFail: () => void;
   skipLabel?: string;
   onSkip?: () => void;
 }) {
+  const [saving, setSaving] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef<number>(0);
+
+  function stopTracks() {
+    streamRef.current?.getTracks().forEach((tk) => tk.stop());
+    streamRef.current = null;
+  }
+
+  // Begin capture as soon as the screen appears; tear down on leave.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (cancelled) {
+          stream.getTracks().forEach((tk) => tk.stop());
+          return;
+        }
+        streamRef.current = stream;
+        const mime = pickRecorderMime();
+        const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        chunksRef.current = [];
+        rec.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+        };
+        rec.start();
+        startedAtRef.current = Date.now();
+        recorderRef.current = rec;
+      } catch {
+        // Mic was granted at priming but is unavailable now — fall to recovery.
+        if (!cancelled) onMicFail();
+      }
+    })();
+    return () => {
+      cancelled = true;
+      try {
+        if (recorderRef.current && recorderRef.current.state !== "inactive") {
+          recorderRef.current.stop();
+        }
+      } catch {
+        // ignore
+      }
+      stopTracks();
+    };
+    // Mount once per answer screen; deps intentionally empty.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Stop the recorder and resolve with the assembled clip + its length.
+  function stopRecording(): Promise<{ blob: Blob | null; durationSec: number }> {
+    return new Promise((resolve) => {
+      const rec = recorderRef.current;
+      const durationSec = startedAtRef.current
+        ? Math.round((Date.now() - startedAtRef.current) / 1000)
+        : 0;
+      if (!rec || rec.state === "inactive") {
+        resolve({ blob: null, durationSec });
+        return;
+      }
+      rec.onstop = () => {
+        const type = rec.mimeType || "audio/webm";
+        const blob = chunksRef.current.length
+          ? new Blob(chunksRef.current, { type })
+          : null;
+        resolve({ blob, durationSec });
+      };
+      rec.stop();
+    });
+  }
+
+  async function handleFinished() {
+    setSaving(true);
+    const { blob, durationSec } = await stopRecording();
+    stopTracks();
+    await onFinished(blob, durationSec);
+    // Parent advances the step here, unmounting this screen.
+  }
+
+  function handleSkip() {
+    try {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+    } catch {
+      // ignore
+    }
+    stopTracks();
+    onSkip?.();
+  }
+
+  if (saving) {
+    return (
+      <Screen>
+        <Mic />
+        <DisplayText>{savingLabel}</DisplayText>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Mic />
@@ -211,10 +388,9 @@ function AnswerScreen({
       <DisplayText>{title}</DisplayText>
       <Hint>{hint}</Hint>
       <Spacer />
-      {/* 2.5: capture audio while this screen is up; "I'm finished" stops + uploads. */}
-      <BigButton onClick={onFinished}>{finishedLabel}</BigButton>
+      <BigButton onClick={handleFinished}>{finishedLabel}</BigButton>
       {skipLabel && onSkip && (
-        <QuietButton onClick={onSkip}>{skipLabel}</QuietButton>
+        <QuietButton onClick={handleSkip}>{skipLabel}</QuietButton>
       )}
     </Screen>
   );

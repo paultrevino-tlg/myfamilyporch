@@ -30,6 +30,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     your_turn: "Your turn — just talk.",
     take_time: "Take all the time you need.",
     finished: "I'm finished",
+    saving: "Saving your story…",
     skip: "Skip this one",
     // AI follow-up
     follow_tag: "↳ a question about what you just said",
@@ -67,6 +68,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     your_turn: "Es tu turno — solo habla.",
     take_time: "Tómate todo el tiempo que necesites.",
     finished: "Ya terminé",
+    saving: "Guardando tu historia…",
     skip: "Saltar esta",
     // AI follow-up
     follow_tag: "↳ una pregunta sobre lo que acabas de decir",
