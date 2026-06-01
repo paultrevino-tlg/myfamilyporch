@@ -80,8 +80,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ question: fallback, source: fallback ? "preauthored" : "none" });
 }
 
-// Light coverage signal for the AI (full weighting is TODO 3.3): library
-// categories in the storyteller's language minus the ones already answered.
+// Light coverage signal for the AI: library categories in the storyteller's
+// language minus the ones already answered. The opening-question selector
+// (lib/ai/assembly) carries the full 3.3 gating/pacing/weighting; the follow-up
+// only needs a hint of where there's still ground to cover.
 async function coverageGaps(
   db: ReturnType<typeof supabaseService>,
   storytellerId: string,
