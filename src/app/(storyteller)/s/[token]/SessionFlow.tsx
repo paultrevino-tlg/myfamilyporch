@@ -12,11 +12,13 @@ import { t, type Lang } from "@/lib/i18n";
 // always a forgiving exit, never a dead-end. See SPEC § Elder-facing UX.
 //
 // SEAMS for later tasks — kept deliberately inert here:
-//  - Real question + AI follow-up text (placeholders for now) → 3.1 / 3.2
+//  - AI follow-up text (the second question is still a placeholder) → 3.2
 //  - Cloned-voice playback (the voice chip is visual only) → 4.2
-//  - {address} term resolution (we greet by name for now) → 3.1
 // LIVE as of 2.5: the two "Your turn" screens record real audio and upload it to
 // api/storyteller/answer, which stores it privately and writes the answer row.
+// LIVE as of 3.1: the greeting uses the resolved address term and the opening
+// question is a real library prompt (server-assembled), recorded with its
+// prompt_id. Both fall back to placeholders if assembly returned nothing.
 
 type Step =
   | "welcome"
@@ -33,14 +35,24 @@ export default function SessionFlow({
   token,
   name,
   language,
+  address,
+  question,
+  promptId,
 }: {
   token: string;
   name: string;
   language: string;
+  address?: string | null;
+  question?: string | null;
+  promptId?: string | null;
 }) {
   const lang: Lang = language === "es" ? "es" : "en";
   const [step, setStep] = useState<Step>("welcome");
   const tr = (key: string, vars?: Record<string, string>) => t(lang, key, vars);
+
+  // Resolved from session assembly (3.1); fall back so the flow never blanks.
+  const greetAddress = address || name;
+  const openingQuestion = question || tr("q_placeholder");
 
   // The captured answers ground in a session and thread together. The first
   // answer's POST returns these; later answers send them back so the follow-up
@@ -94,10 +106,14 @@ export default function SessionFlow({
     fd.set("final", String(opts.isFinal));
     fd.set("lang", lang);
     fd.set("duration_sec", String(durationSec));
+    // The opening question is the assembled library prompt (3.1); the follow-up
+    // is still a placeholder until 3.2 generates it. prompt_id rides along for
+    // the opening so the answer row links back to the coverage backbone.
     fd.set(
       "question_text",
-      opts.isFollowup ? tr("follow_placeholder") : tr("q_placeholder"),
+      opts.isFollowup ? tr("follow_placeholder") : openingQuestion,
     );
+    if (!opts.isFollowup && promptId) fd.set("prompt_id", promptId);
     if (sessionId) fd.set("session_id", sessionId);
     if (opts.isFollowup && firstAnswerId) fd.set("parent_answer_id", firstAnswerId);
     try {
@@ -127,7 +143,7 @@ export default function SessionFlow({
         {step === "welcome" && (
           <Screen>
             <Avatar>👋</Avatar>
-            <DisplayText>{tr("greeting", { address: name })}</DisplayText>
+            <DisplayText>{tr("greeting", { address: greetAddress })}</DisplayText>
             <Hint>{tr("welcome_sub")}</Hint>
             <Spacer />
             <BigButton onClick={() => setStep("prime")}>
@@ -170,7 +186,7 @@ export default function SessionFlow({
           <Screen>
             <SpeakingAvatar />
             <Label>{tr("q_label")}</Label>
-            <DisplayText>{tr("q_placeholder")}</DisplayText>
+            <DisplayText>{openingQuestion}</DisplayText>
             <VoiceChip>{tr("voice_chip")}</VoiceChip>
             <Spacer />
             {/* 4.2: question audio plays in the cloned voice; text is the backup channel. */}

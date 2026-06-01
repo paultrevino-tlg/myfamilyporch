@@ -1,4 +1,5 @@
 import { validateStorytellerToken } from "@/lib/storyteller/token";
+import { assembleOpeningQuestion } from "@/lib/ai/assembly";
 import SessionFlow from "./SessionFlow";
 
 // Token-scoped storyteller flow. No login — the token in the URL is validated
@@ -30,11 +31,23 @@ export default async function StorytellerSession({
     );
   }
 
+  // Assemble the opening question: pick a library prompt and resolve its tokens
+  // from the storyteller + interviewer relationship (TODO 3.1). If nothing can be
+  // assembled (no prompts/relationship yet), the flow falls back to its built-in
+  // placeholder — never dead-end the elder.
+  const opening = await assembleOpeningQuestion({
+    storytellerId: session.storyteller_id,
+    familyId: session.family_id,
+  });
+
   return (
     <SessionFlow
       token={token}
       name={session.name}
       language={session.language}
+      address={opening?.address ?? null}
+      question={opening?.questionText ?? null}
+      promptId={opening?.promptId ?? null}
     />
   );
 }

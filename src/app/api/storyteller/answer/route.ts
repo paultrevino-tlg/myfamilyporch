@@ -7,11 +7,16 @@ import { supabaseService } from "@/lib/supabase/service";
 // via the service role. No Supabase Auth here; family_id/storyteller_id come
 // straight from the validated token, never from the client.
 //
-// Seams kept intact: transcript stays null (STT → 3.4); question_text is the
-// asked text the surface showed (real prompt resolution → 3.1/3.2); admin
-// playback mints signed URLs after a membership check (→ 5.2).
+// Seams kept intact: transcript stays null (STT → 3.4); admin playback mints
+// signed URLs after a membership check (→ 5.2). As of 3.1 the opening answer
+// carries the assembled prompt's resolved question_text + prompt_id; the
+// follow-up's text is generated in 3.2.
 
 const BUCKET = "story-audio";
+
+// Accept a prompt_id only if it's a UUID — it labels which library prompt was
+// asked (FK is on delete set null), so a malformed value is dropped, not stored.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Map the recorder's content-type to a file extension for the object key.
 function extFor(contentType: string): string {
@@ -46,6 +51,8 @@ export async function POST(req: NextRequest) {
   const isFinal = String(form.get("final") ?? "") === "true";
   const parentAnswerId = (form.get("parent_answer_id") as string) || null;
   const questionText = (form.get("question_text") as string) || null;
+  const promptIdRaw = (form.get("prompt_id") as string) || "";
+  const promptId = UUID_RE.test(promptIdRaw) ? promptIdRaw : null;
   const lang = (form.get("lang") as string) || session.language || "en";
   const durationRaw = parseInt(String(form.get("duration_sec") ?? ""), 10);
   const durationSec = Number.isFinite(durationRaw) ? durationRaw : null;
@@ -95,6 +102,7 @@ export async function POST(req: NextRequest) {
       family_id: session.family_id,
       storyteller_id: session.storyteller_id,
       session_id: sessionId,
+      prompt_id: promptId,
       parent_answer_id: parentAnswerId,
       is_followup: isFollowup,
       question_text: questionText,
