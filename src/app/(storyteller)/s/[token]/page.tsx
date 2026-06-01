@@ -16,7 +16,9 @@ export default async function StorytellerSession({
   // Forgiving dead-end: never scold, never strand — point to a human.
   if (!session) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6 text-center">
+      // Dead link → the storyteller's language is unknown, so this copy stays
+      // English by design (lang="en"). The live flow renders per-storyteller (2.6).
+      <main lang="en" className="flex min-h-screen items-center justify-center p-6 text-center">
         <div className="max-w-sm">
           <p className="text-2xl">This link isn&apos;t active anymore</p>
           <p className="mt-3 text-lg text-ink/60">

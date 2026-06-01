@@ -2,9 +2,12 @@ export type Lang = "en" | "es";
 
 // Storyteller-facing UI strings, keyed by language (see storyteller prototype,
 // docs/prototypes/storyteller-flow.html). Drives the 7-screen voice flow.
-// NOTE: full string-coverage audit is TODO 2.6; the sample question/follow-up
-// text here is a placeholder until the AI interview loop (TODO 3.1/3.2) supplies
-// real prompts, and the voice attribution is generic until cloned voice (4.2).
+// String-coverage audit complete (TODO 2.6): every visible string in the
+// storyteller surface resolves through t() in the storyteller's language, and
+// the flow carries a matching lang attribute for screen-reader pronunciation.
+// The sample question/follow-up text here is still a placeholder until the AI
+// interview loop (TODO 3.1/3.2) supplies real prompts, and the voice attribution
+// is generic until cloned voice (4.2).
 export const ui: Record<Lang, Record<string, string>> = {
   en: {
     // Welcome

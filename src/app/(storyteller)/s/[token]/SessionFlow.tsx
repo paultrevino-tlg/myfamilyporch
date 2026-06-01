@@ -115,7 +115,14 @@ export default function SessionFlow({
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-10 text-ink">
+    // lang drives screen-reader pronunciation for the whole flow (TODO 2.6).
+    // Assistive tech honors lang on any element and it inherits to descendants,
+    // so the per-storyteller language (en/es) is announced correctly even though
+    // the root <html lang> can't know the token's language.
+    <main
+      lang={lang}
+      className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-10 text-ink"
+    >
       <div className="flex w-full max-w-md flex-1 flex-col">
         {step === "welcome" && (
           <Screen>
