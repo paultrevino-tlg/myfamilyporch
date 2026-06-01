@@ -12,6 +12,14 @@ export const ui: Record<Lang, Record<string, string>> = {
     welcome_sub: "I've got a question for you whenever you're ready.",
     lets_talk: "Let's talk",
     maybe_later: "Maybe later",
+    // Mic priming (prime before the iOS prompt — one clean shot)
+    mic_prime_title: "One quick thing",
+    mic_prime_sub: "So I can hear your story, your phone will ask to use the microphone. Just tap “Allow.”",
+    mic_prime_btn: "OK, I'm ready",
+    // Mic denial recovery (calm, never a dead-end)
+    mic_denied_title: "I couldn't hear the microphone",
+    mic_denied_sub: "No problem at all. In your phone's settings, allow the microphone for this page — then come back and tap below.",
+    mic_retry_btn: "Try again",
     // Question
     q_label: "A question for you",
     q_placeholder: "What was your first car?",
@@ -41,6 +49,14 @@ export const ui: Record<Lang, Record<string, string>> = {
     welcome_sub: "Tengo una pregunta para ti cuando quieras.",
     lets_talk: "Hablemos",
     maybe_later: "Quizás más tarde",
+    // Mic priming (prime before the iOS prompt — one clean shot)
+    mic_prime_title: "Una cosita rápida",
+    mic_prime_sub: "Para escuchar tu historia, tu teléfono te pedirá usar el micrófono. Solo toca “Permitir.”",
+    mic_prime_btn: "Listo, adelante",
+    // Mic denial recovery (calm, never a dead-end)
+    mic_denied_title: "No pude escuchar el micrófono",
+    mic_denied_sub: "No pasa nada. En la configuración de tu teléfono, permite el micrófono para esta página — luego regresa y toca abajo.",
+    mic_retry_btn: "Intentar de nuevo",
     // Question
     q_label: "Una pregunta para ti",
     q_placeholder: "¿Cuál fue tu primer carro?",

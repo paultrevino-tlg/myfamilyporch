@@ -12,7 +12,6 @@ import { t, type Lang } from "@/lib/i18n";
 // always a forgiving exit, never a dead-end. See SPEC § Elder-facing UX.
 //
 // SEAMS for later tasks — kept deliberately inert here:
-//  - Mic priming + denial recovery  → 2.4
 //  - Real audio capture + answer write (api/storyteller/answer) → 2.5
 //  - Real question + AI follow-up text (placeholders for now) → 3.1 / 3.2
 //  - Cloned-voice playback (the voice chip is visual only) → 4.2
@@ -20,6 +19,8 @@ import { t, type Lang } from "@/lib/i18n";
 
 type Step =
   | "welcome"
+  | "prime"
+  | "denied"
   | "question"
   | "answer1"
   | "followup"
@@ -28,15 +29,42 @@ type Step =
   | "closed";
 
 export default function SessionFlow({
+  token,
   name,
   language,
 }: {
+  token: string;
   name: string;
   language: string;
 }) {
   const lang: Lang = language === "es" ? "es" : "en";
   const [step, setStep] = useState<Step>("welcome");
   const tr = (key: string, vars?: Record<string, string>) => t(lang, key, vars);
+
+  // Prime the mic (TODO 2.4). iOS gives one clean shot, so we ask only after the
+  // friendly priming screen. On grant we stop the tracks immediately — real
+  // capture is wired in 2.5 — and proceed. On denial/failure we drop to the calm
+  // recovery screen and beacon a mic-failed signal (fail-soft; UI never waits).
+  async function requestMic() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((tk) => tk.stop());
+      setStep("question");
+    } catch {
+      setStep("denied");
+      // Fire-and-forget; the elder's flow does not depend on this.
+      try {
+        void fetch("/api/storyteller/mic-failed", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token, user_agent: navigator.userAgent }),
+          keepalive: true,
+        });
+      } catch {
+        // ignore — best effort
+      }
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-10 text-ink">
@@ -47,8 +75,35 @@ export default function SessionFlow({
             <DisplayText>{tr("greeting", { address: name })}</DisplayText>
             <Hint>{tr("welcome_sub")}</Hint>
             <Spacer />
-            <BigButton onClick={() => setStep("question")}>
+            <BigButton onClick={() => setStep("prime")}>
               {tr("lets_talk")}
+            </BigButton>
+            <QuietButton onClick={() => setStep("closed")}>
+              {tr("maybe_later")}
+            </QuietButton>
+          </Screen>
+        )}
+
+        {step === "prime" && (
+          <Screen>
+            <Mic />
+            <DisplayText>{tr("mic_prime_title")}</DisplayText>
+            <Hint>{tr("mic_prime_sub")}</Hint>
+            <Spacer />
+            <BigButton accent onClick={requestMic}>
+              {tr("mic_prime_btn")}
+            </BigButton>
+          </Screen>
+        )}
+
+        {step === "denied" && (
+          <Screen>
+            <Avatar>🎤</Avatar>
+            <DisplayText>{tr("mic_denied_title")}</DisplayText>
+            <Hint>{tr("mic_denied_sub")}</Hint>
+            <Spacer />
+            <BigButton accent onClick={requestMic}>
+              {tr("mic_retry_btn")}
             </BigButton>
             <QuietButton onClick={() => setStep("closed")}>
               {tr("maybe_later")}

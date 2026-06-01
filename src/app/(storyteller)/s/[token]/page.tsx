@@ -28,5 +28,11 @@ export default async function StorytellerSession({
     );
   }
 
-  return <SessionFlow name={session.name} language={session.language} />;
+  return (
+    <SessionFlow
+      token={token}
+      name={session.name}
+      language={session.language}
+    />
+  );
 }
