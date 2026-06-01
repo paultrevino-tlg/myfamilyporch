@@ -29,35 +29,39 @@ type Kind = RelationshipContext["kind"];
 // (relationship gating) revisits this once those facts are captured.
 const UNRESOLVABLE_TOKEN = /\{partner\}|\{asker_parent\}/;
 
-export async function assembleOpeningQuestion(args: {
-  storytellerId: string;
-  familyId: string;
-}): Promise<AssembledQuestion | null> {
+// Build the resolved relationship context for a storyteller (TODO 3.1/3.2).
+// SERVER-ONLY. Both the opening-question assembly and the follow-up route
+// (api/ai/interview) derive context here so names/pronouns are always resolved
+// server-side from data — never trusted from the client. Returns null if the
+// storyteller is missing.
+export async function buildRelationshipContext(
+  storytellerId: string,
+): Promise<RelationshipContext | null> {
   const db = supabaseService();
 
-  // 1. The storyteller's shared facts drive name, pronouns, era, and language.
+  // The storyteller's shared facts drive name, pronouns, era, and language.
   const { data: st } = await db
     .from("storytellers")
     .select("name, pronouns, birth_year, language")
-    .eq("id", args.storytellerId)
+    .eq("id", storytellerId)
     .maybeSingle();
   if (!st) return null;
 
   const lang: "en" | "es" = st.language === "es" ? "es" : "en";
 
-  // 2. The interviewer relationship supplies the address term + asker relation.
+  // The interviewer relationship supplies the address term + asker relation.
   // Prefer the member flagged as interviewer; otherwise any relationship row.
   const { data: rels } = await db
     .from("storyteller_relationships")
     .select("address_term, asker_relation, kind, is_interviewer")
-    .eq("storyteller_id", args.storytellerId)
+    .eq("storyteller_id", storytellerId)
     .order("is_interviewer", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(1);
   const rel = rels?.[0] ?? null;
 
   const address = (rel?.address_term ?? st.name) || st.name;
-  const context: RelationshipContext = {
+  return {
     address,
     name: st.name,
     pronouns: (st.pronouns as Pronouns) ?? "they_them",
@@ -66,6 +70,19 @@ export async function assembleOpeningQuestion(args: {
     birthYear: st.birth_year ?? undefined,
     lang,
   };
+}
+
+export async function assembleOpeningQuestion(args: {
+  storytellerId: string;
+  familyId: string;
+}): Promise<AssembledQuestion | null> {
+  const db = supabaseService();
+
+  // 1 & 2. Resolve the relationship context (storyteller facts + interviewer edge).
+  const context = await buildRelationshipContext(args.storytellerId);
+  if (!context) return null;
+  const lang = context.lang;
+  const address = context.address;
 
   // 3. Don't re-ask questions this storyteller has already answered.
   const { data: asked } = await db

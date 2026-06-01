@@ -12,13 +12,15 @@ import { t, type Lang } from "@/lib/i18n";
 // always a forgiving exit, never a dead-end. See SPEC § Elder-facing UX.
 //
 // SEAMS for later tasks — kept deliberately inert here:
-//  - AI follow-up text (the second question is still a placeholder) → 3.2
 //  - Cloned-voice playback (the voice chip is visual only) → 4.2
 // LIVE as of 2.5: the two "Your turn" screens record real audio and upload it to
 // api/storyteller/answer, which stores it privately and writes the answer row.
 // LIVE as of 3.1: the greeting uses the resolved address term and the opening
 // question is a real library prompt (server-assembled), recorded with its
 // prompt_id. Both fall back to placeholders if assembly returned nothing.
+// LIVE as of 3.2: after the opening answer saves, we fetch one follow-up from
+// api/ai/interview (AI once a transcript exists — 3.4 — else a pre-authored
+// follow-up). Falls back to the gentle generic placeholder if nothing returns.
 
 type Step =
   | "welcome"
@@ -53,6 +55,12 @@ export default function SessionFlow({
   // Resolved from session assembly (3.1); fall back so the flow never blanks.
   const greetAddress = address || name;
   const openingQuestion = question || tr("q_placeholder");
+
+  // The follow-up question, fetched from api/ai/interview after the opening
+  // answer is saved (3.2). Null until fetched (or if generation yields nothing) —
+  // the follow-up screen then keeps a gentle generic placeholder.
+  const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
+  const followUpText = followUpQuestion || tr("follow_placeholder");
 
   // The captured answers ground in a session and thread together. The first
   // answer's POST returns these; later answers send them back so the follow-up
@@ -97,8 +105,8 @@ export default function SessionFlow({
     blob: Blob | null,
     durationSec: number,
     opts: { isFollowup: boolean; isFinal: boolean },
-  ) {
-    if (!blob || blob.size === 0) return;
+  ): Promise<string | null> {
+    if (!blob || blob.size === 0) return null;
     const fd = new FormData();
     fd.set("token", token);
     fd.set("audio", blob, `answer.${blob.type.includes("mp4") ? "mp4" : "webm"}`);
@@ -106,13 +114,10 @@ export default function SessionFlow({
     fd.set("final", String(opts.isFinal));
     fd.set("lang", lang);
     fd.set("duration_sec", String(durationSec));
-    // The opening question is the assembled library prompt (3.1); the follow-up
-    // is still a placeholder until 3.2 generates it. prompt_id rides along for
-    // the opening so the answer row links back to the coverage backbone.
-    fd.set(
-      "question_text",
-      opts.isFollowup ? tr("follow_placeholder") : openingQuestion,
-    );
+    // Opening = the assembled library prompt (3.1); follow-up = the question we
+    // fetched from api/ai/interview (3.2). prompt_id rides along for the opening
+    // so the answer row links back to the coverage backbone.
+    fd.set("question_text", opts.isFollowup ? followUpText : openingQuestion);
     if (!opts.isFollowup && promptId) fd.set("prompt_id", promptId);
     if (sessionId) fd.set("session_id", sessionId);
     if (opts.isFollowup && firstAnswerId) fd.set("parent_answer_id", firstAnswerId);
@@ -122,11 +127,32 @@ export default function SessionFlow({
         const data = (await res.json()) as { session_id?: string; answer_id?: string };
         if (data.session_id) setSessionId(data.session_id);
         if (!opts.isFollowup && data.answer_id) setFirstAnswerId(data.answer_id);
-      } else {
-        console.error("[storyteller] answer upload rejected", res.status);
+        return data.answer_id ?? null;
       }
+      console.error("[storyteller] answer upload rejected", res.status);
     } catch (e) {
       console.error("[storyteller] answer upload failed", e);
+    }
+    return null;
+  }
+
+  // Ask the interview brain (3.2) for one natural follow-up to the opening answer.
+  // Fail-soft: any miss leaves followUpQuestion null and the screen shows the
+  // gentle generic placeholder — the elder is never stranded.
+  async function fetchFollowUp(answerId: string | null) {
+    if (!answerId) return;
+    try {
+      const res = await fetch("/api/ai/interview", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token, answer_id: answerId }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { question?: string | null };
+        if (data.question) setFollowUpQuestion(data.question);
+      }
+    } catch (e) {
+      console.error("[storyteller] follow-up fetch failed", e);
     }
   }
 
@@ -205,7 +231,13 @@ export default function SessionFlow({
             savingLabel={tr("saving")}
             onMicFail={beaconMicFailed}
             onFinished={async (blob, dur) => {
-              await uploadAnswer(blob, dur, { isFollowup: false, isFinal: false });
+              const answerId = await uploadAnswer(blob, dur, {
+                isFollowup: false,
+                isFinal: false,
+              });
+              // Generate the follow-up while the "saving" screen is still up, so
+              // it's ready when the follow-up screen appears (no placeholder flash).
+              await fetchFollowUp(answerId);
               setStep("followup");
             }}
             skipLabel={tr("skip")}
@@ -217,7 +249,7 @@ export default function SessionFlow({
           <Screen>
             <SpeakingAvatar />
             <FollowTag>{tr("follow_tag")}</FollowTag>
-            <DisplayText>{tr("follow_placeholder")}</DisplayText>
+            <DisplayText>{followUpText}</DisplayText>
             <VoiceChip>{tr("voice_chip")}</VoiceChip>
             <Spacer />
             <BigButton accent onClick={() => setStep("answer2")}>
