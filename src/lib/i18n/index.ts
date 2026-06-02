@@ -27,6 +27,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     q_label: "A question for you",
     q_placeholder: "What was your first car?",
     voice_chip: "in your family's voice",
+    hear_question: "Tap to hear it",
+    playing_question: "Playing…",
     ready_to_answer: "I'm ready to answer",
     // Your turn
     listening: "Listening",
@@ -65,6 +67,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     q_label: "Una pregunta para ti",
     q_placeholder: "¿Cuál fue tu primer carro?",
     voice_chip: "con la voz de tu familia",
+    hear_question: "Toca para escuchar",
+    playing_question: "Reproduciendo…",
     ready_to_answer: "Estoy listo para responder",
     // Your turn
     listening: "Escuchando",

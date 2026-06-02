@@ -213,9 +213,17 @@ export default function SessionFlow({
             <SpeakingAvatar />
             <Label>{tr("q_label")}</Label>
             <DisplayText>{openingQuestion}</DisplayText>
-            <VoiceChip>{tr("voice_chip")}</VoiceChip>
+            {/* Plays in the interviewer's cloned voice (4.2); the large text above
+                is the backup channel. Falls back to a static chip if no voice. */}
+            <QuestionVoice
+              token={token}
+              text={openingQuestion}
+              lang={lang}
+              chipLabel={tr("voice_chip")}
+              hearLabel={tr("hear_question")}
+              playingLabel={tr("playing_question")}
+            />
             <Spacer />
-            {/* 4.2: question audio plays in the cloned voice; text is the backup channel. */}
             <BigButton accent onClick={() => setStep("answer1")}>
               {tr("ready_to_answer")}
             </BigButton>
@@ -250,7 +258,14 @@ export default function SessionFlow({
             <SpeakingAvatar />
             <FollowTag>{tr("follow_tag")}</FollowTag>
             <DisplayText>{followUpText}</DisplayText>
-            <VoiceChip>{tr("voice_chip")}</VoiceChip>
+            <QuestionVoice
+              token={token}
+              text={followUpText}
+              lang={lang}
+              chipLabel={tr("voice_chip")}
+              hearLabel={tr("hear_question")}
+              playingLabel={tr("playing_question")}
+            />
             <Spacer />
             <BigButton accent onClick={() => setStep("answer2")}>
               {tr("ready_to_answer")}
@@ -503,17 +518,122 @@ function FollowTag({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Animated equalizer bars — the "a voice is speaking" cue, shared by the static
+// chip and the playing state of QuestionVoice.
+function VoiceBars() {
+  return (
+    <span className="flex h-4 items-end gap-0.5" aria-hidden>
+      <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "60%" }} />
+      <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "100%", animationDelay: "0.15s" }} />
+      <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "40%", animationDelay: "0.3s" }} />
+      <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "80%", animationDelay: "0.45s" }} />
+    </span>
+  );
+}
+
 function VoiceChip({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-black/[0.03] px-4 py-2 text-base text-ink/70">
-      <span className="flex h-4 items-end gap-0.5" aria-hidden>
-        <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "60%" }} />
-        <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "100%", animationDelay: "0.15s" }} />
-        <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "40%", animationDelay: "0.3s" }} />
-        <i className="w-1 animate-pulse rounded-sm bg-accent" style={{ height: "80%", animationDelay: "0.45s" }} />
-      </span>
+      <VoiceBars />
       {children}
     </span>
+  );
+}
+
+// Plays the question in the interviewer's cloned voice (TODO 4.2). Fetches the
+// audio from the token-gated api/storyteller/voice when the screen appears,
+// attempts autoplay (iOS blocks gesture-less playback, so this is best-effort),
+// and renders a big tap-to-(re)play chip. The large question text on the screen
+// is the always-present backup channel, so if there's no cloned voice (204) or
+// synthesis fails, we fall back to the static chip and never block the elder.
+function QuestionVoice({
+  token,
+  text,
+  lang,
+  chipLabel,
+  hearLabel,
+  playingLabel,
+}: {
+  token: string;
+  text: string;
+  lang: Lang;
+  chipLabel: string;
+  hearLabel: string;
+  playingLabel: string;
+}) {
+  const [state, setState] = useState<"loading" | "ready" | "playing" | "unavailable">("loading");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setState("loading");
+    (async () => {
+      try {
+        const res = await fetch("/api/storyteller/voice", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token, text, lang }),
+        });
+        if (cancelled) return;
+        if (res.status !== 200) {
+          setState("unavailable"); // 204 (no cloned voice) or error → text only
+          return;
+        }
+        const url = URL.createObjectURL(await res.blob());
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        urlRef.current = url;
+        const audio = new Audio(url);
+        audio.onended = () => setState("ready");
+        audioRef.current = audio;
+        setState("ready");
+        // Best-effort autoplay; on iOS this rejects without a gesture and the
+        // elder taps the chip instead.
+        audio.play().then(() => !cancelled && setState("playing")).catch(() => {});
+      } catch {
+        if (!cancelled) setState("unavailable");
+      }
+    })();
+    return () => {
+      cancelled = true;
+      audioRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+      audioRef.current = null;
+    };
+  }, [token, text, lang]);
+
+  function toggle() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (state === "playing") {
+      audio.pause();
+      audio.currentTime = 0;
+      setState("ready");
+      return;
+    }
+    audio.currentTime = 0;
+    audio.play().then(() => setState("playing")).catch(() => {});
+  }
+
+  // No cloned voice / failed → the static chip; the text above carries the question.
+  if (state === "unavailable") return <VoiceChip>{chipLabel}</VoiceChip>;
+
+  const playing = state === "playing";
+  const label = state === "loading" ? chipLabel : playing ? playingLabel : hearLabel;
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={label}
+      className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-black/[0.03] px-4 py-2 text-base text-ink/70"
+    >
+      {playing ? <VoiceBars /> : <span aria-hidden>🔊</span>}
+      {label}
+    </button>
   );
 }
 
