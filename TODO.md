@@ -39,7 +39,7 @@ spec. Each phase should leave the app building and deployable.
 
 ## Phase 4 — Voice & messaging
 → read: SPEC § Voice, Localization
-- [ ] 4.1 Voice profile setup (ElevenLabs clone) per interviewer; multilingual TTS
+- [x] 4.1 Voice profile setup (ElevenLabs clone) per interviewer; multilingual TTS — `lib/voice/elevenlabs.ts` (server-only): `cloneVoice` (Instant Voice Cloning), `synthesize` (real TTS via `eleven_multilingual_v2` — one cloned voice speaks both en+es), `deleteVoice`. `api/voice/clone` (admin+RLS gated) records the interviewer's in-browser sample (`VoiceSetup.tsx`, reuses the storyteller MediaRecorder pattern), sends it straight to ElevenLabs (no audio persisted — only the returned `voice_id`), inserts `voice_profiles`, and links `storyteller_relationships.voice_profile_id`; cleans up on failure/re-clone. `api/voice/preview` proves multilingual playback; `deleteVoiceProfile` action removes it. Wired into `/storytellers` interviewer section with en/es preview. Verified: type-check clean; live ElevenLabs round-trip (creator tier, IVC enabled) — cloned a voice, synthesized EN+ES mp3 from the same voice, deleted it; lib fails closed without a key; both routes return 403 unauthenticated. **Prod:** `ELEVENLABS_API_KEY` set as a Cloudflare Worker secret. Cloned-voice playback on the storyteller question screen is 4.2.
 - [ ] 4.2 Question playback in the interviewer's cloned voice
 - [ ] 4.3 Twilio SMS nudges (per-storyteller, localized) + deep link
 

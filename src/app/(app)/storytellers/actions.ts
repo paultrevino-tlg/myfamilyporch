@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
+import { deleteVoice } from "@/lib/voice/elevenlabs";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Pronouns = Database["public"]["Enums"]["pronoun_set"];
@@ -187,6 +188,50 @@ export async function revokeRecordingLinks(formData: FormData) {
   if (!storyteller) return;
 
   await revokeStorytellerTokens(storytellerId);
+  revalidatePath("/storytellers");
+  redirect("/storytellers");
+}
+
+// Remove the cloned voice from the caller's interviewer relationship (TODO 4.1):
+// unlink it, delete the ElevenLabs voice, and drop the voice_profiles row. Same
+// admin authorization + RLS scoping as the other actions.
+export async function deleteVoiceProfile(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const storyteller_id = String(formData.get("storyteller_id") ?? "");
+  if (!storyteller_id) return;
+
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: rel } = await sb
+    .from("storyteller_relationships")
+    .select("id, voice_profile_id")
+    .eq("user_id", user.id)
+    .eq("storyteller_id", storyteller_id)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!rel?.voice_profile_id) return;
+
+  const { data: profile } = await sb
+    .from("voice_profiles")
+    .select("provider_voice")
+    .eq("id", rel.voice_profile_id)
+    .maybeSingle();
+
+  // Unlink first so a deleted row never leaves a dangling FK, then clean up the
+  // external voice and the row itself.
+  await sb
+    .from("storyteller_relationships")
+    .update({ voice_profile_id: null })
+    .eq("id", rel.id);
+  if (profile?.provider_voice) await deleteVoice(profile.provider_voice);
+  await sb.from("voice_profiles").delete().eq("id", rel.voice_profile_id);
+
   revalidatePath("/storytellers");
   redirect("/storytellers");
 }

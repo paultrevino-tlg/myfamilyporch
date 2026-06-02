@@ -12,6 +12,7 @@ import {
   createRecordingLink,
   revokeRecordingLinks,
 } from "./actions";
+import VoiceSetup from "./VoiceSetup";
 
 // Storyteller + relationship management (TODO 2.1). RLS scopes every read to the
 // member's families; the active-family cookie picks which one this page shows.
@@ -57,7 +58,7 @@ export default async function StorytellersPage({
   const { data: storytellers } = await sb
     .from("storytellers")
     .select(
-      "id,name,pronouns,birth_year,language,storyteller_relationships(address_term,kind,asker_relation,is_interviewer)",
+      "id,name,pronouns,birth_year,language,storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profile_id,voice_profiles(id,label))",
     )
     .eq("family_id", active.family_id)
     .eq("storyteller_relationships.user_id", user.id)
@@ -125,6 +126,14 @@ export default async function StorytellersPage({
           const rel = Array.isArray(s.storyteller_relationships)
             ? s.storyteller_relationships[0]
             : s.storyteller_relationships;
+          // Embedded to-one voice profile (PostgREST may widen it to an array).
+          const vp = rel
+            ? Array.isArray(rel.voice_profiles)
+              ? rel.voice_profiles[0]
+              : rel.voice_profiles
+            : null;
+          const linkedVoice = vp ? { id: vp.id, label: vp.label } : null;
+          const stLang: "en" | "es" = s.language === "es" ? "es" : "en";
           return (
             <div key={s.id} className="rounded-xl border p-4">
               <div className="flex items-start justify-between gap-4">
@@ -251,6 +260,22 @@ export default async function StorytellersPage({
                         Save
                       </button>
                     </form>
+
+                    {/* Cloned voice for the interviewer (TODO 4.1). Only when the
+                        member has a relationship to this storyteller. */}
+                    {rel && (
+                      <div className="mt-4 border-t pt-3">
+                        <p className="text-ink/70">
+                          Cloned voice — record yourself once; {s.name} hears the
+                          questions in your voice (en &amp; es).
+                        </p>
+                        <VoiceSetup
+                          storytellerId={s.id}
+                          lang={stLang}
+                          linked={linkedVoice}
+                        />
+                      </div>
+                    )}
                   </details>
                 </div>
               )}
