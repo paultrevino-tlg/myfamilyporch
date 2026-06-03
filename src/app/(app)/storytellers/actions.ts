@@ -13,6 +13,7 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
 import { sendStorytellerNudge } from "@/lib/sms/nudge";
 import { deleteVoice } from "@/lib/voice/elevenlabs";
+import { collectStorytellerAudioPaths, removeAudioObjects } from "@/lib/storage/cleanup";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Pronouns = Database["public"]["Enums"]["pronoun_set"];
@@ -273,12 +274,19 @@ export async function deleteVoiceProfile(formData: FormData) {
 }
 
 // Remove a storyteller. Cascades drop their relationships, sessions, answers, etc.
+// DB cascades DON'T touch Storage, so we erase the private recordings first
+// (5.2a) — before the row delete, so a storage failure aborts and never leaves
+// orphaned voice files behind a deleted storyteller.
 export async function deleteStoryteller(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;
 
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+
+  // Erase the storyteller's audio objects, then the row (answers cascade).
+  const paths = await collectStorytellerAudioPaths(active.family_id, id);
+  await removeAudioObjects(paths);
 
   const sb = await supabaseServer();
   const { error } = await sb

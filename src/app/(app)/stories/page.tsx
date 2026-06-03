@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
-import { toggleInBook, editTranscript } from "./actions";
+import { toggleInBook, editTranscript, deleteStory } from "./actions";
 
 // A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp
 // on this elder-adjacent surface. (Mirrors the dashboard's helper.)
@@ -179,6 +179,27 @@ function StoryActions({ story }: { story: Story }) {
             className="mt-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white"
           >
             Save transcript
+          </button>
+        </form>
+      </details>
+
+      {/* Delete erases the recording(s) too (5.2a). Tucked behind a disclosure
+          so it's deliberate, not a one-tap mistake. */}
+      <details className="text-sm">
+        <summary className="cursor-pointer rounded-full border border-red-200 px-3 py-1 text-red-700 hover:bg-red-50">
+          Delete
+        </summary>
+        <form action={deleteStory} className="mt-2">
+          <input type="hidden" name="answer_id" value={story.id} />
+          <p className="text-ink/60">
+            This permanently erases this story, its follow-ups, and the voice
+            recordings. This can&apos;t be undone.
+          </p>
+          <button
+            type="submit"
+            className="mt-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white"
+          >
+            Delete this story
           </button>
         </form>
       </details>
