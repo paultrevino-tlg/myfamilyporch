@@ -80,8 +80,8 @@ export async function createStoryteller(formData: FormData) {
   });
   if (relError) throw relError;
 
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath("/dashboard");
+  redirect(`/storytellers/${storyteller.id}`);
 }
 
 // Update a storyteller's shared facts. Scoped to the active family so a stray id
@@ -107,8 +107,8 @@ export async function updateStoryteller(formData: FormData) {
     .eq("family_id", active.family_id);
   if (error) throw error;
 
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath(`/storytellers/${id}`);
+  redirect(`/storytellers/${id}`);
 }
 
 // Upsert the current member's relationship to a storyteller. The unique
@@ -141,8 +141,8 @@ export async function updateMyRelationship(formData: FormData) {
   );
   if (error) throw error;
 
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath(`/storytellers/${storyteller_id}`);
+  redirect(`/storytellers/${storyteller_id}`);
 }
 
 // Mint a recording link (magic-link token) for a storyteller. We authorize via
@@ -167,9 +167,9 @@ export async function createRecordingLink(formData: FormData) {
   if (!storyteller) return; // not visible to this admin → refuse
 
   const token = await mintStorytellerToken(storytellerId, active.family_id);
-  revalidatePath("/storytellers");
-  if (!token) redirect("/storytellers?error=link"); // secret unset / mint failed
-  redirect("/storytellers");
+  revalidatePath(`/storytellers/${storytellerId}`);
+  if (!token) redirect(`/storytellers/${storytellerId}?error=link`); // secret unset / mint failed
+  redirect(`/storytellers/${storytellerId}`);
 }
 
 // Revoke all active recording links for a storyteller (same authorization path).
@@ -190,8 +190,8 @@ export async function revokeRecordingLinks(formData: FormData) {
   if (!storyteller) return;
 
   await revokeStorytellerTokens(storytellerId);
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}`);
 }
 
 // Send a localized story nudge now (TODO 4.3). Manual "ask now" hook so the SMS
@@ -225,8 +225,8 @@ export async function sendNudge(formData: FormData) {
     flag = "nudge_failed";
   }
 
-  revalidatePath("/storytellers");
-  redirect(`/storytellers?sent=${flag}`);
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}?sent=${flag}`);
 }
 
 // Remove the cloned voice from the caller's interviewer relationship (TODO 4.1):
@@ -269,8 +269,8 @@ export async function deleteVoiceProfile(formData: FormData) {
   if (profile?.provider_voice) await deleteVoice(profile.provider_voice);
   await sb.from("voice_profiles").delete().eq("id", rel.voice_profile_id);
 
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath(`/storytellers/${storyteller_id}`);
+  redirect(`/storytellers/${storyteller_id}`);
 }
 
 // Remove a storyteller. Cascades drop their relationships, sessions, answers, etc.
@@ -296,6 +296,6 @@ export async function deleteStoryteller(formData: FormData) {
     .eq("family_id", active.family_id);
   if (error) throw error;
 
-  revalidatePath("/storytellers");
-  redirect("/storytellers");
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }

@@ -78,29 +78,32 @@ export default async function Dashboard() {
         </div>
       )}
 
-      {/* Overview: status cards + recent stories (TODO 5.1). The 3 signal
-          alerts land in Phase 6; audio playback on Lately is 5.2. */}
-      <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card
-          label="Last session"
-          good={overview.lastSessionFresh}
-          value={overview.lastSessionAt ? relDay(overview.lastSessionAt) : "—"}
-          sub={overview.lastSessionFresh ? "✓" : overview.lastSessionAt ? "" : "none yet"}
-        />
-        <Card
-          label="This week"
-          value={String(overview.thisWeekCount)}
-          sub={overview.weeklyTarget != null ? `of ${overview.weeklyTarget}` : ""}
-        />
-        <Card label="Stories saved" value={String(overview.storiesSaved)} />
-        <Card
-          label="Topics touched"
-          value={String(overview.topicsTouched)}
-          sub={overview.topicsTotal ? `/ ${overview.topicsTotal}` : ""}
-        />
+      {/* Storytellers first: one block per elder with their own metrics, the
+          whole thing a link into their config + answers hub. */}
+      <section className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-lg">Storytellers</h2>
+          <Link href="/storytellers/new" className="text-sm text-ink/60 underline">
+            Add storyteller
+          </Link>
+        </div>
+        <div className="mt-3 space-y-3">
+          {storytellerStats.map((s) => (
+            <StorytellerBlock key={s.id} stat={s} />
+          ))}
+          {storytellerStats.length === 0 && (
+            <p className="text-sm text-ink/50">
+              No storytellers yet.{" "}
+              <Link href="/storytellers/new" className="underline">
+                Add one
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       </section>
 
-      <section className="mt-8">
+      <section className="mt-10">
         <div className="flex items-center justify-between">
           <h2 className="font-medium text-lg">Lately</h2>
           <Link href="/stories" className="text-sm text-ink/60 underline">
@@ -118,43 +121,6 @@ export default async function Dashboard() {
             </li>
           )}
         </ul>
-      </section>
-
-      <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-lg">Storytellers</h2>
-          <div className="flex gap-4">
-            <Link href="/topics" className="text-sm text-ink/60 underline">
-              Topics
-            </Link>
-            <Link href="/schedule" className="text-sm text-ink/60 underline">
-              Schedule
-            </Link>
-            <Link href="/settings" className="text-sm text-ink/60 underline">
-              Settings
-            </Link>
-            <Link href="/storytellers" className="text-sm text-ink/60 underline">
-              Manage storytellers
-            </Link>
-          </div>
-        </div>
-        {/* One block per storyteller: the same four metrics as the family-wide
-            cards above, scoped to that elder. The whole block links to their
-            detail page (config summary + their answers). */}
-        <div className="mt-3 space-y-3">
-          {storytellerStats.map((s) => (
-            <StorytellerBlock key={s.id} stat={s} />
-          ))}
-          {storytellerStats.length === 0 && (
-            <p className="text-sm text-ink/50">
-              No storytellers yet.{" "}
-              <Link href="/storytellers" className="underline">
-                Add one
-              </Link>
-              .
-            </p>
-          )}
-        </div>
       </section>
 
       {/* Family access now lives on Settings (TODO 5.5) — one source of truth. */}

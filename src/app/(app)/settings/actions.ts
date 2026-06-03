@@ -36,7 +36,7 @@ export async function setStorytellerPhone(formData: FormData) {
 
   const phone = normalizePhone(String(formData.get("phone") ?? ""));
   if (!phone.ok) {
-    redirect("/settings?error=phone");
+    redirect(`/storytellers/${storytellerId}?error=phone`);
   }
 
   const sb = await supabaseServer();
@@ -47,8 +47,8 @@ export async function setStorytellerPhone(formData: FormData) {
     .eq("family_id", active.family_id);
   if (error) throw error;
 
-  revalidatePath("/settings");
-  redirect("/settings?saved=phone");
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}?saved=phone`);
 }
 
 // Set/clear the signed-in admin's OWN alert number (failure alerts). Scoped to

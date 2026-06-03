@@ -1,14 +1,41 @@
 import { redirect, notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { getActiveMembership } from "@/lib/auth";
+import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
+import {
+  loadStorytellerSchedule,
+  DAY_CODES,
+  TIMEZONES,
+  type DayCode,
+  type StorytellerSchedule,
+} from "@/lib/schedule";
+import {
+  loadStorytellerTopics,
+  type StorytellerTopics,
+  type TopicRow,
+  type TopicPreference,
+} from "@/lib/topics";
+import { decryptToken } from "@/lib/storyteller/crypto";
+import {
+  updateStoryteller,
+  updateMyRelationship,
+  createRecordingLink,
+  revokeRecordingLinks,
+  sendNudge,
+  deleteStoryteller,
+} from "../actions";
+import { setStorytellerPhone } from "../../settings/actions";
+import { saveSchedule, askNow } from "../../schedule/actions";
+import { setTopicPreference } from "../../topics/actions";
+import VoiceSetup from "../VoiceSetup";
 
-// Per-storyteller detail page. RLS scopes every read to the member's families;
-// we additionally pin to the active family + this storyteller id. Read-only by
-// design: a compact config summary at the top links out to the pages that own
-// each setting, and this elder's answers are listed below (editing stays on
-// /stories — one source of truth).
+// Per-storyteller hub. RLS scopes every read to the member's families; we also
+// pin to the active family + this storyteller id. This is the single place to
+// configure one storyteller: each setting is an expandable box whose body holds
+// the real inline editor (admins) or a calm read-only summary (viewers). Their
+// answers are listed below (review/edit stays on /stories — one source of truth).
 
 const PRONOUN_LABEL: Record<string, string> = {
   he_him: "he/him",
@@ -24,16 +51,22 @@ const KIND_LABEL: Record<string, string> = {
   spouse: "Spouse",
   other: "Other",
 };
-const DAY_LABEL: Record<string, string> = {
-  SU: "Sun",
-  MO: "Mon",
-  TU: "Tue",
-  WE: "Wed",
-  TH: "Thu",
-  FR: "Fri",
-  SA: "Sat",
+const KINDS = Object.keys(KIND_LABEL);
+const PREF_LABEL: Record<TopicPreference, string> = {
+  ease_off: "Ease off",
+  focus: "Focus next",
+  avoid: "Avoid",
 };
-const DAY_ORDER = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+const DAY_LABEL: Record<DayCode, string> = {
+  SU: "Su",
+  MO: "Mo",
+  TU: "Tu",
+  WE: "We",
+  TH: "Th",
+  FR: "Fr",
+  SA: "Sa",
+};
+const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
 
 // A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp.
 function relDay(iso: string): string {
@@ -52,14 +85,25 @@ function formatDuration(sec: number | null): string | null {
   return m > 0 ? `${m} min ${s} sec` : `${s} sec`;
 }
 
-// "10:00:00" → "10:00 AM" (the storyteller's local send time).
-function fmtTime(t: string | null): string | null {
-  if (!t) return null;
-  const [h, m] = t.split(":").map(Number);
-  if (Number.isNaN(h)) return null;
-  const am = h < 12;
+// "10:00" → "10:00 AM" for the read-only / pill display.
+function prettyTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h)) return hhmm;
+  const period = h < 12 ? "AM" : "PM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${am ? "AM" : "PM"}`;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function tzLabel(tz: string): string {
+  return TIMEZONES.find((z) => z.value === tz)?.label ?? tz;
+}
+
+function daysSummary(days: DayCode[]): string {
+  if (days.length === 0) return "No days set";
+  if (days.length === 7) return "Every day";
+  return DAY_CODES.filter((d) => days.includes(d))
+    .map((d) => DAY_LABEL[d])
+    .join(" · ");
 }
 
 // PostgREST embeds a to-one relation as an object at runtime but the generated
@@ -71,13 +115,17 @@ function one<T>(rel: unknown): T | null {
 
 export default async function StorytellerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; sent?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
 
   const { id } = await params;
+  const sp = await searchParams;
+  const canManage = roleAtLeast(active.role, "admin");
   const sb = await supabaseServer();
   const {
     data: { user },
@@ -92,7 +140,7 @@ export default async function StorytellerDetailPage({
     .from("storytellers")
     .select(
       "id,name,pronouns,birth_year,language,phone," +
-        "storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profiles(label))"
+        "storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profile_id,voice_profiles(id,label))"
     )
     .eq("family_id", active.family_id)
     .eq("id", id)
@@ -110,47 +158,48 @@ export default async function StorytellerDetailPage({
     phone: string | null;
     storyteller_relationships: unknown;
   };
+  const stLang: "en" | "es" = st.language === "es" ? "es" : "en";
 
   const rel = one<{
     address_term: string | null;
     kind: string | null;
     asker_relation: string | null;
     is_interviewer: boolean | null;
+    voice_profile_id: string | null;
     voice_profiles: unknown;
   }>(st.storyteller_relationships);
-  const voice = rel ? one<{ label: string }>(rel.voice_profiles) : null;
+  const voice = rel ? one<{ id: string; label: string }>(rel.voice_profiles) : null;
+  const linkedVoice = voice ? { id: voice.id, label: voice.label } : null;
 
-  // Schedule + active-link count + this elder's answers, in parallel.
-  const [schedRes, linkRes, stories] = await Promise.all([
-    sb
-      .from("schedules")
-      .select("days_of_week,send_time_local,paused")
-      .eq("family_id", active.family_id)
-      .eq("storyteller_id", id)
-      .maybeSingle(),
+  // Recording links, schedule, topics, and this elder's answers, in parallel.
+  const [tokenRes, schedule, topics, stories] = await Promise.all([
     sb
       .from("storyteller_tokens")
-      .select("id", { count: "exact", head: true })
+      .select("created_at,last_used_at,token_enc")
       .eq("family_id", active.family_id)
       .eq("storyteller_id", id)
-      .is("revoked_at", null),
+      .is("revoked_at", null)
+      .order("created_at", { ascending: false }),
+    loadStorytellerSchedule(active.family_id, id),
+    loadStorytellerTopics(active.family_id, id),
     loadStories(active.family_id, id),
   ]);
 
-  const sched = schedRes.data;
-  const linkCount = linkRes.count ?? 0;
-
-  const scheduleSummary = (() => {
-    if (!sched) return "Not scheduled yet";
-    if (sched.paused) return "Paused";
-    const days = ((sched.days_of_week as string[] | null) ?? [])
-      .slice()
-      .sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b))
-      .map((d) => DAY_LABEL[d] ?? d)
-      .join(" & ");
-    const time = fmtTime(sched.send_time_local as string | null);
-    return [days || "No days set", time].filter(Boolean).join(" · ");
-  })();
+  // Rebuild the shareable /s/<token> URL from the encrypted-at-rest copy of the
+  // newest link (same logic the old list page used).
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  let linkCount = 0;
+  let lastUsed: string | null = null;
+  let linkUrl: string | null = null;
+  for (const t of tokenRes.data ?? []) {
+    linkCount += 1;
+    if (t.last_used_at && (!lastUsed || t.last_used_at > lastUsed)) lastUsed = t.last_used_at;
+    if (!linkUrl && t.token_enc) {
+      const raw = await decryptToken(t.token_enc);
+      if (raw) linkUrl = `${origin}/s/${raw}`;
+    }
+  }
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -169,18 +218,86 @@ export default async function StorytellerDetailPage({
         </Link>
       </div>
 
-      {/* Configuration summary — read-only; each row links to the page that
-          owns that setting. */}
-      <section className="mt-8 space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-lg">Setup</h2>
-          <Link href="/storytellers" className="text-sm text-ink/60 underline">
-            Edit details
-          </Link>
-        </div>
+      {/* Banners surfaced by the inline editors' redirects. */}
+      {sp.saved === "phone" && <Banner tone="green">Phone number saved. 📱</Banner>}
+      {sp.saved === "schedule" && <Banner tone="green">Schedule saved. 🗓️</Banner>}
+      {sp.error === "phone" && (
+        <Banner tone="red">
+          That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
+        </Banner>
+      )}
+      {sp.error === "link" && (
+        <Banner tone="red">
+          Couldn&apos;t create the recording link. The storyteller-token secret may not be configured.
+        </Banner>
+      )}
+      {(sp.sent === "nudge" || sp.sent === "asked") && <Banner tone="green">We sent the question. 💬</Banner>}
+      {(sp.sent === "nudge_no-phone" || sp.sent === "asked_no-phone") && (
+        <Banner tone="amber">No nudge sent — no phone number on file. Add one in Phone below.</Banner>
+      )}
+      {(sp.sent === "nudge_no-link" || sp.sent === "asked_no-link") && (
+        <Banner tone="amber">
+          No nudge sent — couldn&apos;t build a recording link. The storyteller-token secret may not be configured.
+        </Banner>
+      )}
+      {(sp.sent === "nudge_failed" || sp.sent === "asked_failed") && (
+        <Banner tone="red">Couldn&apos;t send it. The SMS provider may not be configured.</Banner>
+      )}
 
-        <SummaryRow
-          label="You call them"
+      {/* Setup — one expandable box per setting, each with that storyteller's
+          own configuration inline. */}
+      <section className="mt-8 space-y-2">
+        <h2 className="font-medium text-lg">Setup</h2>
+
+        {/* Details ---------------------------------------------------------- */}
+        <ConfigBox
+          label="Details"
+          value={`${PRONOUN_LABEL[st.pronouns] ?? st.pronouns} · ${
+            st.birth_year ? `b. ${st.birth_year} · ` : ""
+          }${st.language === "es" ? "Español" : "English"}`}
+        >
+          {canManage ? (
+            <form action={updateStoryteller} className="flex flex-wrap items-end gap-3">
+              <input type="hidden" name="id" value={st.id} />
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Name</span>
+                <input name="name" required defaultValue={st.name} className={inputCls} />
+              </label>
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Pronouns</span>
+                <select name="pronouns" defaultValue={st.pronouns} className={inputCls}>
+                  <option value="she_her">she/her</option>
+                  <option value="he_him">he/him</option>
+                  <option value="they_them">they/them</option>
+                </select>
+              </label>
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Birth year</span>
+                <input
+                  name="birth_year"
+                  inputMode="numeric"
+                  placeholder="1948"
+                  defaultValue={st.birth_year ?? ""}
+                  className={`${inputCls} w-24`}
+                />
+              </label>
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Language</span>
+                <select name="language" defaultValue={st.language} className={inputCls}>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
+                </select>
+              </label>
+              <SaveButton />
+            </form>
+          ) : (
+            <ViewerNote />
+          )}
+        </ConfigBox>
+
+        {/* Your relationship + cloned voice --------------------------------- */}
+        <ConfigBox
+          label="Your relationship"
           value={rel?.address_term ?? "—"}
           sub={
             rel?.kind
@@ -189,43 +306,197 @@ export default async function StorytellerDetailPage({
                 }`
               : undefined
           }
-          href="/storytellers"
-        />
-        <SummaryRow
-          label="Phone"
-          value={st.phone?.trim() ? st.phone : "Not set"}
-          sub="Where the story texts go"
-          href="/settings"
-        />
-        <SummaryRow
-          label="Your voice"
-          value={voice ? `✓ Cloned${voice.label ? ` · ${voice.label}` : ""}` : "Not set up"}
-          sub={`What ${st.name} hears asking the questions`}
-          href="/storytellers"
-          good={!!voice}
-        />
-        <SummaryRow
+        >
+          {canManage ? (
+            <>
+              <form action={updateMyRelationship} className="flex flex-wrap items-end gap-3">
+                <input type="hidden" name="storyteller_id" value={st.id} />
+                <label className="flex flex-col text-sm">
+                  <span className="text-ink/60">You call them</span>
+                  <input
+                    name="address_term"
+                    required
+                    placeholder="Dad, Grandma, Uncle Joe"
+                    defaultValue={rel?.address_term ?? ""}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  <span className="text-ink/60">Relationship</span>
+                  <select name="kind" defaultValue={rel?.kind ?? "other"} className={inputCls}>
+                    {KINDS.map((k) => (
+                      <option key={k} value={k}>
+                        {KIND_LABEL[k]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col text-sm">
+                  <span className="text-ink/60">They are your…</span>
+                  <input
+                    name="asker_relation"
+                    placeholder="son, niece"
+                    defaultValue={rel?.asker_relation ?? ""}
+                    className={inputCls}
+                  />
+                </label>
+                <label className="flex items-center gap-2 pb-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="is_interviewer"
+                    defaultChecked={rel?.is_interviewer ?? false}
+                  />
+                  <span className="text-ink/70">I&apos;m the interviewer</span>
+                </label>
+                <SaveButton />
+              </form>
+
+              {/* Cloned voice (TODO 4.1) — only once a relationship exists. */}
+              {rel && (
+                <div className="mt-4 border-t pt-3 text-sm">
+                  <p className="text-ink/70">
+                    Cloned voice — record yourself once; {st.name} hears the questions in your
+                    voice (en &amp; es).
+                  </p>
+                  <VoiceSetup storytellerId={st.id} lang={stLang} linked={linkedVoice} />
+                </div>
+              )}
+            </>
+          ) : (
+            <ViewerNote />
+          )}
+        </ConfigBox>
+
+        {/* Phone ------------------------------------------------------------ */}
+        <ConfigBox label="Phone" value={st.phone?.trim() ? st.phone : "Not set"} sub="Where the story texts go">
+          {canManage ? (
+            <form action={setStorytellerPhone} className="flex items-end gap-2">
+              <input type="hidden" name="storyteller_id" value={st.id} />
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Phone</span>
+                <input
+                  type="tel"
+                  name="phone"
+                  defaultValue={st.phone ?? ""}
+                  placeholder="+1 602 555 4471"
+                  className={inputCls}
+                />
+              </label>
+              <SaveButton />
+            </form>
+          ) : (
+            <ViewerNote />
+          )}
+        </ConfigBox>
+
+        {/* Recording link --------------------------------------------------- */}
+        <ConfigBox
           label="Recording link"
-          value={
-            linkCount > 0
-              ? `${linkCount} active link${linkCount === 1 ? "" : "s"}`
-              : "None yet"
-          }
+          value={linkCount > 0 ? `${linkCount} active link${linkCount === 1 ? "" : "s"}` : "None yet"}
           sub="The magic link the storyteller opens"
-          href="/storytellers"
-        />
-        <SummaryRow
+        >
+          <div className="text-sm">
+            <p className="text-ink/60">
+              {linkCount > 0
+                ? `${linkCount} active link${linkCount === 1 ? "" : "s"}` +
+                  (lastUsed
+                    ? ` · last opened ${new Date(lastUsed).toLocaleDateString()}`
+                    : " · not opened yet")
+                : "No recording link yet"}
+            </p>
+
+            {canManage && (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {st.phone?.trim() && (
+                  <form action={sendNudge}>
+                    <input type="hidden" name="storyteller_id" value={st.id} />
+                    <button type="submit" className="text-ink/70 underline">
+                      Send a nudge
+                    </button>
+                  </form>
+                )}
+                <form action={createRecordingLink}>
+                  <input type="hidden" name="storyteller_id" value={st.id} />
+                  <button type="submit" className="text-ink/70 underline">
+                    {linkCount > 0 ? "New link" : "Create recording link"}
+                  </button>
+                </form>
+                {linkCount > 0 && (
+                  <form action={revokeRecordingLinks}>
+                    <input type="hidden" name="storyteller_id" value={st.id} />
+                    <button type="submit" className="text-red-600 underline">
+                      Revoke links
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {linkUrl && (
+              <div className="mt-3 rounded-lg bg-black/[0.03] p-3">
+                <p className="text-ink/60">Recording link for {st.name}:</p>
+                <code className="mt-1 block break-all text-ink">{linkUrl}</code>
+              </div>
+            )}
+            {linkCount > 0 && !linkUrl && (
+              <div className="mt-3 rounded-lg bg-amber-50 p-3 text-ink/70">
+                {canManage
+                  ? `This link predates shareable URLs. Tap “New link” to get a copyable URL for ${st.name}.`
+                  : `An admin can create a shareable link for ${st.name}.`}
+              </div>
+            )}
+          </div>
+        </ConfigBox>
+
+        {/* Schedule --------------------------------------------------------- */}
+        <ConfigBox
           label="Schedule"
-          value={scheduleSummary}
-          sub="When we reach out"
-          href="/schedule"
-        />
-        <SummaryRow
+          value={schedule ? (schedule.paused ? "Paused" : daysSummary(schedule.days)) : "Not scheduled yet"}
+          sub={schedule && !schedule.paused ? `${prettyTime(schedule.sendTimeLocal)} · ${tzLabel(schedule.timezone)}` : "When we reach out"}
+        >
+          {schedule ? (
+            <ScheduleEditor st={schedule} canManage={canManage} />
+          ) : (
+            <ViewerNote />
+          )}
+        </ConfigBox>
+
+        {/* Topics ----------------------------------------------------------- */}
+        <ConfigBox
           label="Topics"
-          value="Steer what we ask about"
+          value={
+            topics
+              ? `${topics.topics.filter((t) => t.preference).length} steered · ${topics.topics.length} categories`
+              : "—"
+          }
           sub="Focus, ease off, or avoid"
-          href="/topics"
-        />
+        >
+          {topics ? (
+            <TopicsEditor st={topics} canManage={canManage} />
+          ) : (
+            <ViewerNote />
+          )}
+        </ConfigBox>
+
+        {/* Remove ----------------------------------------------------------- */}
+        {canManage && (
+          <details className="rounded-xl border border-red-200 px-4 py-3">
+            <summary className="cursor-pointer text-sm text-red-600">Remove {st.name}</summary>
+            <form action={deleteStoryteller} className="mt-3">
+              <input type="hidden" name="id" value={st.id} />
+              <p className="text-sm text-ink/60">
+                This deletes {st.name} and all of their stories, recordings, and schedule. This
+                can&apos;t be undone.
+              </p>
+              <button
+                type="submit"
+                className="mt-3 rounded-lg bg-red-600 px-4 py-2 font-medium text-white"
+              >
+                Remove storyteller
+              </button>
+            </form>
+          </details>
+        )}
       </section>
 
       {/* This storyteller's answers. Read-only here — review/edit/in-book live
@@ -243,8 +514,7 @@ export default async function StorytellerDetailPage({
           ))}
           {stories.length === 0 && (
             <p className="rounded-lg border px-3 py-4 text-sm text-ink/50">
-              No stories yet — they&apos;ll appear here once {st.name} starts
-              recording.
+              No stories yet — they&apos;ll appear here once {st.name} starts recording.
             </p>
           )}
         </div>
@@ -253,35 +523,270 @@ export default async function StorytellerDetailPage({
   );
 }
 
-// One read-only setup row: label + value, optional sub, with an edit link.
-function SummaryRow({
+// One expandable setup box: summary shows label + current value; the body holds
+// the inline editor (children).
+function ConfigBox({
   label,
   value,
   sub,
-  href,
-  good,
+  children,
 }: {
   label: string;
   value: string;
   sub?: string;
-  href: string;
-  good?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border px-4 py-3">
-      <div>
-        <div className="font-medium text-sm">{label}</div>
-        {sub && <div className="text-xs text-ink/50">{sub}</div>}
-      </div>
-      <div className="flex items-center gap-3">
-        <span className={`text-sm ${good ? "text-emerald-700" : "text-ink/70"}`}>
-          {value}
+    <details className="rounded-xl border px-4 py-3">
+      <summary className="flex cursor-pointer items-center justify-between gap-4">
+        <span>
+          <span className="font-medium text-sm">{label}</span>
+          {sub && <span className="block text-xs text-ink/50">{sub}</span>}
         </span>
-        <Link href={href} className="text-xs text-ink/50 underline">
-          Edit
-        </Link>
-      </div>
+        <span className="text-sm text-ink/70">{value}</span>
+      </summary>
+      <div className="mt-4">{children}</div>
+    </details>
+  );
+}
+
+function ViewerNote() {
+  return <p className="text-sm text-ink/50">Only owners and admins can change this.</p>;
+}
+
+function SaveButton() {
+  return (
+    <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
+      Save
+    </button>
+  );
+}
+
+function Banner({ tone, children }: { tone: "green" | "amber" | "red"; children: React.ReactNode }) {
+  const cls =
+    tone === "green"
+      ? "bg-green-50 text-green-700"
+      : tone === "amber"
+        ? "bg-amber-50 text-ink/70"
+        : "bg-red-50 text-red-700";
+  return <p className={`mt-4 rounded-lg p-3 text-sm ${cls}`}>{children}</p>;
+}
+
+// Inline schedule editor (admins) / read-only summary (viewers). Mirrors the
+// old /schedule block; saveSchedule + askNow redirect back to this hub.
+function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage: boolean }) {
+  const dayset = new Set(st.days);
+
+  if (!canManage) {
+    return (
+      <dl className="space-y-2 text-sm">
+        <ScheduleRow label="Days">{daysSummary(st.days)}</ScheduleRow>
+        <ScheduleRow label="Time">{prettyTime(st.sendTimeLocal)}</ScheduleRow>
+        <ScheduleRow label="Timezone">{tzLabel(st.timezone)}</ScheduleRow>
+        <ScheduleRow label="Questions per session">{st.questionsPer === 1 ? "1" : "1–2"}</ScheduleRow>
+        <ScheduleRow label="Quiet hours">
+          {st.quietAfter ? `After ${prettyTime(st.quietAfter)}` : "Not set"}
+        </ScheduleRow>
+        {st.paused && <ScheduleRow label="Status">Paused</ScheduleRow>}
+      </dl>
+    );
+  }
+
+  return (
+    <>
+      <form action={saveSchedule} className="space-y-5">
+        <input type="hidden" name="storyteller_id" value={st.id} />
+
+        <div>
+          <div className="font-medium text-sm">Days</div>
+          <p className="text-xs text-ink/50">The text arrives these mornings.</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {DAY_CODES.map((d) => {
+              const on = dayset.has(d);
+              return (
+                <label
+                  key={d}
+                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                    on ? "border-ink bg-ink text-white" : "text-ink/60 hover:bg-ink/5"
+                  }`}
+                >
+                  <input type="checkbox" name="days" value={d} defaultChecked={on} className="sr-only" />
+                  {DAY_LABEL[d]}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-6">
+          <label className="flex flex-col text-sm">
+            <span className="font-medium">Time</span>
+            <span className="text-xs text-ink/50">In their local time.</span>
+            <input
+              type="time"
+              name="send_time_local"
+              defaultValue={st.sendTimeLocal}
+              className="mt-1 rounded-lg border px-3 py-2 text-base"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm">
+            <span className="font-medium">Timezone</span>
+            <span className="text-xs text-ink/50">Where they are.</span>
+            <select
+              name="timezone"
+              defaultValue={st.timezone}
+              className="mt-1 rounded-lg border px-3 py-2 text-base"
+            >
+              {!TIMEZONES.some((z) => z.value === st.timezone) && (
+                <option value={st.timezone}>{st.timezone}</option>
+              )}
+              {TIMEZONES.map((z) => (
+                <option key={z.value} value={z.value}>
+                  {z.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm">
+            <span className="font-medium">Questions per session</span>
+            <span className="text-xs text-ink/50">Kept short on purpose.</span>
+            <select
+              name="questions_per"
+              defaultValue={String(st.questionsPer)}
+              className="mt-1 rounded-lg border px-3 py-2 text-base"
+            >
+              <option value="1">1</option>
+              <option value="2">1–2</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm">
+            <span className="font-medium">Quiet hours</span>
+            <span className="text-xs text-ink/50">Never ring after this.</span>
+            <input
+              type="time"
+              name="quiet_after"
+              defaultValue={st.quietAfter ?? ""}
+              className="mt-1 rounded-lg border px-3 py-2 text-base"
+            />
+          </label>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="paused" defaultChecked={st.paused} className="h-4 w-4 rounded border" />
+          <span>
+            <span className="font-medium">Pause everything</span>
+            <span className="text-ink/50"> — if they&apos;re traveling or unwell.</span>
+          </span>
+        </label>
+
+        <SaveButton />
+      </form>
+
+      {/* "Ask now" posts on its own, outside the Save form. */}
+      <form action={askNow} className="mt-4 border-t pt-4">
+        <input type="hidden" name="storyteller_id" value={st.id} />
+        <button
+          type="submit"
+          className="rounded-full border border-ink px-4 py-1.5 text-sm hover:bg-ink/5"
+        >
+          Ask now
+        </button>
+        <span className="ml-3 text-xs text-ink/50">
+          Send a question right away, outside the schedule.
+        </span>
+      </form>
+    </>
+  );
+}
+
+function ScheduleRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-ink/50">{label}</dt>
+      <dd className="text-right">{children}</dd>
     </div>
+  );
+}
+
+// Inline topics steering (admins) / read-only coverage (viewers). setTopicPreference
+// revalidates this hub.
+function TopicsEditor({ st, canManage }: { st: StorytellerTopics; canManage: boolean }) {
+  return (
+    <ul className="space-y-2">
+      {st.topics.map((t) => (
+        <TopicRowItem key={t.category} storytellerId={st.id} topic={t} canManage={canManage} />
+      ))}
+      {st.topics.length === 0 && (
+        <li className="text-sm text-ink/50">No topic library for this language yet.</li>
+      )}
+    </ul>
+  );
+}
+
+function coverageLabel(t: TopicRow): string {
+  if (t.explored === 0) return "untouched";
+  return `${t.explored} of ${t.available} explored`;
+}
+
+function segClass(pref: TopicPreference, selected: boolean): string {
+  const base = "rounded-full border px-3 py-1 text-xs whitespace-nowrap";
+  if (!selected) return `${base} text-ink/60 hover:bg-ink/5`;
+  if (pref === "avoid") return `${base} border-red-700 bg-red-700 text-white`;
+  return `${base} border-ink bg-ink text-white`;
+}
+
+function TopicRowItem({
+  storytellerId,
+  topic,
+  canManage,
+}: {
+  storytellerId: string;
+  topic: TopicRow;
+  canManage: boolean;
+}) {
+  const pct =
+    topic.available > 0 ? Math.min(100, Math.round((topic.explored / topic.available) * 100)) : 0;
+
+  return (
+    <li className="rounded-2xl border bg-white/40 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-[12rem] flex-1">
+          <div className="font-medium text-sm">{topic.category}</div>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/10">
+            <div className="h-full rounded-full bg-ink/40" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="mt-1 text-xs text-ink/50">{coverageLabel(topic)}</div>
+        </div>
+
+        {canManage ? (
+          <div className="flex gap-1">
+            {(["ease_off", "focus", "avoid"] as TopicPreference[]).map((pref) => {
+              const selected = topic.preference === pref;
+              return (
+                <form key={pref} action={setTopicPreference}>
+                  <input type="hidden" name="storyteller_id" value={storytellerId} />
+                  <input type="hidden" name="category" value={topic.category} />
+                  {/* Re-tapping the active choice clears it back to neutral. */}
+                  <input type="hidden" name="preference" value={selected ? "" : pref} />
+                  <button type="submit" className={segClass(pref, selected)} aria-pressed={selected}>
+                    {PREF_LABEL[pref]}
+                  </button>
+                </form>
+              );
+            })}
+          </div>
+        ) : (
+          topic.preference && (
+            <span className="rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60">
+              {PREF_LABEL[topic.preference]}
+            </span>
+          )
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -292,9 +797,7 @@ function StoryCard({ story }: { story: Story }) {
   return (
     <article className="rounded-xl border p-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-medium text-base">
-          {story.question ?? "Untitled story"}
-        </h3>
+        <h3 className="font-medium text-base">{story.question ?? "Untitled story"}</h3>
         {story.inBook && (
           <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
             In the book
@@ -303,16 +806,12 @@ function StoryCard({ story }: { story: Story }) {
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
         {story.category && (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-ink/60">
-            {story.category}
-          </span>
+          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-ink/60">{story.category}</span>
         )}
         {meta && <span>{meta}</span>}
       </div>
       {story.transcript && (
-        <p className="mt-3 border-ink/10 border-l-2 pl-3 text-sm text-ink/70">
-          {story.transcript}
-        </p>
+        <p className="mt-3 border-ink/10 border-l-2 pl-3 text-sm text-ink/70">{story.transcript}</p>
       )}
       {story.hasAudio && (
         <audio
@@ -336,12 +835,8 @@ function StoryCard({ story }: { story: Story }) {
 function FollowUpRow({ followUp }: { followUp: StoryFollowUp }) {
   return (
     <div>
-      {followUp.question && (
-        <div className="text-sm text-ink/60">↳ {followUp.question}</div>
-      )}
-      {followUp.transcript && (
-        <p className="mt-1 text-sm text-ink/70">{followUp.transcript}</p>
-      )}
+      {followUp.question && <div className="text-sm text-ink/60">↳ {followUp.question}</div>}
+      {followUp.transcript && <p className="mt-1 text-sm text-ink/70">{followUp.transcript}</p>}
       {followUp.hasAudio && (
         <audio
           controls

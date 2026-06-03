@@ -81,8 +81,8 @@ export async function saveSchedule(formData: FormData) {
     { onConflict: "storyteller_id" },
   );
 
-  revalidatePath("/schedule");
-  redirect("/schedule?saved=1");
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}?saved=schedule`);
 }
 
 // "Ask now" — send a story nudge immediately, reusing the 4.3 unit. Same
@@ -112,6 +112,6 @@ export async function askNow(formData: FormData) {
     flag = "asked_failed";
   }
 
-  revalidatePath("/schedule");
-  redirect(`/schedule?sent=${flag}`);
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}?sent=${flag}`);
 }

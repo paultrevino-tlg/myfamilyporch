@@ -61,6 +61,49 @@ function toHHMM(t: string | null): string | null {
   return t.slice(0, 5);
 }
 
+// One storyteller's schedule for the detail-page hub. Same RLS-scoped read as
+// loadSchedules, pinned to a single id; returns the table defaults when no row
+// exists yet so the inline editor always has sensible values. null = the
+// storyteller isn't visible in this family (caller 404s).
+export async function loadStorytellerSchedule(
+  familyId: string,
+  storytellerId: string,
+): Promise<StorytellerSchedule | null> {
+  const sb = await supabaseServer();
+
+  const [stRes, schRes] = await Promise.all([
+    sb
+      .from("storytellers")
+      .select("id, name, language")
+      .eq("family_id", familyId)
+      .eq("id", storytellerId)
+      .maybeSingle(),
+    sb
+      .from("schedules")
+      .select(
+        "days_of_week, send_time_local, questions_per, quiet_after, timezone, paused",
+      )
+      .eq("family_id", familyId)
+      .eq("storyteller_id", storytellerId)
+      .maybeSingle(),
+  ]);
+
+  const st = stRes.data;
+  if (!st) return null;
+  const row = schRes.data;
+  return {
+    id: st.id,
+    name: st.name,
+    language: st.language,
+    days: (row?.days_of_week as DayCode[] | null) ?? DEFAULTS.days,
+    sendTimeLocal: toHHMM(row?.send_time_local ?? null) ?? DEFAULTS.sendTimeLocal,
+    questionsPer: row?.questions_per ?? DEFAULTS.questionsPer,
+    quietAfter: toHHMM(row?.quiet_after ?? null) ?? DEFAULTS.quietAfter,
+    timezone: row?.timezone ?? DEFAULTS.timezone,
+    paused: row?.paused ?? DEFAULTS.paused,
+  };
+}
+
 export async function loadSchedules(familyId: string): Promise<StorytellerSchedule[]> {
   const sb = await supabaseServer();
 

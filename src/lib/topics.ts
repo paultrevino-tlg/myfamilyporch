@@ -27,6 +27,73 @@ function one<T>(rel: unknown): T | null {
   return (rel as T) ?? null;
 }
 
+// One storyteller's topics for the detail-page hub. Same RLS-scoped reads as
+// loadTopics, pinned to a single storyteller. null = not visible in this family.
+export async function loadStorytellerTopics(
+  familyId: string,
+  storytellerId: string,
+): Promise<StorytellerTopics | null> {
+  const sb = await supabaseServer();
+
+  const stRes = await sb
+    .from("storytellers")
+    .select("id, name, language")
+    .eq("family_id", familyId)
+    .eq("id", storytellerId)
+    .maybeSingle();
+  const st = stRes.data;
+  if (!st) return null;
+
+  const [promptsRes, answeredRes, prefsRes] = await Promise.all([
+    sb
+      .from("prompts")
+      .select("id, category, lang")
+      .or(`family_id.is.null,family_id.eq.${familyId}`)
+      .eq("lang", st.language),
+    sb
+      .from("answers")
+      .select("prompt_id, prompt:prompts(category)")
+      .eq("family_id", familyId)
+      .eq("storyteller_id", storytellerId)
+      .not("prompt_id", "is", null),
+    sb
+      .from("topic_preferences")
+      .select("category, preference")
+      .eq("family_id", familyId)
+      .eq("storyteller_id", storytellerId),
+  ]);
+
+  // available[category] = prompt count in the storyteller's language.
+  const available = new Map<string, number>();
+  for (const p of promptsRes.data ?? []) {
+    available.set(p.category, (available.get(p.category) ?? 0) + 1);
+  }
+
+  // explored[category] = distinct answered prompt ids.
+  const explored = new Map<string, Set<string>>();
+  for (const a of answeredRes.data ?? []) {
+    const category = one<{ category: string }>(a.prompt)?.category;
+    if (!category || !a.prompt_id) continue;
+    const set = explored.get(category) ?? new Set<string>();
+    set.add(a.prompt_id);
+    explored.set(category, set);
+  }
+
+  const prefByCat = new Map<string, TopicPreference>();
+  for (const row of prefsRes.data ?? []) prefByCat.set(row.category, row.preference);
+
+  const topics: TopicRow[] = [...available.keys()]
+    .sort((a, b) => a.localeCompare(b))
+    .map((category) => ({
+      category,
+      available: available.get(category) ?? 0,
+      explored: explored.get(category)?.size ?? 0,
+      preference: prefByCat.get(category) ?? null,
+    }));
+
+  return { id: st.id, name: st.name, language: st.language, topics };
+}
+
 export async function loadTopics(familyId: string): Promise<StorytellerTopics[]> {
   const sb = await supabaseServer();
 

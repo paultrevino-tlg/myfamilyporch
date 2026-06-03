@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
-import { setStorytellerPhone, setAlertPhone } from "./actions";
+import { setAlertPhone } from "./actions";
 import { createInvitation } from "../actions";
 
 // Settings (TODO 5.5). The prototype's four fields: storyteller phone numbers,
@@ -20,9 +20,7 @@ export default async function SettingsPage({
 
   const sp = await searchParams;
   const canManage = roleAtLeast(active.role, "admin");
-  const { storytellers, myAlertPhone, voices, roster, invitations } = await loadSettings(
-    active.family_id,
-  );
+  const { myAlertPhone, roster, invitations } = await loadSettings(active.family_id);
 
   const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
 
@@ -38,69 +36,19 @@ export default async function SettingsPage({
         </Link>
       </div>
 
-      {sp.saved === "phone" && (
-        <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">Phone number saved. 📱</p>
-      )}
       {sp.saved === "alert" && (
         <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">Alert number saved. 🔔</p>
       )}
-      {(sp.error === "phone" || sp.error === "alert") && (
+      {sp.error === "alert" && (
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
         </p>
       )}
 
-      {/* 1 — Storyteller numbers. Where each story text goes. */}
-      <section className="mt-8 rounded-2xl border bg-white/40 p-5">
-        <h2 className="font-medium text-lg">Storyteller numbers</h2>
-        <p className="text-sm text-ink/60">Where the story texts go.</p>
+      {/* Storyteller phone numbers + cloned voice now live on each storyteller's
+          page (reach them from the dashboard). */}
 
-        {storytellers.length === 0 ? (
-          <p className="mt-4 text-sm text-ink/50">
-            No storytellers yet.{" "}
-            <Link href="/storytellers" className="underline">
-              Add one
-            </Link>
-            .
-          </p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {storytellers.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-end justify-between gap-3">
-                <div className="text-sm">
-                  <div className="font-medium">{s.name}</div>
-                  {!canManage && (
-                    <div className="text-ink/60">{s.phone?.trim() || "No number on file"}</div>
-                  )}
-                </div>
-                {canManage && (
-                  <form action={setStorytellerPhone} className="flex items-end gap-2">
-                    <input type="hidden" name="storyteller_id" value={s.id} />
-                    <label className="flex flex-col text-sm">
-                      <span className="text-ink/60">Phone</span>
-                      <input
-                        type="tel"
-                        name="phone"
-                        defaultValue={s.phone ?? ""}
-                        placeholder="+1 602 555 4471"
-                        className={inputCls}
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-ink px-4 py-2 font-medium text-white"
-                    >
-                      Save
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* 2 — Alert me by text. The signed-in admin's OWN number. */}
+      {/* Alert me by text. The signed-in admin's OWN number. */}
       <section className="mt-8 rounded-2xl border bg-white/40 p-5">
         <h2 className="font-medium text-lg">Alert me by text</h2>
         <p className="text-sm text-ink/60">
@@ -131,47 +79,7 @@ export default async function SettingsPage({
         )}
       </section>
 
-      {/* 3 — Your voice. Status only; cloning lives on /storytellers (4.1). */}
-      <section className="mt-8 rounded-2xl border bg-white/40 p-5">
-        <h2 className="font-medium text-lg">Your voice</h2>
-        <p className="text-sm text-ink/60">What they hear asking the questions.</p>
-
-        {voices.length === 0 ? (
-          <p className="mt-4 text-sm text-ink/50">
-            You&apos;re not set as the interviewer for anyone yet. Set that up in{" "}
-            <Link href="/storytellers" className="underline">
-              Storytellers
-            </Link>
-            .
-          </p>
-        ) : (
-          <ul className="mt-4 space-y-2">
-            {voices.map((v) => (
-              <li
-                key={v.storytellerId}
-                className="flex items-center justify-between gap-3 text-sm"
-              >
-                <span>
-                  <span className="text-ink/60">For </span>
-                  {v.storytellerName}
-                </span>
-                <span className="flex items-center gap-3">
-                  {v.voiceLabel ? (
-                    <span className="text-green-700">✓ Cloned</span>
-                  ) : (
-                    <span className="text-ink/50">Not set up</span>
-                  )}
-                  <Link href="/storytellers" className="text-ink/70 underline">
-                    {v.voiceLabel ? "Manage" : "Set up"}
-                  </Link>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* 4 — Family who can listen. Roster + invitations + invite form. */}
+      {/* Family who can listen. Roster + invitations + invite form. */}
       <section className="mt-8 rounded-2xl border bg-white/40 p-5">
         <h2 className="font-medium text-lg">Family who can listen</h2>
         <p className="text-sm text-ink/60">

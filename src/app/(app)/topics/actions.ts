@@ -47,5 +47,5 @@ export async function setTopicPreference(formData: FormData) {
     );
   }
 
-  revalidatePath("/topics");
+  revalidatePath(`/storytellers/${storytellerId}`);
 }
