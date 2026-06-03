@@ -301,33 +301,39 @@ export type Database = {
           days_of_week: string[]
           family_id: string
           id: string
+          last_nudged_at: string | null
           paused: boolean
           questions_per: number
           quiet_after: string | null
           send_time_local: string
           storyteller_id: string
+          timezone: string | null
           updated_at: string
         }
         Insert: {
           days_of_week?: string[]
           family_id: string
           id?: string
+          last_nudged_at?: string | null
           paused?: boolean
           questions_per?: number
           quiet_after?: string | null
           send_time_local?: string
           storyteller_id: string
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
           days_of_week?: string[]
           family_id?: string
           id?: string
+          last_nudged_at?: string | null
           paused?: boolean
           questions_per?: number
           quiet_after?: string | null
           send_time_local?: string
           storyteller_id?: string
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: [

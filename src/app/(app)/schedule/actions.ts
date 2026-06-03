@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { sendStorytellerNudge } from "@/lib/sms/nudge";
-import { DAY_CODES, type DayCode } from "@/lib/schedule";
+import { DAY_CODES, DEFAULT_TIMEZONE, type DayCode } from "@/lib/schedule";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -17,6 +17,20 @@ const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 // "HH:MM" → "HH:MM" if valid, else the fallback. Postgres `time` accepts it.
 function cleanTime(raw: string, fallback: string): string {
   return HHMM_RE.test(raw) ? raw : fallback;
+}
+
+// Accept the submitted IANA zone only if the runtime recognizes it (the cron
+// will feed it straight to Intl); anything else falls back to the default so a
+// bad value can never wedge the scheduler.
+function cleanTimezone(raw: string): string {
+  const tz = raw.trim();
+  if (!tz) return DEFAULT_TIMEZONE;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return DEFAULT_TIMEZONE;
+  }
 }
 
 export async function saveSchedule(formData: FormData) {
@@ -46,6 +60,8 @@ export async function saveSchedule(formData: FormData) {
   const quietRaw = String(formData.get("quiet_after") ?? "").trim();
   const quietAfter = HHMM_RE.test(quietRaw) ? quietRaw : null; // blank = no cutoff
 
+  const timezone = cleanTimezone(String(formData.get("timezone") ?? ""));
+
   const qpRaw = Number(formData.get("questions_per"));
   const questionsPer = qpRaw === 1 ? 1 : 2; // kept to 1–2 per the prototype
 
@@ -59,6 +75,7 @@ export async function saveSchedule(formData: FormData) {
       send_time_local: sendTimeLocal,
       questions_per: questionsPer,
       quiet_after: quietAfter,
+      timezone,
       paused,
     },
     { onConflict: "storyteller_id" },

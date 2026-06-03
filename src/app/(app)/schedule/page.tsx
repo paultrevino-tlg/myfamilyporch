@@ -4,6 +4,7 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import {
   loadSchedules,
   DAY_CODES,
+  TIMEZONES,
   type DayCode,
   type StorytellerSchedule,
 } from "@/lib/schedule";
@@ -100,6 +101,12 @@ function prettyTime(hhmm: string): string {
   return `${h12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
+// Friendly label for a stored IANA zone; falls back to the raw id for any
+// value not in the curated picker list.
+function tzLabel(tz: string): string {
+  return TIMEZONES.find((z) => z.value === tz)?.label ?? tz;
+}
+
 function daysSummary(days: DayCode[]): string {
   if (days.length === 0) return "No days set";
   if (days.length === 7) return "Every day";
@@ -132,7 +139,8 @@ function ScheduleBlock({
         // Viewer: calm read-only summary.
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Days">{daysSummary(st.days)}</Row>
-          <Row label="Time">{prettyTime(st.sendTimeLocal)} · his local time</Row>
+          <Row label="Time">{prettyTime(st.sendTimeLocal)}</Row>
+          <Row label="Timezone">{tzLabel(st.timezone)}</Row>
           <Row label="Questions per session">{st.questionsPer === 1 ? "1" : "1–2"}</Row>
           <Row label="Quiet hours">
             {st.quietAfter ? `After ${prettyTime(st.quietAfter)}` : "Not set"}
@@ -172,13 +180,33 @@ function ScheduleBlock({
           <div className="flex flex-wrap gap-6">
             <label className="flex flex-col text-sm">
               <span className="font-medium">Time</span>
-              <span className="text-xs text-ink/50">His local time.</span>
+              <span className="text-xs text-ink/50">In their local time.</span>
               <input
                 type="time"
                 name="send_time_local"
                 defaultValue={st.sendTimeLocal}
                 className="mt-1 rounded-lg border px-3 py-2 text-base"
               />
+            </label>
+
+            <label className="flex flex-col text-sm">
+              <span className="font-medium">Timezone</span>
+              <span className="text-xs text-ink/50">Where they are.</span>
+              <select
+                name="timezone"
+                defaultValue={st.timezone}
+                className="mt-1 rounded-lg border px-3 py-2 text-base"
+              >
+                {/* Keep an unknown stored zone selectable rather than silently swapping it. */}
+                {!TIMEZONES.some((z) => z.value === st.timezone) && (
+                  <option value={st.timezone}>{st.timezone}</option>
+                )}
+                {TIMEZONES.map((z) => (
+                  <option key={z.value} value={z.value}>
+                    {z.label}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="flex flex-col text-sm">
