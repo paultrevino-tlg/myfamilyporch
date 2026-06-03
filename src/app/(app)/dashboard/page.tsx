@@ -3,11 +3,15 @@ import Link from "next/link";
 import { getActiveMembership, getFamilies } from "@/lib/auth";
 import {
   loadOverview,
+  loadSignals,
   loadStorytellerStats,
   type RecentStory,
+  type Signal,
   type StorytellerStat,
 } from "@/lib/overview";
 import { switchFamily } from "../actions";
+import { dismissInsight } from "./actions";
+import { roleAtLeast } from "@/lib/auth";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -18,6 +22,14 @@ function relDay(iso: string): string {
   if (days === 1) return "Yesterday";
   if (days < 7) return then.toLocaleDateString("en-US", { weekday: "short" });
   return `${days} days ago`;
+}
+
+// Time-of-day for a signal's sub line ("9:42 AM") — pairs with relDay above.
+function timeOfDay(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // "2 min 14 sec" — matches the prototype's spoken-length phrasing.
@@ -38,6 +50,8 @@ export default async function Dashboard() {
   const families = await getFamilies();
   const overview = await loadOverview(active.family_id);
   const storytellerStats = await loadStorytellerStats(active.family_id);
+  const signals = await loadSignals(active.family_id);
+  const canDismiss = roleAtLeast(active.role, "admin");
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -76,6 +90,18 @@ export default async function Dashboard() {
             </form>
           ))}
         </div>
+      )}
+
+      {/* Signals at the top of Overview (TODO 6.2): the mic-failed alert is
+          acute/red-tone. Any member sees it; only admins can dismiss it. */}
+      {signals.length > 0 && (
+        <section className="mt-8 space-y-3">
+          {signals
+            .filter((s) => s.type === "mic_failed")
+            .map((s) => (
+              <SignalAlert key={s.id} signal={s} canDismiss={canDismiss} />
+            ))}
+        </section>
       )}
 
       {/* Storytellers first: one block per elder with their own metrics, the
@@ -231,5 +257,45 @@ function RecentRow({ story }: { story: RecentStory }) {
         />
       )}
     </li>
+  );
+}
+
+// The mic-failed signal (TODO 6.2) — acute/red tone per the prototype's `.alert`.
+// Surfaced to every member; only admins get the Dismiss control (RLS ins_write
+// is the real guard). The matching admin SMS already fired when the signal was
+// recorded (TODO 2.4/5.5), so this banner just makes it visible and clearable.
+function SignalAlert({
+  signal,
+  canDismiss,
+}: {
+  signal: Signal;
+  canDismiss: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+      <span className="text-xl leading-none" aria-hidden>
+        ⚠️
+      </span>
+      <div className="flex-1">
+        <div className="font-medium text-sm text-amber-900">
+          {signal.storytellerName}&apos;s microphone didn&apos;t go through.
+        </div>
+        <div className="mt-0.5 text-xs text-amber-800/80">
+          {relDay(signal.createdAt)} at {timeOfDay(signal.createdAt)} · they may
+          need to allow the microphone on their device. We also texted the family.
+        </div>
+      </div>
+      {canDismiss && (
+        <form action={dismissInsight}>
+          <input type="hidden" name="insight_id" value={signal.id} />
+          <button
+            type="submit"
+            className="rounded-lg border border-amber-300 px-3 py-1 text-xs text-amber-900 hover:bg-amber-100"
+          >
+            Dismiss
+          </button>
+        </form>
+      )}
+    </div>
   );
 }

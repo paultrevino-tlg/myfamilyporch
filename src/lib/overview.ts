@@ -32,6 +32,18 @@ export type StorytellerStat = {
   topicsTotal: number; // family-wide library size (shared across storytellers)
 };
 
+// A surfaced signal/insight for the active family (TODO 6.2 — mic-failed; the
+// schedule-suggestion and engagement-drop signals 6.3/6.4 reuse this shape).
+// Loaded via the RLS-bound SSR client: any member reads (ins_select), only
+// admins dismiss (ins_write) — that policy is the boundary, not app code.
+export type Signal = {
+  id: string;
+  type: "mic_failed" | "schedule_suggestion" | "engagement_drop";
+  storytellerName: string;
+  createdAt: string;
+  payload: Record<string, unknown>;
+};
+
 export type Overview = {
   lastSessionAt: string | null; // ISO of most recent completed session, or null
   lastSessionFresh: boolean; // completed within the last 7 days
@@ -256,4 +268,26 @@ export async function loadOverview(familyId: string): Promise<Overview> {
     topicsTotal: libraryCategories.size,
     recent,
   };
+}
+
+// Active (undismissed) signals for the active family, newest first. RLS
+// (ins_select) scopes the read to the member's families; we additionally filter
+// to the active one. Generic over insight type so 6.3/6.4 add rows without a
+// new loader — the dashboard chooses which types it renders.
+export async function loadSignals(familyId: string): Promise<Signal[]> {
+  const sb = await supabaseServer();
+  const { data } = await sb
+    .from("insights")
+    .select("id, type, payload, created_at, storyteller:storytellers(name)")
+    .eq("family_id", familyId)
+    .is("dismissed_at", null)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((s) => ({
+    id: s.id as string,
+    type: s.type as Signal["type"],
+    storytellerName: one<{ name: string }>(s.storyteller)?.name ?? "Storyteller",
+    createdAt: s.created_at as string,
+    payload: (s.payload as Record<string, unknown>) ?? {},
+  }));
 }
