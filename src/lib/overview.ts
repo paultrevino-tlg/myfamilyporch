@@ -14,6 +14,7 @@ export type RecentStory = {
   createdAt: string;
   durationSec: number | null;
   followUps: number;
+  hasAudio: boolean; // a recording is linked → show a player (TODO 5.2)
 };
 
 export type Overview = {
@@ -53,7 +54,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
       sb
         .from("answers")
         .select(
-          "id, question_text, created_at, duration_sec, " +
+          "id, question_text, created_at, duration_sec, audio_path, " +
             "storyteller:storytellers(name), prompt:prompts(category), " +
             "followups:answers!parent_answer_id(count)"
         )
@@ -114,6 +115,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
     question_text: string | null;
     created_at: string;
     duration_sec: number | null;
+    audio_path: string | null;
     storyteller: unknown;
     prompt: unknown;
     followups: unknown;
@@ -126,6 +128,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
     createdAt: a.created_at,
     durationSec: a.duration_sec ?? null,
     followUps: one<{ count: number }>(a.followups)?.count ?? 0,
+    hasAudio: !!a.audio_path,
   }));
 
   return {

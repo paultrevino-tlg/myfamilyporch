@@ -109,7 +109,12 @@ export default async function Dashboard() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-medium text-lg">Lately</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium text-lg">Lately</h2>
+          <Link href="/stories" className="text-sm text-ink/60 underline">
+            Review stories
+          </Link>
+        </div>
         <ul className="mt-3 space-y-2">
           {overview.recent.map((story) => (
             <RecentRow key={story.id} story={story} />
@@ -232,7 +237,8 @@ function Card({
   );
 }
 
-// One "Lately" row. Audio playback (▶) arrives with signed URLs in 5.2.
+// One "Lately" row. Audio plays via a short-lived signed URL minted by
+// /api/stories/audio after a membership check (TODO 5.2).
 function RecentRow({ story }: { story: RecentStory }) {
   const duration = formatDuration(story.durationSec);
   const meta = [relDay(story.createdAt), duration, story.followUps > 0 && `${story.followUps} follow-up${story.followUps > 1 ? "s" : ""}`]
@@ -252,6 +258,14 @@ function RecentRow({ story }: { story: RecentStory }) {
         <span>{story.storyteller}</span>
         {meta && <span>· {meta}</span>}
       </div>
+      {story.hasAudio && (
+        <audio
+          controls
+          preload="none"
+          src={`/api/stories/audio?answer=${story.id}`}
+          className="mt-2 w-full"
+        />
+      )}
     </li>
   );
 }
