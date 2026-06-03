@@ -135,6 +135,9 @@ export default async function Dashboard() {
             <Link href="/topics" className="text-sm text-ink/60 underline">
               Topics
             </Link>
+            <Link href="/schedule" className="text-sm text-ink/60 underline">
+              Schedule
+            </Link>
             <Link href="/storytellers" className="text-sm text-ink/60 underline">
               Manage storytellers
             </Link>
