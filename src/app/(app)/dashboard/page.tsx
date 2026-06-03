@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, getFamilies } from "@/lib/auth";
-import { loadOverview, type RecentStory } from "@/lib/overview";
+import {
+  loadOverview,
+  loadStorytellerStats,
+  type RecentStory,
+  type StorytellerStat,
+} from "@/lib/overview";
 import { switchFamily } from "../actions";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
@@ -32,13 +36,8 @@ export default async function Dashboard() {
   if (!active) redirect("/onboarding");
 
   const families = await getFamilies();
-  const sb = await supabaseServer();
   const overview = await loadOverview(active.family_id);
-
-  const { data: storytellers } = await sb
-    .from("storytellers")
-    .select("id,name,language")
-    .eq("family_id", active.family_id);
+  const storytellerStats = await loadStorytellerStats(active.family_id);
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -139,26 +138,23 @@ export default async function Dashboard() {
             </Link>
           </div>
         </div>
-        <ul className="mt-3 space-y-2">
-          {(storytellers ?? []).map((s) => (
-            <li key={s.id} className="rounded-lg border px-3 py-2 text-sm">
-              {s.name}
-              <span className="text-ink/50">
-                {" · "}
-                {s.language === "es" ? "Español" : "English"}
-              </span>
-            </li>
+        {/* One block per storyteller: the same four metrics as the family-wide
+            cards above, scoped to that elder. The whole block links to their
+            detail page (config summary + their answers). */}
+        <div className="mt-3 space-y-3">
+          {storytellerStats.map((s) => (
+            <StorytellerBlock key={s.id} stat={s} />
           ))}
-          {(storytellers ?? []).length === 0 && (
-            <li className="text-sm text-ink/50">
+          {storytellerStats.length === 0 && (
+            <p className="text-sm text-ink/50">
               No storytellers yet.{" "}
               <Link href="/storytellers" className="underline">
                 Add one
               </Link>
               .
-            </li>
+            </p>
           )}
-        </ul>
+        </div>
       </section>
 
       {/* Family access now lives on Settings (TODO 5.5) — one source of truth. */}
@@ -174,6 +170,43 @@ export default async function Dashboard() {
         </div>
       </section>
     </main>
+  );
+}
+
+// One storyteller's block on the dashboard: their name + the same four status
+// cards, the whole thing a link into their detail page.
+function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
+  return (
+    <Link
+      href={`/storytellers/${stat.id}`}
+      className="block rounded-xl border p-4 transition hover:bg-ink/[0.03]"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-base">{stat.name}</h3>
+        <span className="text-sm text-ink/50">
+          {stat.language === "es" ? "Español" : "English"} ›
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card
+          label="Last session"
+          good={stat.lastSessionFresh}
+          value={stat.lastSessionAt ? relDay(stat.lastSessionAt) : "—"}
+          sub={stat.lastSessionFresh ? "✓" : stat.lastSessionAt ? "" : "none yet"}
+        />
+        <Card
+          label="This week"
+          value={String(stat.thisWeekCount)}
+          sub={stat.weeklyTarget != null ? `of ${stat.weeklyTarget}` : ""}
+        />
+        <Card label="Stories saved" value={String(stat.storiesSaved)} />
+        <Card
+          label="Topics touched"
+          value={String(stat.topicsTouched)}
+          sub={stat.topicsTotal ? `/ ${stat.topicsTotal}` : ""}
+        />
+      </div>
+    </Link>
   );
 }
 

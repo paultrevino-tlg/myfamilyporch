@@ -36,14 +36,18 @@ function one<T>(rel: unknown): T | null {
   return (rel as T) ?? null;
 }
 
-export async function loadStories(familyId: string): Promise<Story[]> {
+export async function loadStories(
+  familyId: string,
+  storytellerId?: string
+): Promise<Story[]> {
   const sb = await supabaseServer();
 
   // Top-level answers (follow-ups thread under them), newest first, with the
   // category, storyteller, and the full follow-up thread embedded. The
   // self-referential `followups` embed defeats PostgREST's static type
-  // inference, so we type the rows explicitly below.
-  const { data } = await sb
+  // inference, so we type the rows explicitly below. An optional storytellerId
+  // narrows to one elder's archive (the detail page); RLS stays the boundary.
+  let query = sb
     .from("answers")
     .select(
       "id, question_text, transcript, in_book, duration_sec, audio_path, created_at, " +
@@ -51,8 +55,9 @@ export async function loadStories(familyId: string): Promise<Story[]> {
         "followups:answers!parent_answer_id(id, question_text, transcript, duration_sec, audio_path, created_at)"
     )
     .eq("family_id", familyId)
-    .eq("is_followup", false)
-    .order("created_at", { ascending: false });
+    .eq("is_followup", false);
+  if (storytellerId) query = query.eq("storyteller_id", storytellerId);
+  const { data } = await query.order("created_at", { ascending: false });
 
   type FollowRow = {
     id: string;

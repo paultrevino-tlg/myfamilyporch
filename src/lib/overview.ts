@@ -17,6 +17,21 @@ export type RecentStory = {
   hasAudio: boolean; // a recording is linked → show a player (TODO 5.2)
 };
 
+// The same four status metrics as Overview, but scoped to one storyteller —
+// powers the per-storyteller blocks on the dashboard and the detail page header.
+export type StorytellerStat = {
+  id: string;
+  name: string;
+  language: string;
+  lastSessionAt: string | null;
+  lastSessionFresh: boolean;
+  thisWeekCount: number;
+  weeklyTarget: number | null; // this storyteller's scheduled days, or null if unscheduled
+  storiesSaved: number;
+  topicsTouched: number;
+  topicsTotal: number; // family-wide library size (shared across storytellers)
+};
+
 export type Overview = {
   lastSessionAt: string | null; // ISO of most recent completed session, or null
   lastSessionFresh: boolean; // completed within the last 7 days
@@ -33,6 +48,106 @@ export type Overview = {
 function one<T>(rel: unknown): T | null {
   if (Array.isArray(rel)) return (rel[0] as T) ?? null;
   return (rel as T) ?? null;
+}
+
+// Per-storyteller breakdown of the four status metrics for the active family.
+// One grouped pass over sessions / schedules / answers (bucketed by
+// storyteller_id in JS) rather than N per-storyteller round-trips. RLS scopes
+// every read to the member's families; we additionally filter to the active one.
+export async function loadStorytellerStats(
+  familyId: string
+): Promise<StorytellerStat[]> {
+  const sb = await supabaseServer();
+  const weekAgo = new Date(Date.now() - WEEK_MS).toISOString();
+
+  const [storytellersRes, sessionsRes, schedulesRes, answersRes, libraryRes] =
+    await Promise.all([
+      sb
+        .from("storytellers")
+        .select("id,name,language")
+        .eq("family_id", familyId)
+        .order("created_at", { ascending: true }),
+      sb
+        .from("sessions")
+        .select("storyteller_id, completed_at")
+        .eq("family_id", familyId)
+        .not("completed_at", "is", null),
+      sb
+        .from("schedules")
+        .select("storyteller_id, days_of_week")
+        .eq("family_id", familyId),
+      sb
+        .from("answers")
+        .select("storyteller_id, prompt:prompts(category)")
+        .eq("family_id", familyId)
+        .eq("is_followup", false),
+      sb
+        .from("prompts")
+        .select("category")
+        .or(`family_id.is.null,family_id.eq.${familyId}`),
+    ]);
+
+  const topicsTotal = new Set(
+    (libraryRes.data ?? []).map((p) => p.category as string).filter(Boolean)
+  ).size;
+
+  // Completed-session timestamps per storyteller (for last session + this week).
+  const sessionsBy = new Map<string, string[]>();
+  for (const s of sessionsRes.data ?? []) {
+    if (!s.completed_at) continue;
+    const id = s.storyteller_id as string;
+    const arr = sessionsBy.get(id) ?? [];
+    arr.push(s.completed_at as string);
+    sessionsBy.set(id, arr);
+  }
+
+  // Weekly target = this storyteller's scheduled days (null when unscheduled).
+  const scheduleBy = new Map<string, number>();
+  for (const s of schedulesRes.data ?? []) {
+    scheduleBy.set(
+      s.storyteller_id as string,
+      (s.days_of_week as string[] | null)?.length ?? 0
+    );
+  }
+
+  // Stories saved (top-level answer count) + distinct categories per storyteller.
+  const storiesBy = new Map<string, number>();
+  const topicsBy = new Map<string, Set<string>>();
+  for (const a of answersRes.data ?? []) {
+    const id = a.storyteller_id as string;
+    storiesBy.set(id, (storiesBy.get(id) ?? 0) + 1);
+    const cat = one<{ category: string }>(a.prompt)?.category;
+    if (cat) {
+      const set = topicsBy.get(id) ?? new Set<string>();
+      set.add(cat);
+      topicsBy.set(id, set);
+    }
+  }
+
+  return (
+    (storytellersRes.data ?? []) as {
+      id: string;
+      name: string;
+      language: string;
+    }[]
+  ).map((st) => {
+    const completed = (sessionsBy.get(st.id) ?? [])
+      .slice()
+      .sort((a, b) => b.localeCompare(a));
+    const lastSessionAt = completed[0] ?? null;
+    return {
+      id: st.id,
+      name: st.name,
+      language: st.language,
+      lastSessionAt,
+      lastSessionFresh: !!lastSessionAt && lastSessionAt >= weekAgo,
+      thisWeekCount: completed.filter((c) => c >= weekAgo).length,
+      weeklyTarget: scheduleBy.has(st.id) ? (scheduleBy.get(st.id) ?? 0) : null,
+      storiesSaved: storiesBy.get(st.id) ?? 0,
+      topicsTouched: topicsBy.get(st.id)?.size ?? 0,
+      topicsTotal,
+    };
+  });
 }
 
 export async function loadOverview(familyId: string): Promise<Overview> {
