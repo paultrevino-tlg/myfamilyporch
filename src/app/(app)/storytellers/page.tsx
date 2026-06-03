@@ -11,6 +11,7 @@ import {
   deleteStoryteller,
   createRecordingLink,
   revokeRecordingLinks,
+  sendNudge,
 } from "./actions";
 import VoiceSetup from "./VoiceSetup";
 
@@ -39,7 +40,7 @@ const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
 export default async function StorytellersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
@@ -58,7 +59,7 @@ export default async function StorytellersPage({
   const { data: storytellers } = await sb
     .from("storytellers")
     .select(
-      "id,name,pronouns,birth_year,language,storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profile_id,voice_profiles(id,label))",
+      "id,name,pronouns,birth_year,language,phone,storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profile_id,voice_profiles(id,label))",
     )
     .eq("family_id", active.family_id)
     .eq("storyteller_relationships.user_id", user.id)
@@ -113,6 +114,28 @@ export default async function StorytellersPage({
         <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           Couldn&apos;t create the recording link. The storyteller-token secret may not be
           configured.
+        </p>
+      )}
+
+      {sp.sent === "nudge" && (
+        <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+          Nudge sent. 💬
+        </p>
+      )}
+      {sp.sent === "nudge_no-phone" && (
+        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-ink/70">
+          No nudge sent — that storyteller has no phone number on file. Add one in their details.
+        </p>
+      )}
+      {sp.sent === "nudge_no-link" && (
+        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-ink/70">
+          No nudge sent — couldn&apos;t build a recording link. The storyteller-token secret may
+          not be configured.
+        </p>
+      )}
+      {sp.sent === "nudge_failed" && (
+        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          Couldn&apos;t send the nudge. The SMS provider may not be configured.
         </p>
       )}
 
@@ -299,6 +322,14 @@ export default async function StorytellersPage({
                         </span>
                         {canManage && (
                           <span className="flex gap-3">
+                            {s.phone?.trim() && (
+                              <form action={sendNudge}>
+                                <input type="hidden" name="storyteller_id" value={s.id} />
+                                <button type="submit" className="text-ink/70 underline">
+                                  Send a nudge
+                                </button>
+                              </form>
+                            )}
                             <form action={createRecordingLink}>
                               <input type="hidden" name="storyteller_id" value={s.id} />
                               <button type="submit" className="text-ink/70 underline">

@@ -48,6 +48,11 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_sub: "Saved. We'll talk again soon. ❤️",
     done_count: "2 questions today — that's plenty",
     done_btn: "Done",
+    // SMS nudge (TODO 4.3). {address} = how the elder is addressed; {interviewer}
+    // = who it's from. The deep-link URL is appended after this line by the
+    // sender, never interpolated into the translated string.
+    sms_nudge: "Hi {address}, it's {interviewer} — tap here to tell me a story 💬",
+    sms_nudge_no_interviewer: "Hi {address} — tap here to tell me a story 💬",
   },
   es: {
     // Welcome
@@ -88,6 +93,9 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_sub: "Guardada. Hablamos pronto. ❤️",
     done_count: "Dos preguntas hoy — con eso basta",
     done_btn: "Listo",
+    // SMS nudge (TODO 4.3)
+    sms_nudge: "Hola {address}, soy {interviewer} — toca aquí para contarme una historia 💬",
+    sms_nudge_no_interviewer: "Hola {address} — toca aquí para contarme una historia 💬",
   },
 };
 

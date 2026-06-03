@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
+import { sendStorytellerNudge } from "@/lib/sms/nudge";
 import { deleteVoice } from "@/lib/voice/elevenlabs";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -190,6 +191,41 @@ export async function revokeRecordingLinks(formData: FormData) {
   await revokeStorytellerTokens(storytellerId);
   revalidatePath("/storytellers");
   redirect("/storytellers");
+}
+
+// Send a localized story nudge now (TODO 4.3). Manual "ask now" hook so the SMS
+// path is exercisable today; the weekly cron (6.1) and full Schedule surface
+// (5.4) reuse sendStorytellerNudge. Authorize via the RLS-scoped client (the
+// storyteller must be visible to this admin in the active family), then send
+// with the service role. Fail-soft outcomes (no phone / no link) surface as a
+// query flag rather than an error.
+export async function sendNudge(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const storytellerId = String(formData.get("storyteller_id") ?? "");
+  if (!storytellerId) return;
+
+  const sb = await supabaseServer();
+  const { data: storyteller } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!storyteller) return; // not visible to this admin → refuse
+
+  let flag = "nudge";
+  try {
+    const result = await sendStorytellerNudge(storytellerId, active.family_id);
+    flag = result.status === "sent" ? "nudge" : `nudge_${result.reason}`;
+  } catch (e) {
+    console.error("[storytellers/sendNudge] send failed", e);
+    flag = "nudge_failed";
+  }
+
+  revalidatePath("/storytellers");
+  redirect(`/storytellers?sent=${flag}`);
 }
 
 // Remove the cloned voice from the caller's interviewer relationship (TODO 4.1):
