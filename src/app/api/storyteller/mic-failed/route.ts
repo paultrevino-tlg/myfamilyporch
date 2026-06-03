@@ -60,20 +60,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Best-effort admin alert. Twilio transport is wired in TODO 4.3 and the
-  // admin alert number is configured in Settings (TODO 5.5); until both land,
-  // sendSms is a stub. Swallow any failure so the signal still records.
+  // Best-effort admin alert (TODO 5.5). Text every owner/admin in this family
+  // who set an alert number in Settings (memberships.alert_phone). Fail-soft:
+  // any send error is swallowed so the signal still records and the elder's
+  // experience never depends on it.
   try {
-    // TODO 5.5: resolve the family's admin alert number; TODO 4.3: real send.
-    const adminNumber = process.env.ADMIN_ALERT_TEST_NUMBER;
-    if (adminNumber) {
-      await sendSms(
-        adminNumber,
-        `My Family Porch: ${session.name} had a microphone problem starting a story. They may need a hand.`,
-      );
-    }
+    const { data: admins } = await db
+      .from("memberships")
+      .select("alert_phone, role")
+      .eq("family_id", session.family_id)
+      .in("role", ["owner", "admin"])
+      .not("alert_phone", "is", null);
+
+    const numbers = Array.from(
+      new Set(
+        (admins ?? [])
+          .map((m) => m.alert_phone?.trim())
+          .filter((p): p is string => !!p),
+      ),
+    );
+
+    await Promise.all(
+      numbers.map((to) =>
+        sendSms(
+          to,
+          `My Family Porch: ${session.name} had a microphone problem starting a story. They may need a hand.`,
+        ).catch((e) => console.error("[storyteller/mic-failed] admin SMS failed", e)),
+      ),
+    );
   } catch (e) {
-    console.error("[storyteller/mic-failed] admin SMS failed (expected until 4.3/5.5)", e);
+    console.error("[storyteller/mic-failed] admin alert lookup failed", e);
   }
 
   return NextResponse.json({ ok: true });

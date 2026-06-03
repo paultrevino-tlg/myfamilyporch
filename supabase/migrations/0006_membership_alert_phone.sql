@@ -1,0 +1,11 @@
+-- ============================================================================
+-- TODO 5.5 — Settings: admin alert number
+-- Each admin registers their OWN phone for failure alerts (the mic-failed
+-- signal, SPEC § three signals). The prototype's Settings panel shows it tied
+-- to a person ("Paul · (480)•••‑2208"), so it belongs on the membership edge,
+-- not the family. Nullable: no number = that admin isn't texted. The mic-failed
+-- route resolves every admin alert_phone in the family and texts each.
+-- No new RLS needed — memberships already has mem_select (member read) and
+-- mem_write (admin write); admins update only their own row in app code.
+-- ============================================================================
+alter table memberships add column alert_phone text;

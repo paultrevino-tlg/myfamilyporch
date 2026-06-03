@@ -213,6 +213,7 @@ export type Database = {
       }
       memberships: {
         Row: {
+          alert_phone: string | null
           created_at: string
           family_id: string
           id: string
@@ -220,6 +221,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_phone?: string | null
           created_at?: string
           family_id: string
           id?: string
@@ -227,6 +229,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_phone?: string | null
           created_at?: string
           family_id?: string
           id?: string

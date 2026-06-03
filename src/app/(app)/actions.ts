@@ -62,7 +62,8 @@ export async function createInvitation(formData: FormData) {
     footnote: "This invitation expires in 7 days. If you weren't expecting it, you can ignore this email.",
   });
 
-  redirect("/dashboard");
+  // Family access is managed on Settings (TODO 5.5) — return there.
+  redirect("/settings");
 }
 
 // Friendly text for the exceptions raised by the accept_invitation RPC.

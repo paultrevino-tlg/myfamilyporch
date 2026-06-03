@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { getActiveMembership, getFamilies, roleAtLeast } from "@/lib/auth";
+import { getActiveMembership, getFamilies } from "@/lib/auth";
 import { loadOverview, type RecentStory } from "@/lib/overview";
-import { createInvitation, switchFamily } from "../actions";
+import { switchFamily } from "../actions";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -32,7 +32,6 @@ export default async function Dashboard() {
   if (!active) redirect("/onboarding");
 
   const families = await getFamilies();
-  const canManage = roleAtLeast(active.role, "admin");
   const sb = await supabaseServer();
   const overview = await loadOverview(active.family_id);
 
@@ -40,12 +39,6 @@ export default async function Dashboard() {
     .from("storytellers")
     .select("id,name,language")
     .eq("family_id", active.family_id);
-
-  const { data: invitations } = await sb
-    .from("invitations")
-    .select("email,role,accepted_at,expires_at")
-    .eq("family_id", active.family_id)
-    .order("created_at", { ascending: false });
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -138,6 +131,9 @@ export default async function Dashboard() {
             <Link href="/schedule" className="text-sm text-ink/60 underline">
               Schedule
             </Link>
+            <Link href="/settings" className="text-sm text-ink/60 underline">
+              Settings
+            </Link>
             <Link href="/storytellers" className="text-sm text-ink/60 underline">
               Manage storytellers
             </Link>
@@ -165,56 +161,17 @@ export default async function Dashboard() {
         </ul>
       </section>
 
-      {/* Family access (TODO 1.3). Full Settings surface lands in Phase 5.5. */}
+      {/* Family access now lives on Settings (TODO 5.5) — one source of truth. */}
       <section className="mt-10 border-t pt-6">
-        <h2 className="font-medium text-lg">Family access</h2>
-        <p className="text-sm text-ink/60">Who can see {active.name}&apos;s stories.</p>
-
-        {canManage && (
-          <form action={createInvitation} className="mt-4 flex flex-wrap items-end gap-3">
-            <label className="flex flex-col text-sm">
-              <span className="text-ink/60">Email</span>
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="relative@example.com"
-                className="mt-1 rounded-lg border px-3 py-2 text-base"
-              />
-            </label>
-            <label className="flex flex-col text-sm">
-              <span className="text-ink/60">Role</span>
-              <select name="role" defaultValue="viewer" className="mt-1 rounded-lg border px-3 py-2 text-base">
-                <option value="viewer">Viewer — can listen &amp; read</option>
-                <option value="admin">Admin — can steer &amp; invite</option>
-              </select>
-            </label>
-            <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
-              Send invite
-            </button>
-          </form>
-        )}
-
-        <ul className="mt-4 space-y-2">
-          {(invitations ?? []).map((inv, i) => {
-            const status = inv.accepted_at
-              ? "Accepted"
-              : new Date(inv.expires_at) < new Date()
-                ? "Expired"
-                : "Pending";
-            return (
-              <li key={i} className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
-                <span>
-                  {inv.email} <span className="text-ink/50">· {inv.role}</span>
-                </span>
-                <span className="text-ink/60">{status}</span>
-              </li>
-            );
-          })}
-          {(invitations ?? []).length === 0 && (
-            <li className="text-sm text-ink/50">No invitations yet.</li>
-          )}
-        </ul>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-medium text-lg">Family access</h2>
+            <p className="text-sm text-ink/60">Who can see {active.name}&apos;s stories.</p>
+          </div>
+          <Link href="/settings" className="text-sm text-ink/60 underline">
+            Manage in Settings
+          </Link>
+        </div>
       </section>
     </main>
   );
