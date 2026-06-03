@@ -20,28 +20,28 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-10">
-      <h1 className="font-semibold text-2xl">Create your family</h1>
-      <p className="mt-3 text-ink/70">
-        This is your family&apos;s space on My Family Porch. You can invite others
-        and add storytellers next. You&apos;ll be the owner.
-      </p>
-      <form action={createFamily} className="mt-6 space-y-4">
-        <input
-          type="text"
-          name="name"
-          required
-          placeholder="e.g. The Trevino Family"
-          autoComplete="off"
-          className="w-full rounded-lg border px-4 py-3 text-base"
-        />
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-ink px-4 py-3 font-medium text-white"
-        >
-          Create family
-        </button>
-      </form>
+    <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center p-6">
+      <div className="card p-8">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-3xl">🏡</div>
+        <h1 className="mt-4 font-serif text-2xl font-semibold">Create your family</h1>
+        <p className="mt-2 text-ink/65">
+          This is your family&apos;s space on My Family Porch. You can invite others
+          and add storytellers next. You&apos;ll be the owner.
+        </p>
+        <form action={createFamily} className="mt-6 space-y-3">
+          <input
+            type="text"
+            name="name"
+            required
+            placeholder="e.g. The Trevino Family"
+            autoComplete="off"
+            className="input w-full"
+          />
+          <button type="submit" className="btn-primary w-full py-3">
+            Create family
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

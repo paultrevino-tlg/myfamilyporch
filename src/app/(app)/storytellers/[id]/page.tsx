@@ -66,7 +66,7 @@ const DAY_LABEL: Record<DayCode, string> = {
   FR: "Fr",
   SA: "Sa",
 };
-const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
+const inputCls = "mt-1 input";
 
 // A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp.
 function relDay(iso: string): string {
@@ -202,20 +202,23 @@ export default async function StorytellerDetailPage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="flex items-center justify-between gap-4">
+    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
+      <Link href="/dashboard" className="text-sm font-semibold text-ink/50 hover:text-ink">
+        ← Dashboard
+      </Link>
+      <div className="mt-3 flex items-center gap-4">
+        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-gradient-to-br from-brand to-brand2 text-lg font-bold text-white">
+          {(st.name.trim()[0] ?? "·").toUpperCase()}
+        </div>
         <div>
-          <h1 className="font-semibold text-2xl">{st.name}</h1>
-          <p className="mt-1 text-sm text-ink/60">
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">{st.name}</h1>
+          <p className="mt-1 text-sm text-ink/55">
             {PRONOUN_LABEL[st.pronouns] ?? st.pronouns}
             {st.birth_year ? ` · b. ${st.birth_year}` : ""}
             {` · ${st.language === "es" ? "Español" : "English"}`}
             {rel?.is_interviewer ? " · you interview" : ""}
           </p>
         </div>
-        <Link href="/dashboard" className="text-sm text-ink/60 underline">
-          ← Dashboard
-        </Link>
       </div>
 
       {/* Banners surfaced by the inline editors' redirects. */}
@@ -247,7 +250,7 @@ export default async function StorytellerDetailPage({
       {/* Setup — one expandable box per setting, each with that storyteller's
           own configuration inline. */}
       <section className="mt-8 space-y-2">
-        <h2 className="font-medium text-lg">Setup</h2>
+        <h2 className="text-lg font-semibold">Setup</h2>
 
         {/* Details ---------------------------------------------------------- */}
         <ConfigBox
@@ -406,25 +409,25 @@ export default async function StorytellerDetailPage({
             </p>
 
             {canManage && (
-              <div className="mt-3 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {st.phone?.trim() && (
                   <form action={sendNudge}>
                     <input type="hidden" name="storyteller_id" value={st.id} />
-                    <button type="submit" className="text-ink/70 underline">
+                    <button type="submit" className="btn-ghost">
                       Send a nudge
                     </button>
                   </form>
                 )}
                 <form action={createRecordingLink}>
                   <input type="hidden" name="storyteller_id" value={st.id} />
-                  <button type="submit" className="text-ink/70 underline">
+                  <button type="submit" className="btn-primary">
                     {linkCount > 0 ? "New link" : "Create recording link"}
                   </button>
                 </form>
                 {linkCount > 0 && (
                   <form action={revokeRecordingLinks}>
                     <input type="hidden" name="storyteller_id" value={st.id} />
-                    <button type="submit" className="text-red-600 underline">
+                    <button type="submit" className="btn-ghost text-red-600">
                       Revoke links
                     </button>
                   </form>
@@ -433,13 +436,13 @@ export default async function StorytellerDetailPage({
             )}
 
             {linkUrl && (
-              <div className="mt-3 rounded-lg bg-black/[0.03] p-3">
+              <div className="mt-3 rounded-xl border border-line bg-surface2 p-3">
                 <p className="text-ink/60">Recording link for {st.name}:</p>
                 <code className="mt-1 block break-all text-ink">{linkUrl}</code>
               </div>
             )}
             {linkCount > 0 && !linkUrl && (
-              <div className="mt-3 rounded-lg bg-amber-50 p-3 text-ink/70">
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800">
                 {canManage
                   ? `This link predates shareable URLs. Tap “New link” to get a copyable URL for ${st.name}.`
                   : `An admin can create a shareable link for ${st.name}.`}
@@ -480,18 +483,15 @@ export default async function StorytellerDetailPage({
 
         {/* Remove ----------------------------------------------------------- */}
         {canManage && (
-          <details className="rounded-xl border border-red-200 px-4 py-3">
-            <summary className="cursor-pointer text-sm text-red-600">Remove {st.name}</summary>
+          <details className="rounded-xl border border-red-200 bg-red-50/40 px-4 py-3.5">
+            <summary className="cursor-pointer text-sm font-semibold text-red-600">Remove {st.name}</summary>
             <form action={deleteStoryteller} className="mt-3">
               <input type="hidden" name="id" value={st.id} />
               <p className="text-sm text-ink/60">
                 This deletes {st.name} and all of their stories, recordings, and schedule. This
                 can&apos;t be undone.
               </p>
-              <button
-                type="submit"
-                className="mt-3 rounded-lg bg-red-600 px-4 py-2 font-medium text-white"
-              >
+              <button type="submit" className="btn-danger mt-3">
                 Remove storyteller
               </button>
             </form>
@@ -503,9 +503,9 @@ export default async function StorytellerDetailPage({
           on /stories (one source of truth). */}
       <section className="mt-10">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium text-lg">{st.name}&apos;s stories</h2>
-          <Link href="/stories" className="text-sm text-ink/60 underline">
-            Manage in Stories
+          <h2 className="text-lg font-semibold">{st.name}&apos;s stories</h2>
+          <Link href="/stories" className="text-sm font-semibold text-brand hover:underline">
+            Manage in Stories →
           </Link>
         </div>
         <div className="mt-3 space-y-3">
@@ -537,13 +537,13 @@ function ConfigBox({
   children: React.ReactNode;
 }) {
   return (
-    <details className="rounded-xl border px-4 py-3">
+    <details className="card px-4 py-3.5">
       <summary className="flex cursor-pointer items-center justify-between gap-4">
         <span>
-          <span className="font-medium text-sm">{label}</span>
+          <span className="text-sm font-semibold">{label}</span>
           {sub && <span className="block text-xs text-ink/50">{sub}</span>}
         </span>
-        <span className="text-sm text-ink/70">{value}</span>
+        <span className="text-sm font-medium text-ink/70">{value}</span>
       </summary>
       <div className="mt-4">{children}</div>
     </details>
@@ -556,7 +556,7 @@ function ViewerNote() {
 
 function SaveButton() {
   return (
-    <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
+    <button type="submit" className="btn-ink">
       Save
     </button>
   );
@@ -565,11 +565,11 @@ function SaveButton() {
 function Banner({ tone, children }: { tone: "green" | "amber" | "red"; children: React.ReactNode }) {
   const cls =
     tone === "green"
-      ? "bg-green-50 text-green-700"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "amber"
-        ? "bg-amber-50 text-ink/70"
-        : "bg-red-50 text-red-700";
-  return <p className={`mt-4 rounded-lg p-3 text-sm ${cls}`}>{children}</p>;
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : "border-red-200 bg-red-50 text-red-700";
+  return <p className={`mt-4 rounded-xl border p-3 text-sm font-medium ${cls}`}>{children}</p>;
 }
 
 // Inline schedule editor (admins) / read-only summary (viewers). Mirrors the
@@ -626,7 +626,7 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
               type="time"
               name="send_time_local"
               defaultValue={st.sendTimeLocal}
-              className="mt-1 rounded-lg border px-3 py-2 text-base"
+              className="mt-1 input"
             />
           </label>
 
@@ -636,7 +636,7 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
             <select
               name="timezone"
               defaultValue={st.timezone}
-              className="mt-1 rounded-lg border px-3 py-2 text-base"
+              className="mt-1 input"
             >
               {!TIMEZONES.some((z) => z.value === st.timezone) && (
                 <option value={st.timezone}>{st.timezone}</option>
@@ -655,7 +655,7 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
             <select
               name="questions_per"
               defaultValue={String(st.questionsPer)}
-              className="mt-1 rounded-lg border px-3 py-2 text-base"
+              className="mt-1 input"
             >
               <option value="1">1</option>
               <option value="2">1–2</option>
@@ -669,7 +669,7 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
               type="time"
               name="quiet_after"
               defaultValue={st.quietAfter ?? ""}
-              className="mt-1 rounded-lg border px-3 py-2 text-base"
+              className="mt-1 input"
             />
           </label>
         </div>
@@ -686,11 +686,11 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
       </form>
 
       {/* "Ask now" posts on its own, outside the Save form. */}
-      <form action={askNow} className="mt-4 border-t pt-4">
+      <form action={askNow} className="mt-4 border-t border-line pt-4">
         <input type="hidden" name="storyteller_id" value={st.id} />
         <button
           type="submit"
-          className="rounded-full border border-ink px-4 py-1.5 text-sm hover:bg-ink/5"
+          className="rounded-full border border-ink px-4 py-1.5 text-sm font-semibold hover:bg-ink/5"
         >
           Ask now
         </button>
@@ -751,12 +751,12 @@ function TopicRowItem({
     topic.available > 0 ? Math.min(100, Math.round((topic.explored / topic.available) * 100)) : 0;
 
   return (
-    <li className="rounded-2xl border bg-white/40 p-4">
+    <li className="card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-[12rem] flex-1">
-          <div className="font-medium text-sm">{topic.category}</div>
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink/10">
-            <div className="h-full rounded-full bg-ink/40" style={{ width: `${pct}%` }} />
+          <div className="text-sm font-semibold">{topic.category}</div>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-line">
+            <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
           </div>
           <div className="mt-1 text-xs text-ink/50">{coverageLabel(topic)}</div>
         </div>
@@ -795,19 +795,15 @@ function StoryCard({ story }: { story: Story }) {
   const duration = formatDuration(story.durationSec);
   const meta = [relDay(story.createdAt), duration].filter(Boolean).join(" · ");
   return (
-    <article className="rounded-xl border p-4">
+    <article className="card p-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-medium text-base">{story.question ?? "Untitled story"}</h3>
+        <h3 className="text-base font-semibold">{story.question ?? "Untitled story"}</h3>
         {story.inBook && (
-          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-            In the book
-          </span>
+          <span className="chip shrink-0 bg-emerald-100 text-emerald-700">In the book</span>
         )}
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
-        {story.category && (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-ink/60">{story.category}</span>
-        )}
+        {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}
         {meta && <span>{meta}</span>}
       </div>
       {story.transcript && (

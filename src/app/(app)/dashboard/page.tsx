@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getActiveMembership, getFamilies } from "@/lib/auth";
+import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import {
   loadOverview,
   loadSignals,
@@ -9,9 +9,7 @@ import {
   type Signal,
   type StorytellerStat,
 } from "@/lib/overview";
-import { switchFamily } from "../actions";
 import { dismissInsight } from "./actions";
-import { roleAtLeast } from "@/lib/auth";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -22,6 +20,10 @@ function relDay(iso: string): string {
   if (days === 1) return "Yesterday";
   if (days < 7) return then.toLocaleDateString("en-US", { weekday: "short" });
   return `${days} days ago`;
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 }
 
 // Time-of-day for a signal's sub line ("9:42 AM") — pairs with relDay above.
@@ -40,6 +42,26 @@ function formatDuration(sec: number | null): string | null {
   return m > 0 ? `${m} min ${s} sec` : `${s} sec`;
 }
 
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "·";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Stable avatar gradient per storyteller, from a small blue-family palette.
+const AVATARS = [
+  "from-[#3B82F6] to-[#1D4ED8]",
+  "from-[#0EA5E9] to-[#0369A1]",
+  "from-[#6366F1] to-[#4338CA]",
+  "from-[#22A6B3] to-[#0E7490]",
+];
+function avatarClass(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % AVATARS.length;
+  return AVATARS[h];
+}
+
 // Overview. RLS scopes everything to the member's families automatically;
 // the active-family cookie just picks which one this page focuses on.
 export default async function Dashboard() {
@@ -47,55 +69,31 @@ export default async function Dashboard() {
   // No family yet → send the member through onboarding (TODO 1.2).
   if (!active) redirect("/onboarding");
 
-  const families = await getFamilies();
   const overview = await loadOverview(active.family_id);
   const storytellerStats = await loadStorytellerStats(active.family_id);
   const signals = await loadSignals(active.family_id);
   const canDismiss = roleAtLeast(active.role, "admin");
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="flex items-center justify-between gap-4">
+    <main className="mx-auto max-w-5xl px-5 py-8 sm:px-7">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl">How&apos;s everyone doing?</h1>
-          <p className="mt-1 text-sm text-ink/60">
+          <h1 className="font-serif text-4xl font-semibold tracking-tight">
+            How&apos;s everyone doing?
+          </h1>
+          <p className="mt-2 text-sm text-ink/55">
             {active.name} · you&apos;re {active.role === "owner" ? "the owner" : `an ${active.role}`}
           </p>
         </div>
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="text-sm text-ink/60 underline">
-            Sign out
-          </button>
-        </form>
+        <Link href="/storytellers/new" className="btn-primary">
+          <span aria-hidden>＋</span> Add storyteller
+        </Link>
       </div>
 
-      {/* Family switcher — only when the member belongs to more than one. */}
-      {families.length > 1 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-ink/60">Family:</span>
-          {families.map((f) => (
-            <form key={f.family_id} action={switchFamily}>
-              <input type="hidden" name="family_id" value={f.family_id} />
-              <button
-                type="submit"
-                disabled={f.family_id === active.family_id}
-                className={`rounded-full border px-3 py-1 text-sm ${
-                  f.family_id === active.family_id
-                    ? "border-ink bg-ink text-white"
-                    : "text-ink/70 hover:bg-ink/5"
-                }`}
-              >
-                {f.name}
-              </button>
-            </form>
-          ))}
-        </div>
-      )}
-
       {/* Signals at the top of Overview (TODO 6.2): the mic-failed alert is
-          acute/red-tone. Any member sees it; only admins can dismiss it. */}
+          acute. Any member sees it; only admins can dismiss it. */}
       {signals.length > 0 && (
-        <section className="mt-8 space-y-3">
+        <section className="mt-7 space-y-3">
           {signals
             .filter((s) => s.type === "mic_failed")
             .map((s) => (
@@ -104,124 +102,161 @@ export default async function Dashboard() {
         </section>
       )}
 
-      {/* Storytellers first: one block per elder with their own metrics, the
+      {/* Storytellers first: one card per elder with their own metrics, the
           whole thing a link into their config + answers hub. */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-lg">Storytellers</h2>
-          <Link href="/storytellers/new" className="text-sm text-ink/60 underline">
-            Add storyteller
-          </Link>
-        </div>
-        <div className="mt-3 space-y-3">
-          {storytellerStats.map((s) => (
-            <StorytellerBlock key={s.id} stat={s} />
-          ))}
-          {storytellerStats.length === 0 && (
-            <p className="text-sm text-ink/50">
-              No storytellers yet.{" "}
-              <Link href="/storytellers/new" className="underline">
-                Add one
-              </Link>
-              .
-            </p>
-          )}
-        </div>
-      </section>
+      <SectionHead title="Storytellers" href="/storytellers/new" cta="Add storyteller" />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {storytellerStats.map((s) => (
+          <StorytellerBlock key={s.id} stat={s} />
+        ))}
+        {storytellerStats.length === 0 && (
+          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
+            No storytellers yet.{" "}
+            <Link href="/storytellers/new" className="link">
+              Add one
+            </Link>
+            .
+          </p>
+        )}
+      </div>
 
-      <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-lg">Lately</h2>
-          <Link href="/stories" className="text-sm text-ink/60 underline">
-            Review stories
-          </Link>
-        </div>
-        <ul className="mt-3 space-y-2">
-          {overview.recent.map((story) => (
-            <RecentRow key={story.id} story={story} />
-          ))}
-          {overview.recent.length === 0 && (
-            <li className="rounded-lg border px-3 py-4 text-sm text-ink/50">
-              No stories yet — they&apos;ll appear here once {active.name} starts
-              recording.
-            </li>
-          )}
-        </ul>
-      </section>
+      <SectionHead title="Lately" href="/stories" cta="Review stories" />
+      <ul className="space-y-2.5">
+        {overview.recent.map((story) => (
+          <RecentRow key={story.id} story={story} />
+        ))}
+        {overview.recent.length === 0 && (
+          <li className="card px-4 py-8 text-center text-sm text-ink/50">
+            No stories yet — they&apos;ll appear here once {active.name} starts recording.
+          </li>
+        )}
+      </ul>
 
       {/* Family access now lives on Settings (TODO 5.5) — one source of truth. */}
-      <section className="mt-10 border-t pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-medium text-lg">Family access</h2>
-            <p className="text-sm text-ink/60">Who can see {active.name}&apos;s stories.</p>
-          </div>
-          <Link href="/settings" className="text-sm text-ink/60 underline">
-            Manage in Settings
-          </Link>
+      <SectionHead title="Family access" href="/settings" cta="Manage in Settings" />
+      <Link href="/settings" className="card flex items-center gap-4 px-5 py-4 transition hover:shadow-md">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand/10 text-brand">
+          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden>
+            <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.7 0-8 1.3-8 4v3h9v-3c0-1 .4-1.9 1-2.6A13 13 0 0 0 8 14zm8 0c-.3 0-.7 0-1.1.1A5 5 0 0 1 17 18v3h7v-3c0-2.7-5.3-4-8-4z" />
+          </svg>
         </div>
-      </section>
+        <div className="flex-1">
+          <h3 className="font-semibold">Who can see {active.name}&apos;s stories</h3>
+          <p className="text-sm text-ink/55">Manage members and invitations in Settings.</p>
+        </div>
+        <span className="text-ink/30" aria-hidden>›</span>
+      </Link>
     </main>
   );
 }
 
-// One storyteller's block on the dashboard: their name + the same four status
-// cards, the whole thing a link into their detail page.
-function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
+function SectionHead({ title, href, cta }: { title: string; href: string; cta: string }) {
   return (
-    <Link
-      href={`/storytellers/${stat.id}`}
-      className="block rounded-xl border p-4 transition hover:bg-ink/[0.03]"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium text-base">{stat.name}</h3>
-        <span className="text-sm text-ink/50">
-          {stat.language === "es" ? "Español" : "English"} ›
-        </span>
+    <div className="mb-3.5 mt-9 flex items-center justify-between px-1">
+      <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-ink/45">{title}</h2>
+      <Link href={href} className="text-sm font-semibold text-brand hover:underline">
+        {cta} →
+      </Link>
+    </div>
+  );
+}
+
+// A small progress ring for "this week vs. target". `tone` colors the arc.
+function Ring({ value, total, tone }: { value: number; total: number | null; tone: "ok" | "warn" }) {
+  const r = 24;
+  const c = 2 * Math.PI * r;
+  const pct = total && total > 0 ? Math.min(1, value / total) : 0;
+  const stroke = tone === "warn" ? "#B5791A" : "#2563EB";
+  return (
+    <div className="relative h-14 w-14 flex-none">
+      <svg width="56" height="56" className="-rotate-90">
+        <circle cx="28" cy="28" r={r} fill="none" stroke="#E1E9F2" strokeWidth="6" />
+        <circle
+          cx="28"
+          cy="28"
+          r={r}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - pct)}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center text-sm font-bold leading-none">
+        {value}
+        {total != null && <small className="text-[9px] font-semibold text-ink/50">of {total}</small>}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card
-          label="Last session"
-          good={stat.lastSessionFresh}
-          value={stat.lastSessionAt ? relDay(stat.lastSessionAt) : "—"}
-          sub={stat.lastSessionFresh ? "✓" : stat.lastSessionAt ? "" : "none yet"}
-        />
-        <Card
-          label="This week"
-          value={String(stat.thisWeekCount)}
-          sub={stat.weeklyTarget != null ? `of ${stat.weeklyTarget}` : ""}
-        />
-        <Card label="Stories saved" value={String(stat.storiesSaved)} />
-        <Card
-          label="Topics touched"
-          value={String(stat.topicsTouched)}
-          sub={stat.topicsTotal ? `/ ${stat.topicsTotal}` : ""}
-        />
+    </div>
+  );
+}
+
+// One storyteller's card on the dashboard: avatar, name, status chip, a weekly
+// progress ring, then the four status metrics. The whole card links into the hub.
+function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
+  const quietDays = stat.lastSessionAt ? daysSince(stat.lastSessionAt) : null;
+  const onTrack = stat.lastSessionFresh;
+  const tone: "ok" | "warn" = onTrack ? "ok" : "warn";
+
+  return (
+    <Link href={`/storytellers/${stat.id}`} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-center gap-3.5">
+        <div
+          className={`grid h-12 w-12 flex-none place-items-center rounded-full bg-gradient-to-br ${avatarClass(stat.id)} text-base font-bold text-white`}
+        >
+          {initials(stat.name)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-lg font-semibold tracking-tight">{stat.name}</h3>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="chip bg-surface2 text-ink/65 ring-1 ring-line">
+              {stat.language === "es" ? "Español" : "English"}
+            </span>
+            {onTrack ? (
+              <span className="chip bg-brand/10 text-brand">
+                <span className="h-1.5 w-1.5 rounded-full bg-current" /> On track
+              </span>
+            ) : quietDays != null ? (
+              <span className="chip bg-amber-100 text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-current" /> Quiet {quietDays}d
+              </span>
+            ) : (
+              <span className="chip bg-surface2 text-ink/50 ring-1 ring-line">Not started</span>
+            )}
+          </div>
+        </div>
+        <Ring value={stat.thisWeekCount} total={stat.weeklyTarget} tone={tone} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-4 gap-2.5">
+        <Stat label="Last" value={stat.lastSessionAt ? relDay(stat.lastSessionAt) : "—"} good={onTrack} small />
+        <Stat label="This week" value={String(stat.thisWeekCount)} sub={stat.weeklyTarget != null ? `/${stat.weeklyTarget}` : undefined} />
+        <Stat label="Stories" value={String(stat.storiesSaved)} />
+        <Stat label="Topics" value={String(stat.topicsTouched)} sub={stat.topicsTotal ? `/${stat.topicsTotal}` : undefined} />
       </div>
     </Link>
   );
 }
 
-// A single status card. `good` tints the value (recent activity is reassuring).
-function Card({
+function Stat({
   label,
   value,
   sub,
   good,
+  small,
 }: {
   label: string;
   value: string;
   sub?: string;
   good?: boolean;
+  small?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border bg-white/40 p-4">
-      <div className="font-semibold text-xs uppercase tracking-wide text-ink/50">
-        {label}
-      </div>
-      <div className={`mt-2 font-serif text-3xl leading-none ${good ? "text-emerald-700" : "text-ink"}`}>
+    <div className="rounded-xl border border-line bg-surface2 px-3 py-2.5">
+      <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-ink/45">{label}</div>
+      <div className={`mt-1.5 font-medium leading-none tracking-tight ${small ? "text-base" : "text-2xl"} ${good ? "text-brand" : "text-ink"}`}>
         {value}
-        {sub && <span className="ml-1 align-baseline text-base text-ink/40">{sub}</span>}
+        {sub && <span className="ml-0.5 text-xs font-medium text-ink/35">{sub}</span>}
       </div>
     </div>
   );
@@ -235,17 +270,11 @@ function RecentRow({ story }: { story: RecentStory }) {
     .filter(Boolean)
     .join(" · ");
   return (
-    <li className="rounded-lg border px-3 py-3">
-      <div className="font-medium text-sm">
-        {story.question ?? "Untitled story"}
-      </div>
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
-        {story.category && (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-ink/60">
-            {story.category}
-          </span>
-        )}
-        <span>{story.storyteller}</span>
+    <li className="card px-4 py-3.5">
+      <div className="font-semibold leading-snug">{story.question ?? "Untitled story"}</div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink/50">
+        {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}
+        <span className="font-medium text-ink/60">{story.storyteller}</span>
         {meta && <span>· {meta}</span>}
       </div>
       {story.hasAudio && (
@@ -253,36 +282,30 @@ function RecentRow({ story }: { story: RecentStory }) {
           controls
           preload="none"
           src={`/api/stories/audio?answer=${story.id}`}
-          className="mt-2 w-full"
+          className="mt-2.5 w-full"
         />
       )}
     </li>
   );
 }
 
-// The mic-failed signal (TODO 6.2) — acute/red tone per the prototype's `.alert`.
+// The mic-failed signal (TODO 6.2) — acute tone per the prototype's `.alert`.
 // Surfaced to every member; only admins get the Dismiss control (RLS ins_write
 // is the real guard). The matching admin SMS already fired when the signal was
 // recorded (TODO 2.4/5.5), so this banner just makes it visible and clearable.
-function SignalAlert({
-  signal,
-  canDismiss,
-}: {
-  signal: Signal;
-  canDismiss: boolean;
-}) {
+function SignalAlert({ signal, canDismiss }: { signal: Signal; canDismiss: boolean }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-      <span className="text-xl leading-none" aria-hidden>
-        ⚠️
+    <div className="flex items-start gap-3.5 rounded-2xl border border-rose-200 border-l-4 border-l-rose-500 bg-gradient-to-b from-rose-50 to-surface px-4 py-3.5 shadow-sm">
+      <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-surface text-lg shadow-sm" aria-hidden>
+        🎙️
       </span>
       <div className="flex-1">
-        <div className="font-medium text-sm text-amber-900">
+        <div className="text-sm font-semibold text-rose-900">
           {signal.storytellerName}&apos;s microphone didn&apos;t go through.
         </div>
-        <div className="mt-0.5 text-xs text-amber-800/80">
-          {relDay(signal.createdAt)} at {timeOfDay(signal.createdAt)} · they may
-          need to allow the microphone on their device. We also texted the family.
+        <div className="mt-0.5 text-xs text-rose-800/75">
+          {relDay(signal.createdAt)} at {timeOfDay(signal.createdAt)} · they may need to allow the
+          microphone on their device. We also texted the family.
         </div>
       </div>
       {canDismiss && (
@@ -290,7 +313,7 @@ function SignalAlert({
           <input type="hidden" name="insight_id" value={signal.id} />
           <button
             type="submit"
-            className="rounded-lg border border-amber-300 px-3 py-1 text-xs text-amber-900 hover:bg-amber-100"
+            className="self-center rounded-lg border border-rose-200 bg-surface px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-50"
           >
             Dismiss
           </button>

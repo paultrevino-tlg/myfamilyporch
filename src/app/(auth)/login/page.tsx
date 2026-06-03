@@ -38,41 +38,46 @@ export default function LoginPage() {
 
   if (status === "sent") {
     return (
-      <main className="mx-auto max-w-md p-10">
-        <h1 className="font-semibold text-2xl">Check your email</h1>
-        <p className="mt-3 text-ink/70">
-          We sent a sign-in link to <strong>{email}</strong>. Open it on this
-          device to continue.
-        </p>
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
+        <div className="card p-8 text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-3xl">📬</div>
+          <h1 className="mt-4 font-serif text-2xl font-semibold">Check your email</h1>
+          <p className="mt-3 text-ink/65">
+            We sent a sign-in link to <strong className="text-ink">{email}</strong>. Open it on this
+            device to continue.
+          </p>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-md p-10">
-      <h1 className="font-semibold text-2xl">Sign in to My Family Porch</h1>
-      <p className="mt-3 text-ink/70">
-        Enter your email and we&apos;ll send a secure sign-in link — no password.
-      </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          className="w-full rounded-lg border px-4 py-3 text-base"
-        />
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="w-full rounded-lg bg-ink px-4 py-3 font-medium text-white disabled:opacity-50"
-        >
-          {status === "sending" ? "Sending…" : "Send sign-in link"}
-        </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </form>
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
+      <div className="mb-6 flex items-center gap-2.5">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-xl shadow-sm">🏡</span>
+        <span className="font-bold tracking-tight">My Family Porch</span>
+      </div>
+      <div className="card p-8">
+        <h1 className="font-serif text-2xl font-semibold">Welcome back</h1>
+        <p className="mt-2 text-ink/65">
+          Enter your email and we&apos;ll send a secure sign-in link — no password.
+        </p>
+        <form onSubmit={onSubmit} className="mt-6 space-y-3">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            className="input w-full"
+          />
+          <button type="submit" disabled={status === "sending"} className="btn-primary w-full py-3">
+            {status === "sending" ? "Sending…" : "Send sign-in link"}
+          </button>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+        </form>
+      </div>
     </main>
   );
 }

@@ -32,13 +32,19 @@ export default async function InvitePage({
     .maybeSingle();
 
   const Shell = ({ children }: { children: React.ReactNode }) => (
-    <main className="mx-auto max-w-md p-10">{children}</main>
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
+      <div className="mb-6 flex items-center gap-2.5">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-xl shadow-sm">🏡</span>
+        <span className="font-bold tracking-tight">My Family Porch</span>
+      </div>
+      <div className="card p-8">{children}</div>
+    </main>
   );
 
   if (!inv) {
     return (
       <Shell>
-        <h1 className="font-semibold text-2xl">Invitation not found</h1>
+        <h1 className="font-serif text-2xl font-semibold">Invitation not found</h1>
         <p className="mt-3 text-ink/70">This invitation link isn&apos;t valid. Ask the family to send a new one.</p>
       </Shell>
     );
@@ -54,9 +60,9 @@ export default async function InvitePage({
   if (inv.accepted_at) {
     return (
       <Shell>
-        <h1 className="font-semibold text-2xl">Already accepted</h1>
+        <h1 className="font-serif text-2xl font-semibold">Already accepted</h1>
         <p className="mt-3 text-ink/70">This invitation has already been used.</p>
-        <Link href="/dashboard" className="mt-4 inline-block underline">Go to your dashboard</Link>
+        <Link href="/dashboard" className="link mt-4 inline-block">Go to your dashboard</Link>
       </Shell>
     );
   }
@@ -64,7 +70,7 @@ export default async function InvitePage({
   if (expired) {
     return (
       <Shell>
-        <h1 className="font-semibold text-2xl">Invitation expired</h1>
+        <h1 className="font-serif text-2xl font-semibold">Invitation expired</h1>
         <p className="mt-3 text-ink/70">This invitation to {familyName} has expired. Ask for a new one.</p>
       </Shell>
     );
@@ -73,13 +79,13 @@ export default async function InvitePage({
   if (!emailMatch) {
     return (
       <Shell>
-        <h1 className="font-semibold text-2xl">Wrong email</h1>
+        <h1 className="font-serif text-2xl font-semibold">Wrong email</h1>
         <p className="mt-3 text-ink/70">
           This invitation was sent to <strong>{inv.email}</strong>, but you&apos;re signed in as{" "}
           <strong>{user.email}</strong>. Sign out and sign back in with the invited address.
         </p>
         <form action="/auth/signout" method="post" className="mt-4">
-          <button type="submit" className="underline">Sign out</button>
+          <button type="submit" className="link">Sign out</button>
         </form>
       </Shell>
     );
@@ -87,7 +93,7 @@ export default async function InvitePage({
 
   return (
     <Shell>
-      <h1 className="font-semibold text-2xl">Join {familyName}</h1>
+      <h1 className="font-serif text-2xl font-semibold">Join {familyName}</h1>
       <p className="mt-3 text-ink/70">
         You&apos;ve been invited as a <strong>{inv.role}</strong>. Accept to start{" "}
         {inv.role === "viewer" ? "listening to and reading" : "helping with"} {familyName}&apos;s stories.
@@ -95,7 +101,7 @@ export default async function InvitePage({
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       <form action={acceptInvitation} className="mt-6">
         <input type="hidden" name="token" value={token} />
-        <button type="submit" className="w-full rounded-lg bg-ink px-4 py-3 font-medium text-white">
+        <button type="submit" className="btn-primary w-full py-3">
           Accept &amp; join {familyName}
         </button>
       </form>

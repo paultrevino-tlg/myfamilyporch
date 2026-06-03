@@ -161,7 +161,7 @@ export default function VoiceSetup({
             type="button"
             onClick={() => preview("en")}
             disabled={previewing !== null}
-            className="rounded-lg border px-3 py-2 disabled:opacity-50"
+            className="btn-ghost"
           >
             {previewing === "en" ? "Playing…" : "▶ Preview (English)"}
           </button>
@@ -169,13 +169,13 @@ export default function VoiceSetup({
             type="button"
             onClick={() => preview("es")}
             disabled={previewing !== null}
-            className="rounded-lg border px-3 py-2 disabled:opacity-50"
+            className="btn-ghost"
           >
             {previewing === "es" ? "Reproduciendo…" : "▶ Vista previa (Español)"}
           </button>
           <form action={deleteVoiceProfile}>
             <input type="hidden" name="storyteller_id" value={storytellerId} />
-            <button type="submit" className="text-red-600 underline">
+            <button type="submit" className="font-semibold text-red-600 underline-offset-4 hover:underline">
               Remove voice
             </button>
           </form>
@@ -195,26 +195,18 @@ export default function VoiceSetup({
   function recorder() {
     return (
       <div className="space-y-3">
-        <div className="rounded-lg bg-black/[0.03] p-3 text-ink/70">
-          <p className="mb-1 font-medium text-ink/80">Read this aloud (about 20–40 seconds):</p>
+        <div className="rounded-xl border border-line bg-surface2 p-3.5 text-ink/70">
+          <p className="mb-1 font-semibold text-ink/80">Read this aloud (about 20–40 seconds):</p>
           <p className="italic">{SCRIPT[lang]}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {!recording ? (
-            <button
-              type="button"
-              onClick={startRecording}
-              className="rounded-lg bg-ink px-4 py-2 font-medium text-white"
-            >
+            <button type="button" onClick={startRecording} className="btn-ink">
               {blob ? "Re-record" : "● Start recording"}
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white"
-            >
+            <button type="button" onClick={stopRecording} className="btn-danger">
               ■ Stop ({mmss})
             </button>
           )}
@@ -228,14 +220,14 @@ export default function VoiceSetup({
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                className="mt-1 rounded-lg border px-3 py-2 text-base"
+                className="input mt-1"
               />
             </label>
             <button
               type="button"
               onClick={createVoice}
               disabled={status === "cloning"}
-              className="rounded-lg bg-ink px-4 py-2 font-medium text-white disabled:opacity-50"
+              className="btn-ink"
             >
               {status === "cloning" ? "Creating voice…" : "Create cloned voice"}
             </button>

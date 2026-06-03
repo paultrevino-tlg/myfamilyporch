@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import { toggleInBook, editTranscript, deleteStory } from "./actions";
@@ -34,26 +33,21 @@ export default async function StoriesPage() {
   const stories = await loadStories(active.family_id);
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl">{active.name}&apos;s stories</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            Listen in their voice, read the transcript
-            {canManage ? ", fix anything, choose what goes in the book." : "."}
-          </p>
-        </div>
-        <Link href="/dashboard" className="text-sm text-ink/60 underline">
-          Back to overview
-        </Link>
+    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
+      <div>
+        <h1 className="font-serif text-3xl font-semibold tracking-tight">{active.name}&apos;s stories</h1>
+        <p className="mt-1.5 text-sm text-ink/55">
+          Listen in their voice, read the transcript
+          {canManage ? ", fix anything, choose what goes in the book." : "."}
+        </p>
       </div>
 
-      <ul className="mt-8 space-y-5">
+      <ul className="mt-7 space-y-4">
         {stories.map((story) => (
           <StoryCard key={story.id} story={story} canManage={canManage} />
         ))}
         {stories.length === 0 && (
-          <li className="rounded-2xl border bg-white/40 px-4 py-8 text-center text-sm text-ink/50">
+          <li className="card px-4 py-10 text-center text-sm text-ink/50">
             No stories yet — they&apos;ll appear here once {active.name} starts
             recording.
           </li>
@@ -68,24 +62,18 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
   const meta = [relDay(story.createdAt), duration].filter(Boolean).join(" · ");
 
   return (
-    <li className="rounded-2xl border bg-white/40 p-4">
+    <li className="card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-serif text-xl">{story.question ?? "Untitled story"}</h2>
         {story.inBook &&
           (canManage ? null : (
-            <span className="rounded-full bg-emerald-700/10 px-2 py-0.5 text-xs text-emerald-800">
-              ✓ In the book
-            </span>
+            <span className="chip bg-emerald-100 text-emerald-700">✓ In the book</span>
           ))}
       </div>
 
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink/50">
-        {story.category && (
-          <span className="rounded-full bg-ink/5 px-2 py-0.5 text-ink/60">
-            {story.category}
-          </span>
-        )}
-        <span>{story.storyteller}</span>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink/50">
+        {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}
+        <span className="font-medium text-ink/60">{story.storyteller}</span>
         {meta && <span>· {meta}</span>}
       </div>
 
@@ -145,16 +133,16 @@ function FollowUp({ followUp }: { followUp: StoryFollowUp }) {
 // server actions — no client JS needed; RLS enforces the admin boundary.
 function StoryActions({ story }: { story: Story }) {
   return (
-    <div className="mt-4 flex flex-wrap items-start gap-2 border-t pt-3">
+    <div className="mt-4 flex flex-wrap items-start gap-2 border-t border-line pt-4">
       <form action={toggleInBook}>
         <input type="hidden" name="answer_id" value={story.id} />
         <input type="hidden" name="in_book" value={story.inBook ? "false" : "true"} />
         <button
           type="submit"
-          className={`rounded-full border px-3 py-1 text-sm ${
+          className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
             story.inBook
-              ? "border-emerald-700 bg-emerald-700 text-white"
-              : "text-ink/70 hover:bg-ink/5"
+              ? "bg-emerald-600 text-white hover:brightness-110"
+              : "border border-line text-ink/70 hover:bg-ink/5"
           }`}
         >
           {story.inBook ? "✓ In the book" : "Add to the book"}
@@ -162,7 +150,7 @@ function StoryActions({ story }: { story: Story }) {
       </form>
 
       <details className="text-sm">
-        <summary className="cursor-pointer rounded-full border px-3 py-1 text-ink/70 hover:bg-ink/5">
+        <summary className="cursor-pointer rounded-full border border-line px-3.5 py-1.5 font-semibold text-ink/70 hover:bg-ink/5">
           ✎ Edit transcript
         </summary>
         <form action={editTranscript} className="mt-2 w-full">
@@ -172,12 +160,9 @@ function StoryActions({ story }: { story: Story }) {
             defaultValue={story.transcript ?? ""}
             rows={5}
             placeholder="What they said…"
-            className="w-full rounded-lg border px-3 py-2 text-sm leading-relaxed"
+            className="input w-full text-sm leading-relaxed"
           />
-          <button
-            type="submit"
-            className="mt-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white"
-          >
+          <button type="submit" className="btn-ink mt-2 text-sm">
             Save transcript
           </button>
         </form>
@@ -186,7 +171,7 @@ function StoryActions({ story }: { story: Story }) {
       {/* Delete erases the recording(s) too (5.2a). Tucked behind a disclosure
           so it's deliberate, not a one-tap mistake. */}
       <details className="text-sm">
-        <summary className="cursor-pointer rounded-full border border-red-200 px-3 py-1 text-red-700 hover:bg-red-50">
+        <summary className="cursor-pointer rounded-full border border-red-200 px-3.5 py-1.5 font-semibold text-red-700 hover:bg-red-50">
           Delete
         </summary>
         <form action={deleteStory} className="mt-2">
@@ -195,10 +180,7 @@ function StoryActions({ story }: { story: Story }) {
             This permanently erases this story, its follow-ups, and the voice
             recordings. This can&apos;t be undone.
           </p>
-          <button
-            type="submit"
-            className="mt-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white"
-          >
+          <button type="submit" className="btn-danger mt-2 text-sm">
             Delete this story
           </button>
         </form>

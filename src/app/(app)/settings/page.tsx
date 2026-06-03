@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
 import { setAlertPhone } from "./actions";
@@ -22,25 +21,20 @@ export default async function SettingsPage({
   const canManage = roleAtLeast(active.role, "admin");
   const { myAlertPhone, roster, invitations } = await loadSettings(active.family_id);
 
-  const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
+  const inputCls = "mt-1 input";
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl">Settings</h1>
-          <p className="mt-1 text-sm text-ink/60">People, contact details, and your voice.</p>
-        </div>
-        <Link href="/dashboard" className="text-sm text-ink/60 underline">
-          Back to overview
-        </Link>
+    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
+      <div>
+        <h1 className="font-serif text-3xl font-semibold tracking-tight">Settings</h1>
+        <p className="mt-1.5 text-sm text-ink/55">People, contact details, and your voice.</p>
       </div>
 
       {sp.saved === "alert" && (
-        <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">Alert number saved. 🔔</p>
+        <p className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">Alert number saved. 🔔</p>
       )}
       {sp.error === "alert" && (
-        <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
         </p>
       )}
@@ -49,14 +43,14 @@ export default async function SettingsPage({
           page (reach them from the dashboard). */}
 
       {/* Alert me by text. The signed-in admin's OWN number. */}
-      <section className="mt-8 rounded-2xl border bg-white/40 p-5">
-        <h2 className="font-medium text-lg">Alert me by text</h2>
-        <p className="text-sm text-ink/60">
+      <section className="card mt-7 p-6">
+        <h2 className="text-lg font-semibold">Alert me by text</h2>
+        <p className="text-sm text-ink/55">
           If a session fails to connect, we&apos;ll text you at this number.
         </p>
 
         {canManage ? (
-          <form action={setAlertPhone} className="mt-4 flex items-end gap-2">
+          <form action={setAlertPhone} className="mt-4 flex flex-wrap items-end gap-2">
             <label className="flex flex-col text-sm">
               <span className="text-ink/60">Your phone</span>
               <input
@@ -67,7 +61,7 @@ export default async function SettingsPage({
                 className={inputCls}
               />
             </label>
-            <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
+            <button type="submit" className="btn-ink">
               Save
             </button>
             <span className="pb-2 text-xs text-ink/50">Leave blank to turn alerts off.</span>
@@ -80,9 +74,9 @@ export default async function SettingsPage({
       </section>
 
       {/* Family who can listen. Roster + invitations + invite form. */}
-      <section className="mt-8 rounded-2xl border bg-white/40 p-5">
-        <h2 className="font-medium text-lg">Family who can listen</h2>
-        <p className="text-sm text-ink/60">
+      <section className="card mt-7 p-6">
+        <h2 className="text-lg font-semibold">Family who can listen</h2>
+        <p className="text-sm text-ink/55">
           Viewers can hear and read stories; admins can also steer and invite.
         </p>
 
@@ -90,30 +84,30 @@ export default async function SettingsPage({
           {roster.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
             >
-              <span>
+              <span className="font-medium">
                 {m.email ?? "Family member"}
-                {m.isYou && <span className="text-ink/50"> · you</span>}
+                {m.isYou && <span className="font-normal text-ink/50"> · you</span>}
               </span>
-              <span className="text-ink/60 capitalize">{m.role}</span>
+              <span className="chip bg-brand/10 capitalize text-brand">{m.role}</span>
             </li>
           ))}
         </ul>
 
         {invitations.length > 0 && (
           <>
-            <h3 className="mt-5 font-medium text-sm text-ink/70">Invitations</h3>
+            <h3 className="mt-5 text-sm font-semibold text-ink/70">Invitations</h3>
             <ul className="mt-2 space-y-2">
               {invitations.map((inv, i) => (
                 <li
                   key={i}
-                  className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
                 >
-                  <span>
-                    {inv.email} <span className="text-ink/50">· {inv.role}</span>
+                  <span className="font-medium">
+                    {inv.email} <span className="font-normal text-ink/50">· {inv.role}</span>
                   </span>
-                  <span className="text-ink/60">{inv.status}</span>
+                  <span className="chip bg-amber-100 text-amber-700">{inv.status}</span>
                 </li>
               ))}
             </ul>
@@ -121,7 +115,7 @@ export default async function SettingsPage({
         )}
 
         {canManage && (
-          <form action={createInvitation} className="mt-5 flex flex-wrap items-end gap-3 border-t pt-5">
+          <form action={createInvitation} className="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-5">
             <label className="flex flex-col text-sm">
               <span className="text-ink/60">Invite by email</span>
               <input
@@ -139,7 +133,7 @@ export default async function SettingsPage({
                 <option value="admin">Admin — can steer &amp; invite</option>
               </select>
             </label>
-            <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
+            <button type="submit" className="btn-primary">
               Send invite
             </button>
           </form>

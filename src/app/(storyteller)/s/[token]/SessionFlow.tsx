@@ -648,7 +648,7 @@ function Count({ children }: { children: React.ReactNode }) {
 function Avatar({ children }: { children: React.ReactNode }) {
   // Placeholder family/interviewer mark; 3.1/4.2 swap in the real interviewer.
   return (
-    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/70 text-5xl shadow-lg">
+    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-[#6366F1] to-sky2 text-5xl shadow-lg">
       {children}
     </div>
   );

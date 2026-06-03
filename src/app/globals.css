@@ -2,5 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --paper:#FBF5EA; --ink:#2B2218; --answer:#3E7A52; --accent:#C8743A; }
-html, body { background: var(--paper); color: var(--ink); }
+:root {
+  /* Blue theme tokens (mirror tailwind.config.ts for raw CSS use). */
+  --paper:    #EBF1F8;
+  --surface:  #FFFFFF;
+  --surface-2:#F4F8FC;
+  --ink:      #15233B;
+  --line:     #E1E9F2;
+  --brand:    #2563EB;
+  --accent:   #0284C7;
+}
+
+html, body {
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #F6FAFD, transparent),
+    radial-gradient(900px 500px at -10% 110%, #DCE6F4, transparent),
+    var(--paper);
+  background-attachment: fixed;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reusable design-system pieces — keep page markup lean and consistent. */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-sm;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           text-sm font-semibold transition disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-brand text-white shadow-sm hover:brightness-110; }
+  .btn-ink     { @apply btn bg-ink text-white shadow-sm hover:brightness-125; }
+  .btn-ghost   { @apply btn border border-line bg-surface text-ink/70 hover:bg-surface2; }
+  .btn-danger  { @apply btn bg-red-600 text-white hover:brightness-110; }
+
+  .input {
+    @apply rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base
+           outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5
+           text-xs font-semibold;
+  }
+
+  .link {
+    @apply font-semibold text-brand underline-offset-4 hover:underline;
+  }
+}

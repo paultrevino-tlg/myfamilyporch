@@ -20,7 +20,7 @@ const KIND_LABEL: Record<string, string> = {
   other: "Other",
 };
 const KINDS = Object.keys(KIND_LABEL);
-const inputCls = "mt-1 rounded-lg border px-3 py-2 text-base";
+const inputCls = "mt-1 input";
 
 export default async function NewStorytellerPage() {
   const active = await getActiveMembership();
@@ -29,21 +29,19 @@ export default async function NewStorytellerPage() {
   const canManage = roleAtLeast(active.role, "admin");
 
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl">Add a storyteller</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            A new person in {active.name} whose stories we&apos;ll capture.
-          </p>
-        </div>
-        <Link href="/dashboard" className="text-sm text-ink/60 underline">
-          ← Dashboard
-        </Link>
+    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
+      <Link href="/dashboard" className="text-sm font-semibold text-ink/50 hover:text-ink">
+        ← Dashboard
+      </Link>
+      <div className="mt-3">
+        <h1 className="font-serif text-3xl font-semibold tracking-tight">Add a storyteller</h1>
+        <p className="mt-1.5 text-sm text-ink/55">
+          A new person in {active.name} whose stories we&apos;ll capture.
+        </p>
       </div>
 
       {canManage ? (
-        <form action={createStoryteller} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <form action={createStoryteller} className="card mt-7 grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
           <label className="flex flex-col text-sm">
             <span className="text-ink/60">Name</span>
             <input name="name" required placeholder="Rosa Treviño" className={inputCls} />
@@ -90,7 +88,7 @@ export default async function NewStorytellerPage() {
             <span className="text-ink/70">I&apos;m the interviewer</span>
           </label>
           <div className="sm:col-span-2">
-            <button type="submit" className="rounded-lg bg-ink px-4 py-2 font-medium text-white">
+            <button type="submit" className="btn-primary">
               Add storyteller
             </button>
             <p className="mt-2 text-xs text-ink/50">
