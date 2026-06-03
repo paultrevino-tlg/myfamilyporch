@@ -551,6 +551,48 @@ export type Database = {
           },
         ]
       }
+      topic_preferences: {
+        Row: {
+          category: string
+          family_id: string
+          id: string
+          preference: Database["public"]["Enums"]["topic_preference"]
+          storyteller_id: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          family_id: string
+          id?: string
+          preference: Database["public"]["Enums"]["topic_preference"]
+          storyteller_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          family_id?: string
+          id?: string
+          preference?: Database["public"]["Enums"]["topic_preference"]
+          storyteller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_preferences_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_preferences_storyteller_id_fkey"
+            columns: ["storyteller_id"]
+            isOneToOne: false
+            referencedRelation: "storytellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_profiles: {
         Row: {
           created_at: string
@@ -628,6 +670,7 @@ export type Database = {
         | "completed"
         | "skipped"
         | "missed"
+      topic_preference: "focus" | "ease_off" | "avoid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -776,6 +819,7 @@ export const Constants = {
         "skipped",
         "missed",
       ],
+      topic_preference: ["focus", "ease_off", "avoid"],
     },
   },
 } as const

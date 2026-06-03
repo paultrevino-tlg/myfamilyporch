@@ -131,9 +131,14 @@ export default async function Dashboard() {
       <section className="mt-10">
         <div className="flex items-center justify-between">
           <h2 className="font-medium text-lg">Storytellers</h2>
-          <Link href="/storytellers" className="text-sm text-ink/60 underline">
-            Manage storytellers
-          </Link>
+          <div className="flex gap-4">
+            <Link href="/topics" className="text-sm text-ink/60 underline">
+              Topics
+            </Link>
+            <Link href="/storytellers" className="text-sm text-ink/60 underline">
+              Manage storytellers
+            </Link>
+          </div>
         </div>
         <ul className="mt-3 space-y-2">
           {(storytellers ?? []).map((s) => (

@@ -59,7 +59,9 @@ export type SelectionSignals = {
   completedSessions: number;        // gates heavy prompts; emphasizes early warm-ups
   lastAnswerWeight: Weight | null;  // most recent answer's weight → never stack heavy
   categoryCounts: Map<string, number>; // answers per category → topic weighting
-  avoidCategories: Set<string>;     // admin Avoid topics (5.3 seam; empty for now)
+  avoidCategories: Set<string>;     // admin Avoid topics → excluded (TODO 5.3)
+  focusCategories: Set<string>;     // admin Focus topics → biased to the front (5.3)
+  easeOffCategories: Set<string>;   // admin Ease-off topics → sunk, not excluded (5.3)
 };
 
 // Pure, deterministic selection. Filters the candidate pool by the 3.3 rules, then
@@ -87,19 +89,29 @@ export function selectOpeningPrompt(
   });
   if (!eligible.length) return null;
 
+  // Admin steering as a rank score: Focus pulls a category to the front (−1),
+  // Ease-off sinks it to the back (+1), neutral sits between (0). It's a bias,
+  // not a script — Avoid is the only hard exclude (applied in the filter above).
+  const prefScore = (category: string) =>
+    s.focusCategories.has(category) ? -1 : s.easeOffCategories.has(category) ? 1 : 0;
+
   // Rank by an ascending key tuple (lower wins). The input arrives in stable
   // (created_at, id) order, so ties keep that deterministic order under V8's
   // stable sort.
   const ranked = [...eligible].sort((a, b) => {
-    // 1. Early sessions open with warm-ups.
+    // 1. Early sessions open with warm-ups (onboarding rhythm wins first).
     const aWarmFirst = earlySession && !a.warm_up ? 1 : 0;
     const bWarmFirst = earlySession && !b.warm_up ? 1 : 0;
     if (aWarmFirst !== bWarmFirst) return aWarmFirst - bWarmFirst;
-    // 2. Topic weighting: prefer the least-covered category.
+    // 2. Admin steering: Focus first, Ease-off last.
+    const aPref = prefScore(a.category);
+    const bPref = prefScore(b.category);
+    if (aPref !== bPref) return aPref - bPref;
+    // 3. Topic weighting: prefer the least-covered category.
     const aCov = s.categoryCounts.get(a.category) ?? 0;
     const bCov = s.categoryCounts.get(b.category) ?? 0;
     if (aCov !== bCov) return aCov - bCov;
-    // 3. Gentle bias toward warm-ups on the tiebreak.
+    // 4. Gentle bias toward warm-ups on the tiebreak.
     const aWarm = a.warm_up ? 0 : 1;
     const bWarm = b.warm_up ? 0 : 1;
     if (aWarm !== bWarm) return aWarm - bWarm;
@@ -154,8 +166,8 @@ export async function buildRelationshipContext(
 export async function assembleOpeningQuestion(args: {
   storytellerId: string;
   familyId: string;
-  // Admin Avoid topics (categories). Wired by Topics steering (TODO 5.3); until
-  // then no avoid store exists, so this stays empty and the filter is a no-op.
+  // Extra Avoid topics merged on top of the stored Topics-steering prefs (5.3).
+  // Optional override; the stored per-storyteller preferences are the source.
   avoidCategories?: Iterable<string>;
 }): Promise<AssembledQuestion | null> {
   const db = supabaseService();
@@ -170,7 +182,8 @@ export async function assembleOpeningQuestion(args: {
   //    a) Which prompts they've already answered → never re-ask.
   //    b) Per-category answer counts + the most recent answer's weight (one join).
   //    c) How many sessions they've completed → heavy gating + early warm-ups.
-  const [askedRes, answeredRes, sessionsRes] = await Promise.all([
+  //    d) Admin Topics steering (focus/ease-off/avoid) for this storyteller.
+  const [askedRes, answeredRes, sessionsRes, prefsRes] = await Promise.all([
     db
       .from("answers")
       .select("prompt_id")
@@ -187,6 +200,10 @@ export async function assembleOpeningQuestion(args: {
       .select("id", { count: "exact", head: true })
       .eq("storyteller_id", args.storytellerId)
       .eq("status", "completed"),
+    db
+      .from("topic_preferences")
+      .select("category, preference")
+      .eq("storyteller_id", args.storytellerId),
   ]);
 
   const askedPromptIds = new Set(
@@ -207,6 +224,16 @@ export async function assembleOpeningQuestion(args: {
 
   const completedSessions = sessionsRes.count ?? 0;
 
+  // Topics steering → category sets (TODO 5.3). Caller-supplied avoids merge on top.
+  const focusCategories = new Set<string>();
+  const easeOffCategories = new Set<string>();
+  const avoidCategories = new Set<string>(args.avoidCategories ?? []);
+  for (const row of prefsRes.data ?? []) {
+    if (row.preference === "focus") focusCategories.add(row.category);
+    else if (row.preference === "ease_off") easeOffCategories.add(row.category);
+    else if (row.preference === "avoid") avoidCategories.add(row.category);
+  }
+
   // 4. Candidate prompts: global library + this family's custom, in the
   //    storyteller's language, in stable (created_at, id) order so the selector's
   //    ties resolve deterministically. The 3.3 selector applies the gating/pacing/
@@ -225,7 +252,9 @@ export async function assembleOpeningQuestion(args: {
     completedSessions,
     lastAnswerWeight,
     categoryCounts,
-    avoidCategories: new Set(args.avoidCategories ?? []),
+    avoidCategories,
+    focusCategories,
+    easeOffCategories,
   });
   if (!chosen) return null;
 
