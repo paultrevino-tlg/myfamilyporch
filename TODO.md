@@ -71,6 +71,7 @@ spec. Each phase should leave the app building and deployable.
 - [ ] 7.2 Voice QR codes that bundle (not just link) the audio
 - [ ] 7.3 Export / print order
 - [ ] 7.4 Optional English translation view of Spanish transcripts
+- [ ] 7.5 Pricing model + public pricing page — build per `docs/PRICING.md` (full spec: 3 subscription tiers Keepsake $99 / Keepsake+Book $149 ⭐ / Family $199, a $199 one-time Lifetime, à-la-carte add-ons, feature matrix, exact hero/callout/FAQ copy, design notes). Reinforce the two positioning pillars (**forever access on cancel**, **voice-QR book**). **Before shipping prices as final**, confirm every `TODO:` in §2/§3/§6 against loaded COGS (book POD quote, per-storyteller software cost, Lifetime guardrail). **Overlaps & coordinates with:** Phase 8.3 (the pricing *page* in `(marketing)`) and Phase 9.1/9.2 (Stripe products/prices + checkout) — 7.5 is the source-of-truth pricing decisions those implement; keep them in sync (don't hardcode prices in two places).
 
 ## Phase 8 — Public marketing site & signup funnel
 → read: SPEC § Marketing, signup & billing · `myfamilyporch-website-brief.md` (full brief) · placeholder `src/app/(marketing)/page.tsx`
