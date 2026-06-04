@@ -866,7 +866,7 @@ function StoryCard({ story }: { story: Story }) {
   const duration = formatDuration(story.durationSec);
   const meta = [relDay(story.createdAt), duration].filter(Boolean).join(" · ");
   return (
-    <article className="card p-4">
+    <article id={`story-${story.id}`} className="card scroll-mt-24 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="-ml-1 shrink-0" />

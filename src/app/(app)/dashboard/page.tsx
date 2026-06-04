@@ -290,7 +290,12 @@ function RecentRow({ story }: { story: RecentStory }) {
     <li className="card px-4 py-3.5">
       <div className="flex items-center gap-2">
         <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="-ml-1 shrink-0" />
-        <div className="font-semibold leading-snug">{story.question ?? "Untitled story"}</div>
+        <Link
+          href={`/storytellers/${story.storytellerId}#story-${story.id}`}
+          className="font-semibold leading-snug hover:underline"
+        >
+          {story.question ?? "Untitled story"}
+        </Link>
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink/50">
         {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}

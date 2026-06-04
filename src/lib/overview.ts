@@ -8,6 +8,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type RecentStory = {
   id: string;
+  storytellerId: string;
   question: string | null;
   category: string | null;
   storyteller: string;
@@ -181,7 +182,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
       sb
         .from("answers")
         .select(
-          "id, question_text, created_at, duration_sec, audio_path, " +
+          "id, storyteller_id, question_text, created_at, duration_sec, audio_path, " +
             "storyteller:storytellers(name), prompt:prompts(category), " +
             "followups:answers!parent_answer_id(count)"
         )
@@ -239,6 +240,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
   // inference (returns a parser-error type), so type the rows explicitly here.
   type RecentRow = {
     id: string;
+    storyteller_id: string;
     question_text: string | null;
     created_at: string;
     duration_sec: number | null;
@@ -249,6 +251,7 @@ export async function loadOverview(familyId: string): Promise<Overview> {
   };
   const recent: RecentStory[] = ((recentRes.data ?? []) as unknown as RecentRow[]).map((a) => ({
     id: a.id,
+    storytellerId: a.storyteller_id,
     question: a.question_text ?? null,
     category: one<{ category: string }>(a.prompt)?.category ?? null,
     storyteller: one<{ name: string }>(a.storyteller)?.name ?? "Storyteller",
