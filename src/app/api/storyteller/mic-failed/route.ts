@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateStorytellerToken } from "@/lib/storyteller/token";
 import { supabaseService } from "@/lib/supabase/service";
-import { sendSms } from "@/lib/sms/twilio";
+import { alertFamilyAdmins } from "@/lib/sms/admin-alert";
 
 // Mic-failed signal (TODO 2.4). The storyteller surface beacons here when the
 // microphone permission is denied or unavailable. We persist a `mic_failed`
@@ -61,36 +61,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Best-effort admin alert (TODO 5.5). Text every owner/admin in this family
-  // who set an alert number in Settings (memberships.alert_phone). Fail-soft:
-  // any send error is swallowed so the signal still records and the elder's
-  // experience never depends on it.
-  try {
-    const { data: admins } = await db
-      .from("memberships")
-      .select("alert_phone, role")
-      .eq("family_id", session.family_id)
-      .in("role", ["owner", "admin"])
-      .not("alert_phone", "is", null);
-
-    const numbers = Array.from(
-      new Set(
-        (admins ?? [])
-          .map((m) => m.alert_phone?.trim())
-          .filter((p): p is string => !!p),
-      ),
-    );
-
-    await Promise.all(
-      numbers.map((to) =>
-        sendSms(
-          to,
-          `My Family Porch: ${session.name} had a microphone problem starting a story. They may need a hand.`,
-        ).catch((e) => console.error("[storyteller/mic-failed] admin SMS failed", e)),
-      ),
-    );
-  } catch (e) {
-    console.error("[storyteller/mic-failed] admin alert lookup failed", e);
-  }
+  // who set an alert number in Settings; fail-soft so the signal still records
+  // and the elder's experience never depends on delivery.
+  await alertFamilyAdmins(
+    db,
+    session.family_id,
+    `My Family Porch: ${session.name} had a microphone problem starting a story. They may need a hand.`,
+  );
 
   return NextResponse.json({ ok: true });
 }

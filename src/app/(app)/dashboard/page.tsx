@@ -9,7 +9,7 @@ import {
   type Signal,
   type StorytellerStat,
 } from "@/lib/overview";
-import { dismissInsight } from "./actions";
+import { dismissInsight, applyScheduleSuggestion } from "./actions";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -32,6 +32,16 @@ function timeOfDay(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+// "14:30" → "2:30 PM" for the suggestion button/copy (the signal's payload
+// stores the suggested send time as "HH:MM").
+function hhmmLabel(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map((n) => parseInt(n, 10));
+  if (Number.isNaN(h)) return hhmm;
+  const period = h < 12 ? "AM" : "PM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m || 0).padStart(2, "0")} ${period}`;
 }
 
 // "2 min 14 sec" — matches the prototype's spoken-length phrasing.
@@ -90,15 +100,18 @@ export default async function Dashboard() {
         </Link>
       </div>
 
-      {/* Signals at the top of Overview (TODO 6.2): the mic-failed alert is
-          acute. Any member sees it; only admins can dismiss it. */}
+      {/* Signals at the top of Overview (TODO 6.2/6.3): mic-failed is acute
+          (rose), schedule-suggestion is a positive recommendation (blue). Any
+          member sees them; only admins get the action controls. */}
       {signals.length > 0 && (
         <section className="mt-7 space-y-3">
-          {signals
-            .filter((s) => s.type === "mic_failed")
-            .map((s) => (
+          {signals.map((s) =>
+            s.type === "mic_failed" ? (
               <SignalAlert key={s.id} signal={s} canDismiss={canDismiss} />
-            ))}
+            ) : s.type === "schedule_suggestion" ? (
+              <ScheduleSuggestionCard key={s.id} signal={s} canAct={canDismiss} />
+            ) : null,
+          )}
         </section>
       )}
 
@@ -319,6 +332,58 @@ function SignalAlert({ signal, canDismiss }: { signal: Signal; canDismiss: boole
           </button>
         </form>
       )}
+    </div>
+  );
+}
+
+// The schedule-suggestion signal (TODO 6.3) — a positive recommendation in the
+// brand blue, distinct from the rose mic-failed alert (prototype `#ins-well`).
+// "Recommend, never auto-change": admins get an explicit "Switch to {time}" (the
+// only thing that shifts the nudge) and a "Keep current time" that just dismisses.
+function ScheduleSuggestionCard({ signal, canAct }: { signal: Signal; canAct: boolean }) {
+  const p = signal.payload;
+  const bestLabel = typeof p.best_time_label === "string" ? p.best_time_label : null;
+  const suggested = typeof p.suggested_send_time === "string" ? p.suggested_send_time : null;
+  const current = typeof p.current_send_time === "string" ? p.current_send_time : null;
+  const sample = typeof p.sample_size === "number" ? p.sample_size : null;
+
+  return (
+    <div className="flex items-start gap-3.5 rounded-2xl border border-brand/25 border-l-4 border-l-brand bg-gradient-to-b from-brand/5 to-surface px-4 py-3.5 shadow-sm">
+      <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-surface text-lg shadow-sm" aria-hidden>
+        💡
+      </span>
+      <div className="flex-1">
+        <div className="text-sm font-semibold text-ink">
+          {signal.storytellerName} records best around {bestLabel ?? "a different time"}.
+        </div>
+        <div className="mt-0.5 text-xs text-ink/65">
+          {sample ? `Across ${sample} recent sessions, ` : ""}
+          {current ? `their reminder goes out at ${hhmmLabel(current)}. ` : ""}
+          Shifting it closer to when they actually record could make it even
+          easier. We also texted the family.
+        </div>
+        {canAct && (
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {suggested && (
+              <form action={applyScheduleSuggestion}>
+                <input type="hidden" name="insight_id" value={signal.id} />
+                <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand/90">
+                  Switch to {hhmmLabel(suggested)}
+                </button>
+              </form>
+            )}
+            <form action={dismissInsight}>
+              <input type="hidden" name="insight_id" value={signal.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-surface2"
+              >
+                Keep current time
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
