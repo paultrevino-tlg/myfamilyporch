@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { runScheduler } from "@/lib/scheduler/run";
 import { runScheduleSuggestions } from "@/lib/signals/schedule-suggestion";
+import { runEngagementDrop } from "@/lib/signals/engagement-drop";
 
 // Weekly cron Worker entrypoint (TODO 6.1). The Cloudflare cron trigger only
 // invokes scheduled() (see worker.ts), which fires one in-process call here with
 // the shared CRON_SECRET in x-cron-secret. Keeping the work in this route means
 // it runs inside the normal Next runtime (env + libs intact) and stays callable
 // by hand for testing. Sends the story nudges due now in each storyteller's
-// timezone, then computes the throttled schedule-suggestion signal (TODO 6.3).
+// timezone, then computes the throttled schedule-suggestion (TODO 6.3) and
+// engaging-less (TODO 6.4) signals.
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
@@ -20,5 +22,6 @@ export async function POST(req: Request) {
 
   const nudges = await runScheduler();
   const suggestions = await runScheduleSuggestions();
-  return NextResponse.json({ ok: true, nudges, suggestions });
+  const drops = await runEngagementDrop();
+  return NextResponse.json({ ok: true, nudges, suggestions, drops });
 }

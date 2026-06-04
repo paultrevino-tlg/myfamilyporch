@@ -100,9 +100,10 @@ export default async function Dashboard() {
         </Link>
       </div>
 
-      {/* Signals at the top of Overview (TODO 6.2/6.3): mic-failed is acute
-          (rose), schedule-suggestion is a positive recommendation (blue). Any
-          member sees them; only admins get the action controls. */}
+      {/* Signals at the top of Overview (TODO 6.2/6.3/6.4): mic-failed is acute
+          (rose), schedule-suggestion is a positive recommendation (blue),
+          engaging-less is a quiet nudge to reach out (slate). Any member sees
+          them; only admins get the action controls. */}
       {signals.length > 0 && (
         <section className="mt-7 space-y-3">
           {signals.map((s) =>
@@ -110,6 +111,8 @@ export default async function Dashboard() {
               <SignalAlert key={s.id} signal={s} canDismiss={canDismiss} />
             ) : s.type === "schedule_suggestion" ? (
               <ScheduleSuggestionCard key={s.id} signal={s} canAct={canDismiss} />
+            ) : s.type === "engagement_drop" ? (
+              <EngagementDropCard key={s.id} signal={s} canAct={canDismiss} />
             ) : null,
           )}
         </section>
@@ -379,6 +382,54 @@ function ScheduleSuggestionCard({ signal, canAct }: { signal: Signal; canAct: bo
                 className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-surface2"
               >
                 Keep current time
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// The engaging-less signal (TODO 6.4) — a quiet, non-clinical nudge to reach out
+// (prototype `#ins-quiet`, slate tone, distinct from the rose mic alert and the
+// blue schedule suggestion). Never diagnoses; the point is to prompt a human
+// call. Admins can step over to the schedule (to ease off / pause) or dismiss;
+// viewers read-only. The gentle family SMS already fired when recorded.
+function EngagementDropCard({ signal, canAct }: { signal: Signal; canAct: boolean }) {
+  const p = signal.payload;
+  const recent = typeof p.recent_label === "string" ? p.recent_label : null;
+  const baseline = typeof p.baseline_label === "string" ? p.baseline_label : null;
+
+  return (
+    <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-gradient-to-b from-slate-50 to-surface px-4 py-3.5 shadow-sm">
+      <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-surface text-lg shadow-sm" aria-hidden>
+        💬
+      </span>
+      <div className="flex-1">
+        <div className="text-sm font-semibold text-ink">
+          {signal.storytellerName} has been recording a little less than usual lately.
+        </div>
+        <div className="mt-0.5 text-xs text-ink/65">
+          {recent && baseline ? `About ${recent} this month, down from ${baseline}. ` : ""}
+          Could well be nothing — might be a nice moment to give them a call. We sent
+          you a quiet text too.
+        </div>
+        {canAct && (
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <Link
+              href="/schedule"
+              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-surface2"
+            >
+              Adjust schedule
+            </Link>
+            <form action={dismissInsight}>
+              <input type="hidden" name="insight_id" value={signal.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink/70 hover:bg-surface2"
+              >
+                Dismiss
               </button>
             </form>
           </div>
