@@ -147,10 +147,13 @@ export async function runScheduleSuggestions(
   const db = supabaseService();
   const summary: SuggestionRunSummary = { considered: 0, suggested: [], throttled: 0 };
 
+  // Pause-aware (paused rows excluded at the source) + the per-storyteller
+  // on/off knob from TODO 6.5.
   const { data: rows, error } = await db
     .from("schedules")
     .select("family_id, storyteller_id, send_time_local, timezone")
-    .eq("paused", false);
+    .eq("paused", false)
+    .eq("signal_schedule_suggestion_enabled", true);
   if (error || !rows) return summary;
 
   const throttleSince = new Date(

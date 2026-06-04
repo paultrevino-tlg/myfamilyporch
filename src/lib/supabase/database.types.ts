@@ -306,6 +306,9 @@ export type Database = {
           questions_per: number
           quiet_after: string | null
           send_time_local: string
+          signal_engagement_enabled: boolean
+          signal_engagement_sensitivity: Database["public"]["Enums"]["engagement_sensitivity"]
+          signal_schedule_suggestion_enabled: boolean
           storyteller_id: string
           timezone: string | null
           updated_at: string
@@ -319,6 +322,9 @@ export type Database = {
           questions_per?: number
           quiet_after?: string | null
           send_time_local?: string
+          signal_engagement_enabled?: boolean
+          signal_engagement_sensitivity?: Database["public"]["Enums"]["engagement_sensitivity"]
+          signal_schedule_suggestion_enabled?: boolean
           storyteller_id: string
           timezone?: string | null
           updated_at?: string
@@ -332,6 +338,9 @@ export type Database = {
           questions_per?: number
           quiet_after?: string | null
           send_time_local?: string
+          signal_engagement_enabled?: boolean
+          signal_engagement_sensitivity?: Database["public"]["Enums"]["engagement_sensitivity"]
+          signal_schedule_suggestion_enabled?: boolean
           storyteller_id?: string
           timezone?: string | null
           updated_at?: string
@@ -661,6 +670,7 @@ export type Database = {
     }
     Enums: {
       emo_weight: "light" | "medium" | "heavy"
+      engagement_sensitivity: "gentle" | "standard" | "sensitive"
       insight_type: "mic_failed" | "schedule_suggestion" | "engagement_drop"
       membership_role: "owner" | "admin" | "viewer"
       pronoun_set: "he_him" | "she_her" | "they_them"
@@ -808,6 +818,7 @@ export const Constants = {
   public: {
     Enums: {
       emo_weight: ["light", "medium", "heavy"],
+      engagement_sensitivity: ["gentle", "standard", "sensitive"],
       insight_type: ["mic_failed", "schedule_suggestion", "engagement_drop"],
       membership_role: ["owner", "admin", "viewer"],
       pronoun_set: ["he_him", "she_her", "they_them"],

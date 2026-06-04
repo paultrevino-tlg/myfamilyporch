@@ -9,7 +9,14 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { sendStorytellerNudge } from "@/lib/sms/nudge";
-import { DAY_CODES, DEFAULT_TIMEZONE, type DayCode } from "@/lib/schedule";
+import {
+  DAY_CODES,
+  DEFAULT_TIMEZONE,
+  type DayCode,
+  type EngagementSensitivity,
+} from "@/lib/schedule";
+
+const SENSITIVITIES: EngagementSensitivity[] = ["gentle", "standard", "sensitive"];
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -67,6 +74,17 @@ export async function saveSchedule(formData: FormData) {
 
   const paused = formData.get("paused") != null;
 
+  // Check-in alert knobs (TODO 6.5). Unchecked checkboxes are absent from the
+  // form post → off; sensitivity falls back to 'standard' if anything unexpected.
+  const engagementEnabled = formData.get("signal_engagement_enabled") != null;
+  const sensitivityRaw = String(formData.get("signal_engagement_sensitivity") ?? "");
+  const engagementSensitivity: EngagementSensitivity = SENSITIVITIES.includes(
+    sensitivityRaw as EngagementSensitivity,
+  )
+    ? (sensitivityRaw as EngagementSensitivity)
+    : "standard";
+  const scheduleSuggestionEnabled = formData.get("signal_schedule_suggestion_enabled") != null;
+
   await sb.from("schedules").upsert(
     {
       family_id: active.family_id,
@@ -77,6 +95,9 @@ export async function saveSchedule(formData: FormData) {
       quiet_after: quietAfter,
       timezone,
       paused,
+      signal_engagement_enabled: engagementEnabled,
+      signal_engagement_sensitivity: engagementSensitivity,
+      signal_schedule_suggestion_enabled: scheduleSuggestionEnabled,
     },
     { onConflict: "storyteller_id" },
   );

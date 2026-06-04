@@ -10,6 +10,7 @@ import {
   TIMEZONES,
   type DayCode,
   type StorytellerSchedule,
+  type EngagementSensitivity,
 } from "@/lib/schedule";
 import {
   loadStorytellerTopics,
@@ -56,6 +57,11 @@ const PREF_LABEL: Record<TopicPreference, string> = {
   ease_off: "Ease off",
   focus: "Focus next",
   avoid: "Avoid",
+};
+const SENSITIVITY_LABEL: Record<EngagementSensitivity, string> = {
+  gentle: "Gentle",
+  standard: "Standard",
+  sensitive: "Sensitive",
 };
 const DAY_LABEL: Record<DayCode, string> = {
   SU: "Su",
@@ -588,6 +594,12 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
           {st.quietAfter ? `After ${prettyTime(st.quietAfter)}` : "Not set"}
         </ScheduleRow>
         {st.paused && <ScheduleRow label="Status">Paused</ScheduleRow>}
+        <ScheduleRow label="“Recording less” alert">
+          {st.engagementEnabled ? `On · ${SENSITIVITY_LABEL[st.engagementSensitivity]}` : "Off"}
+        </ScheduleRow>
+        <ScheduleRow label="Better-time suggestion">
+          {st.scheduleSuggestionEnabled ? "On" : "Off"}
+        </ScheduleRow>
       </dl>
     );
   }
@@ -681,6 +693,64 @@ function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage:
             <span className="text-ink/50"> — if they&apos;re traveling or unwell.</span>
           </span>
         </label>
+
+        {/* Check-in alerts (TODO 6.5) — the adaptive signals are opt-out/tunable;
+            mic-failed always surfaces (it's an acute technical fault). */}
+        <div className="border-t border-line pt-4">
+          <div className="text-sm font-medium">Check-in alerts</div>
+          <p className="text-xs text-ink/50">
+            Quiet, optional heads-ups about how {st.name} is doing. Paused storytellers are
+            never flagged.
+          </p>
+
+          <div className="mt-3 space-y-3">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="signal_engagement_enabled"
+                defaultChecked={st.engagementEnabled}
+                className="mt-0.5 h-4 w-4 rounded border"
+              />
+              <span>
+                <span className="font-medium">Tell me if they&apos;re recording less than usual</span>
+                <span className="block text-ink/50">
+                  A gentle nudge to reach out — compared only to their own pace, never a diagnosis.
+                </span>
+              </span>
+            </label>
+
+            <label className="ml-6 flex flex-col text-sm">
+              <span className="font-medium">How sensitive</span>
+              <span className="text-xs text-ink/50">
+                Gentle flags only a big drop; sensitive flags a smaller one.
+              </span>
+              <select
+                name="signal_engagement_sensitivity"
+                defaultValue={st.engagementSensitivity}
+                className="mt-1 input w-44"
+              >
+                <option value="gentle">Gentle</option>
+                <option value="standard">Standard</option>
+                <option value="sensitive">Sensitive</option>
+              </select>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="signal_schedule_suggestion_enabled"
+                defaultChecked={st.scheduleSuggestionEnabled}
+                className="mt-0.5 h-4 w-4 rounded border"
+              />
+              <span>
+                <span className="font-medium">Suggest a better time</span>
+                <span className="block text-ink/50">
+                  If {st.name} tends to record at a different hour than we reach out.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
 
         <SaveButton />
       </form>

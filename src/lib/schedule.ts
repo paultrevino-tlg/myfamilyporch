@@ -31,6 +31,10 @@ export const TIMEZONES: { value: string; label: string }[] = [
   { value: "UTC", label: "UTC" },
 ];
 
+// Per-storyteller adaptive-signal sensitivity (TODO 6.5). Mirrors the
+// schedules.signal_engagement_sensitivity enum.
+export type EngagementSensitivity = "gentle" | "standard" | "sensitive";
+
 export type StorytellerSchedule = {
   id: string;
   name: string;
@@ -41,6 +45,10 @@ export type StorytellerSchedule = {
   quietAfter: string | null; // "HH:MM" or null = no quiet-hours cutoff
   timezone: string; // IANA zone anchoring the local send time
   paused: boolean; // hold all outreach
+  // Check-in alert knobs (TODO 6.5). mic-failed stays always-on (acute).
+  engagementEnabled: boolean; // surface the engaging-less signal at all
+  engagementSensitivity: EngagementSensitivity; // how big a drop trips it
+  scheduleSuggestionEnabled: boolean; // surface the time-shift suggestion
 };
 
 // Defaults mirror the schedules table column defaults so a storyteller with no
@@ -52,6 +60,9 @@ const DEFAULTS = {
   quietAfter: null as string | null,
   timezone: DEFAULT_TIMEZONE,
   paused: false,
+  engagementEnabled: true,
+  engagementSensitivity: "standard" as EngagementSensitivity,
+  scheduleSuggestionEnabled: true,
 };
 
 // Postgres `time` comes back as "HH:MM:SS"; the <input type=time> form wants
@@ -81,7 +92,7 @@ export async function loadStorytellerSchedule(
     sb
       .from("schedules")
       .select(
-        "days_of_week, send_time_local, questions_per, quiet_after, timezone, paused",
+        "days_of_week, send_time_local, questions_per, quiet_after, timezone, paused, signal_engagement_enabled, signal_engagement_sensitivity, signal_schedule_suggestion_enabled",
       )
       .eq("family_id", familyId)
       .eq("storyteller_id", storytellerId)
@@ -101,6 +112,12 @@ export async function loadStorytellerSchedule(
     quietAfter: toHHMM(row?.quiet_after ?? null) ?? DEFAULTS.quietAfter,
     timezone: row?.timezone ?? DEFAULTS.timezone,
     paused: row?.paused ?? DEFAULTS.paused,
+    engagementEnabled: row?.signal_engagement_enabled ?? DEFAULTS.engagementEnabled,
+    engagementSensitivity:
+      (row?.signal_engagement_sensitivity as EngagementSensitivity | null) ??
+      DEFAULTS.engagementSensitivity,
+    scheduleSuggestionEnabled:
+      row?.signal_schedule_suggestion_enabled ?? DEFAULTS.scheduleSuggestionEnabled,
   };
 }
 
@@ -112,7 +129,7 @@ export async function loadSchedules(familyId: string): Promise<StorytellerSchedu
     sb
       .from("schedules")
       .select(
-        "storyteller_id, days_of_week, send_time_local, questions_per, quiet_after, timezone, paused",
+        "storyteller_id, days_of_week, send_time_local, questions_per, quiet_after, timezone, paused, signal_engagement_enabled, signal_engagement_sensitivity, signal_schedule_suggestion_enabled",
       )
       .eq("family_id", familyId),
   ]);
@@ -135,6 +152,12 @@ export async function loadSchedules(familyId: string): Promise<StorytellerSchedu
         quietAfter: toHHMM(row?.quiet_after ?? null) ?? DEFAULTS.quietAfter,
         timezone: row?.timezone ?? DEFAULTS.timezone,
         paused: row?.paused ?? DEFAULTS.paused,
+        engagementEnabled: row?.signal_engagement_enabled ?? DEFAULTS.engagementEnabled,
+        engagementSensitivity:
+          (row?.signal_engagement_sensitivity as EngagementSensitivity | null) ??
+          DEFAULTS.engagementSensitivity,
+        scheduleSuggestionEnabled:
+          row?.signal_schedule_suggestion_enabled ?? DEFAULTS.scheduleSuggestionEnabled,
       };
     });
 }

@@ -11,13 +11,21 @@
 import { supabaseService } from "@/lib/supabase/service";
 import { alertFamilyAdmins } from "@/lib/sms/admin-alert";
 
-// Tuning — all in one place, all explainable. (Per-family sensitivity + on/off
-// is TODO 6.5; these are the sensible defaults until then.)
+// Tuning — all in one place, all explainable.
 const RECENT_DAYS = 28; // "lately": the trailing window we measure the current rate over
 const BASELINE_DAYS = 56; // the elder's OWN baseline: the window just before "lately"
 const MIN_BASELINE_SESSIONS = 4; // too little history → no baseline → no opinion
-const DROP_FRACTION = 0.5; // "sustained drop": recent rate must be ≤ this share of baseline
 const THROTTLE_DAYS = 30; // don't re-nudge within this window (no pileup)
+
+// Per-storyteller sensitivity (TODO 6.5, schedules.signal_engagement_sensitivity)
+// maps to "how big a drop trips it": the recent rate must fall to ≤ this share of
+// the baseline. Gentle only flags a large drop; sensitive flags a smaller one.
+export type EngagementSensitivity = "gentle" | "standard" | "sensitive";
+const DROP_FRACTION: Record<EngagementSensitivity, number> = {
+  gentle: 0.35,
+  standard: 0.5,
+  sensitive: 0.65,
+};
 
 const DAY_MS = 86_400_000;
 
@@ -44,12 +52,15 @@ export type EngagementDrop = {
 
 // PURE decision. Given a storyteller's completed-session timestamps (ISO strings)
 // and the current instant, decide whether they're recording meaningfully less
-// than their OWN recent baseline. Returns null unless the baseline + drop gates
-// both pass. No DB, no clock — fully unit-testable.
+// than their OWN recent baseline. `sensitivity` tunes how big a drop trips it
+// (default standard). Returns null unless the baseline + drop gates both pass.
+// No DB, no clock — fully unit-testable.
 export function deriveEngagementDrop(input: {
   completedTimestamps: string[];
   now: Date;
+  sensitivity?: EngagementSensitivity;
 }): EngagementDrop | null {
+  const dropFraction = DROP_FRACTION[input.sensitivity ?? "standard"];
   const nowMs = input.now.getTime();
   const recentStart = nowMs - RECENT_DAYS * DAY_MS;
   const baselineStart = nowMs - (RECENT_DAYS + BASELINE_DAYS) * DAY_MS;
@@ -74,7 +85,7 @@ export function deriveEngagementDrop(input: {
   // Drop gate: recent rate must be a meaningful fraction below the baseline. The
   // multi-week recent window is itself the "sustained" measure — a single missed
   // week can't trip it.
-  if (recentPerWeek > baselinePerWeek * DROP_FRACTION) return null;
+  if (recentPerWeek > baselinePerWeek * dropFraction) return null;
 
   return {
     recentPerWeek,
@@ -101,10 +112,15 @@ export async function runEngagementDrop(
   const db = supabaseService();
   const summary: EngagementDropRunSummary = { considered: 0, flagged: [], throttled: 0 };
 
+  // Pause-aware (paused rows excluded at the source) + the per-storyteller
+  // on/off + sensitivity knobs from TODO 6.5.
   const { data: rows, error } = await db
     .from("schedules")
-    .select("family_id, storyteller_id")
-    .eq("paused", false);
+    .select(
+      "family_id, storyteller_id, signal_engagement_enabled, signal_engagement_sensitivity",
+    )
+    .eq("paused", false)
+    .eq("signal_engagement_enabled", true);
   if (error || !rows) return summary;
 
   const throttleSince = new Date(now.getTime() - THROTTLE_DAYS * DAY_MS).toISOString();
@@ -130,7 +146,11 @@ export async function runEngagementDrop(
         .map((s) => (s.started_at as string | null) ?? (s.completed_at as string | null))
         .filter((t): t is string => !!t);
 
-      const drop = deriveEngagementDrop({ completedTimestamps: timestamps, now });
+      const drop = deriveEngagementDrop({
+        completedTimestamps: timestamps,
+        now,
+        sensitivity: row.signal_engagement_sensitivity as EngagementSensitivity,
+      });
       if (!drop) continue;
 
       // Throttle: any engagement_drop for this storyteller within the window
