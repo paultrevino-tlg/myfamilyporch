@@ -12,6 +12,7 @@ type Family = { family_id: string; name: string };
 const LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/stories", label: "Stories" },
+  { href: "/book", label: "Book" },
   { href: "/settings", label: "Settings" },
 ];
 

@@ -13,7 +13,12 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
 import { sendStorytellerNudge } from "@/lib/sms/nudge";
 import { deleteVoice } from "@/lib/voice/elevenlabs";
-import { collectStorytellerAudioPaths, removeAudioObjects } from "@/lib/storage/cleanup";
+import {
+  collectStorytellerAudioPaths,
+  removeAudioObjects,
+  collectStorytellerPhotoPaths,
+  removePhotoObjects,
+} from "@/lib/storage/cleanup";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Pronouns = Database["public"]["Enums"]["pronoun_set"];
@@ -284,9 +289,11 @@ export async function deleteStoryteller(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  // Erase the storyteller's audio objects, then the row (answers cascade).
-  const paths = await collectStorytellerAudioPaths(active.family_id, id);
-  await removeAudioObjects(paths);
+  // Erase the storyteller's audio + keepsake photos (7.1), then the row
+  // (answers + story_photos cascade). Objects go before the row delete so a
+  // storage failure aborts and never orphans media.
+  await removeAudioObjects(await collectStorytellerAudioPaths(active.family_id, id));
+  await removePhotoObjects(await collectStorytellerPhotoPaths(active.family_id, id));
 
   const sb = await supabaseServer();
   const { error } = await sb

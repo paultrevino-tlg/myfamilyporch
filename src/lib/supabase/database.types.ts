@@ -17,6 +17,7 @@ export type Database = {
       answers: {
         Row: {
           audio_path: string | null
+          book_sort: number | null
           created_at: string
           duration_sec: number | null
           family_id: string
@@ -33,6 +34,7 @@ export type Database = {
         }
         Insert: {
           audio_path?: string | null
+          book_sort?: number | null
           created_at?: string
           duration_sec?: number | null
           family_id: string
@@ -49,6 +51,7 @@ export type Database = {
         }
         Update: {
           audio_path?: string | null
+          book_sort?: number | null
           created_at?: string
           duration_sec?: number | null
           family_id?: string
@@ -413,6 +416,51 @@ export type Database = {
           },
         ]
       }
+      story_photos: {
+        Row: {
+          answer_id: string
+          caption: string | null
+          created_at: string
+          family_id: string
+          id: string
+          sort: number
+          storage_path: string
+        }
+        Insert: {
+          answer_id: string
+          caption?: string | null
+          created_at?: string
+          family_id: string
+          id?: string
+          sort?: number
+          storage_path: string
+        }
+        Update: {
+          answer_id?: string
+          caption?: string | null
+          created_at?: string
+          family_id?: string
+          id?: string
+          sort?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_photos_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_photos_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storyteller_relationships: {
         Row: {
           address_term: string
@@ -525,6 +573,7 @@ export type Database = {
       storytellers: {
         Row: {
           birth_year: number | null
+          book_chapter_order: string[] | null
           created_at: string
           family_id: string
           id: string
@@ -537,6 +586,7 @@ export type Database = {
         }
         Insert: {
           birth_year?: number | null
+          book_chapter_order?: string[] | null
           created_at?: string
           family_id: string
           id?: string
@@ -549,6 +599,7 @@ export type Database = {
         }
         Update: {
           birth_year?: number | null
+          book_chapter_order?: string[] | null
           created_at?: string
           family_id?: string
           id?: string

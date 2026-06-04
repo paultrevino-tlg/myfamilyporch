@@ -6,7 +6,12 @@
 import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
-import { collectAnswerAudioPaths, removeAudioObjects } from "@/lib/storage/cleanup";
+import {
+  collectAnswerAudioPaths,
+  removeAudioObjects,
+  collectAnswerPhotoPaths,
+  removePhotoObjects,
+} from "@/lib/storage/cleanup";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -66,8 +71,10 @@ export async function deleteStory(formData: FormData) {
 
   // Tenant-scoped collection: a forged id from another family yields no paths
   // and the family-scoped row delete below no-ops — never a cross-tenant erase.
-  const paths = await collectAnswerAudioPaths(active.family_id, id);
-  await removeAudioObjects(paths);
+  // Erase audio + keepsake photos (7.1) before the row delete: a storage
+  // failure aborts and never leaves orphaned media behind a deleted story.
+  await removeAudioObjects(await collectAnswerAudioPaths(active.family_id, id));
+  await removePhotoObjects(await collectAnswerPhotoPaths(active.family_id, id));
 
   const sb = await supabaseServer();
   // Deleting the opening answer cascades its follow-ups (parent_answer_id).
