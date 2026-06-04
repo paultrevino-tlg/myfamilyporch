@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import { toggleInBook, editTranscript, deleteStory } from "./actions";
+import PlayAudioButton from "../PlayAudioButton";
 
 // A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp
 // on this elder-adjacent surface. (Mirrors the dashboard's helper.)
@@ -63,8 +64,11 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
 
   return (
     <li className="card p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-serif text-xl">{story.question ?? "Untitled story"}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="-ml-1 shrink-0" />
+          <h2 className="font-serif text-xl">{story.question ?? "Untitled story"}</h2>
+        </div>
         {story.inBook &&
           (canManage ? null : (
             <span className="chip bg-emerald-100 text-emerald-700">✓ In the book</span>
@@ -76,15 +80,6 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
         <span className="font-medium text-ink/60">{story.storyteller}</span>
         {meta && <span>· {meta}</span>}
       </div>
-
-      {story.hasAudio && (
-        <audio
-          controls
-          preload="none"
-          src={`/api/stories/audio?answer=${story.id}`}
-          className="mt-3 w-full"
-        />
-      )}
 
       {story.transcript && (
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
@@ -109,17 +104,12 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
 function FollowUp({ followUp }: { followUp: StoryFollowUp }) {
   return (
     <div>
-      {followUp.question && (
-        <div className="text-sm text-ink/60">↳ {followUp.question}</div>
-      )}
-      {followUp.hasAudio && (
-        <audio
-          controls
-          preload="none"
-          src={`/api/stories/audio?answer=${followUp.id}`}
-          className="mt-2 w-full"
-        />
-      )}
+      <div className="flex items-center gap-2">
+        <PlayAudioButton answerId={followUp.id} hasAudio={followUp.hasAudio} className="-ml-1 shrink-0" />
+        {followUp.question && (
+          <div className="text-sm text-ink/60">↳ {followUp.question}</div>
+        )}
+      </div>
       {followUp.transcript && (
         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
           {followUp.transcript}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
+import PlayAudioButton from "../../PlayAudioButton";
 import {
   loadStorytellerSchedule,
   DAY_CODES,
@@ -867,7 +868,10 @@ function StoryCard({ story }: { story: Story }) {
   return (
     <article className="card p-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold">{story.question ?? "Untitled story"}</h3>
+        <div className="flex items-center gap-2">
+          <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="-ml-1 shrink-0" />
+          <h3 className="text-base font-semibold">{story.question ?? "Untitled story"}</h3>
+        </div>
         {story.inBook && (
           <span className="chip shrink-0 bg-emerald-100 text-emerald-700">In the book</span>
         )}
@@ -878,14 +882,6 @@ function StoryCard({ story }: { story: Story }) {
       </div>
       {story.transcript && (
         <p className="mt-3 border-ink/10 border-l-2 pl-3 text-sm text-ink/70">{story.transcript}</p>
-      )}
-      {story.hasAudio && (
-        <audio
-          controls
-          preload="none"
-          src={`/api/stories/audio?answer=${story.id}`}
-          className="mt-2 w-full"
-        />
       )}
       {story.followUps.length > 0 && (
         <div className="mt-3 space-y-3 border-ink/10 border-t pt-3">
@@ -901,16 +897,11 @@ function StoryCard({ story }: { story: Story }) {
 function FollowUpRow({ followUp }: { followUp: StoryFollowUp }) {
   return (
     <div>
-      {followUp.question && <div className="text-sm text-ink/60">↳ {followUp.question}</div>}
+      <div className="flex items-center gap-2">
+        <PlayAudioButton answerId={followUp.id} hasAudio={followUp.hasAudio} className="-ml-1 shrink-0" />
+        {followUp.question && <div className="text-sm text-ink/60">↳ {followUp.question}</div>}
+      </div>
       {followUp.transcript && <p className="mt-1 text-sm text-ink/70">{followUp.transcript}</p>}
-      {followUp.hasAudio && (
-        <audio
-          controls
-          preload="none"
-          src={`/api/stories/audio?answer=${followUp.id}`}
-          className="mt-2 w-full"
-        />
-      )}
     </div>
   );
 }

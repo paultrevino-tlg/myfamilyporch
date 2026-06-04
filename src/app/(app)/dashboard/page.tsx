@@ -10,6 +10,7 @@ import {
   type StorytellerStat,
 } from "@/lib/overview";
 import { dismissInsight, applyScheduleSuggestion } from "./actions";
+import PlayAudioButton from "../PlayAudioButton";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -287,20 +288,15 @@ function RecentRow({ story }: { story: RecentStory }) {
     .join(" · ");
   return (
     <li className="card px-4 py-3.5">
-      <div className="font-semibold leading-snug">{story.question ?? "Untitled story"}</div>
+      <div className="flex items-center gap-2">
+        <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="-ml-1 shrink-0" />
+        <div className="font-semibold leading-snug">{story.question ?? "Untitled story"}</div>
+      </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink/50">
         {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}
         <span className="font-medium text-ink/60">{story.storyteller}</span>
         {meta && <span>· {meta}</span>}
       </div>
-      {story.hasAudio && (
-        <audio
-          controls
-          preload="none"
-          src={`/api/stories/audio?answer=${story.id}`}
-          className="mt-2.5 w-full"
-        />
-      )}
     </li>
   );
 }
