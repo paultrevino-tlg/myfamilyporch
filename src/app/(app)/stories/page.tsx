@@ -4,15 +4,22 @@ import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import { toggleInBook, editTranscript, deleteStory } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
 
-// A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp
-// on this elder-adjacent surface. (Mirrors the dashboard's helper.)
-function relDay(iso: string): string {
-  const then = new Date(iso);
-  const days = Math.floor((Date.now() - then.getTime()) / 86_400_000);
+// A calm date surface for elders — date headings group stories by day, never a
+// raw timestamp. Calendar-date key (local midnight) used to bucket each story.
+function dayKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// A calm date heading per day group: "Today" / "Yesterday" / "Wednesday, June 4".
+function dayHeading(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(now) - startOf(d)) / 86_400_000);
   if (days <= 0) return "Today";
   if (days === 1) return "Yesterday";
-  if (days < 7) return then.toLocaleDateString("en-US", { weekday: "short" });
-  return `${days} days ago`;
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
 // "2 min 14 sec" — matches the prototype's spoken-length phrasing.
@@ -33,6 +40,17 @@ export default async function StoriesPage() {
   const canManage = roleAtLeast(active.role, "admin");
   const stories = await loadStories(active.family_id);
 
+  // Stories already arrive newest-first (date desc, then time desc within a
+  // day). Walk once, bucketing consecutive same-day stories — groups come out
+  // date-desc and each group stays time-desc, no extra sorting needed.
+  const groups: { key: string; heading: string; stories: Story[] }[] = [];
+  for (const story of stories) {
+    const key = dayKey(story.createdAt);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.stories.push(story);
+    else groups.push({ key, heading: dayHeading(story.createdAt), stories: [story] });
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
       <div>
@@ -43,24 +61,32 @@ export default async function StoriesPage() {
         </p>
       </div>
 
-      <ul className="mt-7 space-y-4">
-        {stories.map((story) => (
-          <StoryCard key={story.id} story={story} canManage={canManage} />
+      <div className="mt-7 space-y-8">
+        {groups.map((group) => (
+          <section key={group.key}>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.06em] text-ink/45">
+              {group.heading}
+            </h2>
+            <ul className="space-y-4">
+              {group.stories.map((story) => (
+                <StoryCard key={story.id} story={story} canManage={canManage} />
+              ))}
+            </ul>
+          </section>
         ))}
         {stories.length === 0 && (
-          <li className="card px-4 py-10 text-center text-sm text-ink/50">
+          <div className="card px-4 py-10 text-center text-sm text-ink/50">
             No stories yet — they&apos;ll appear here once {active.name} starts
             recording.
-          </li>
+          </div>
         )}
-      </ul>
+      </div>
     </main>
   );
 }
 
 function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
   const duration = formatDuration(story.durationSec);
-  const meta = [relDay(story.createdAt), duration].filter(Boolean).join(" · ");
 
   return (
     <li className="card p-5">
@@ -78,7 +104,7 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink/50">
         {story.category && <span className="chip bg-accent/10 text-accent">{story.category}</span>}
         <span className="font-medium text-ink/60">{story.storyteller}</span>
-        {meta && <span>· {meta}</span>}
+        {duration && <span>· {duration}</span>}
       </div>
 
       {story.transcript && (
