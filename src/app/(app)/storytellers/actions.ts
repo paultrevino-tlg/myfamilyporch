@@ -116,38 +116,59 @@ export async function updateStoryteller(formData: FormData) {
   redirect(`/storytellers/${id}`);
 }
 
-// Upsert the current member's relationship to a storyteller. The unique
-// (user_id, storyteller_id) constraint makes this idempotent per member.
-export async function updateMyRelationship(formData: FormData) {
+// Choose which family member interviews this storyteller (voice-per-member).
+// The picked member becomes the single interviewer, and the questions play in
+// THEIR voice (resolved later via voice_profiles.owner_user_id). The interviewer
+// relationship also carries the address term + kind the AI/SMS use, so they're
+// set here too. Exactly one interviewer per storyteller (DB enforces it), so we
+// clear the flag on every other relationship first, then upsert the chosen one.
+export async function setInterviewer(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;
 
   const storyteller_id = String(formData.get("storyteller_id") ?? "");
+  const user_id = String(formData.get("user_id") ?? "");
   const address_term = String(formData.get("address_term") ?? "").trim();
-  if (!storyteller_id || !address_term) return;
+  if (!storyteller_id || !user_id || !address_term) {
+    redirect(`/storytellers/${storyteller_id}?error=interviewer`);
+  }
 
   const sb = await supabaseServer();
-  const {
-    data: { user },
-  } = await sb.auth.getUser();
-  if (!user) redirect("/login");
+
+  // The storyteller must be in the active family, and the chosen interviewer must
+  // be a member of it — refuse a stray id rather than write a bogus edge.
+  const [{ data: storyteller }, { data: member }] = await Promise.all([
+    sb.from("storytellers").select("id").eq("id", storyteller_id).eq("family_id", active.family_id).maybeSingle(),
+    sb.from("memberships").select("user_id").eq("family_id", active.family_id).eq("user_id", user_id).maybeSingle(),
+  ]);
+  if (!storyteller || !member) {
+    redirect(`/storytellers/${storyteller_id}?error=interviewer`);
+  }
+
+  // Single interviewer: demote everyone for this storyteller before promoting the
+  // pick (the partial unique index would otherwise reject two interviewers).
+  await sb
+    .from("storyteller_relationships")
+    .update({ is_interviewer: false })
+    .eq("storyteller_id", storyteller_id)
+    .eq("family_id", active.family_id);
 
   const { error } = await sb.from("storyteller_relationships").upsert(
     {
       family_id: active.family_id,
-      user_id: user.id,
+      user_id,
       storyteller_id,
       address_term,
       kind: asKind(formData.get("kind")),
       asker_relation: String(formData.get("asker_relation") ?? "").trim() || null,
-      is_interviewer: formData.get("is_interviewer") === "on",
+      is_interviewer: true,
     },
     { onConflict: "user_id,storyteller_id" },
   );
   if (error) throw error;
 
   revalidatePath(`/storytellers/${storyteller_id}`);
-  redirect(`/storytellers/${storyteller_id}`);
+  redirect(`/storytellers/${storyteller_id}?saved=interviewer`);
 }
 
 // Mint a recording link (magic-link token) for a storyteller. We authorize via
@@ -234,15 +255,13 @@ export async function sendNudge(formData: FormData) {
   redirect(`/storytellers/${storytellerId}?sent=${flag}`);
 }
 
-// Remove the cloned voice from the caller's interviewer relationship (TODO 4.1):
-// unlink it, delete the ElevenLabs voice, and drop the voice_profiles row. Same
-// admin authorization + RLS scoping as the other actions.
-export async function deleteVoiceProfile(formData: FormData) {
+// Remove MY cloned voice (voice-per-member). A member manages their own voice in
+// Settings → My voice; this deletes the ElevenLabs voice + the voice_profiles row
+// owned by the caller. Any signed-in member may remove their OWN voice (owner_user_id
+// is the guard — you can't delete someone else's).
+export async function deleteMyVoice() {
   const active = await getActiveMembership();
-  if (!active || !roleAtLeast(active.role, "admin")) return;
-
-  const storyteller_id = String(formData.get("storyteller_id") ?? "");
-  if (!storyteller_id) return;
+  if (!active) return;
 
   const sb = await supabaseServer();
   const {
@@ -250,32 +269,19 @@ export async function deleteVoiceProfile(formData: FormData) {
   } = await sb.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: rel } = await sb
-    .from("storyteller_relationships")
-    .select("id, voice_profile_id")
-    .eq("user_id", user.id)
-    .eq("storyteller_id", storyteller_id)
-    .eq("family_id", active.family_id)
-    .maybeSingle();
-  if (!rel?.voice_profile_id) return;
-
   const { data: profile } = await sb
     .from("voice_profiles")
-    .select("provider_voice")
-    .eq("id", rel.voice_profile_id)
+    .select("id, provider_voice")
+    .eq("family_id", active.family_id)
+    .eq("owner_user_id", user.id)
     .maybeSingle();
+  if (!profile) return;
 
-  // Unlink first so a deleted row never leaves a dangling FK, then clean up the
-  // external voice and the row itself.
-  await sb
-    .from("storyteller_relationships")
-    .update({ voice_profile_id: null })
-    .eq("id", rel.id);
-  if (profile?.provider_voice) await deleteVoice(profile.provider_voice);
-  await sb.from("voice_profiles").delete().eq("id", rel.voice_profile_id);
+  if (profile.provider_voice) await deleteVoice(profile.provider_voice);
+  await sb.from("voice_profiles").delete().eq("id", profile.id);
 
-  revalidatePath(`/storytellers/${storyteller_id}`);
-  redirect(`/storytellers/${storyteller_id}`);
+  revalidatePath("/settings");
+  redirect("/settings");
 }
 
 // Remove a storyteller. Cascades drop their relationships, sessions, answers, etc.

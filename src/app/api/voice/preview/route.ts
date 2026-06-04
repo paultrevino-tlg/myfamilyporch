@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
-import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { getActiveMembership } from "@/lib/auth";
 import { synthesize } from "@/lib/voice/elevenlabs";
 
 // Voice preview (TODO 4.1). Synthesizes a short line in the cloned voice so an
@@ -15,9 +15,11 @@ const PREVIEW: Record<"en" | "es", string> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Any family member can preview a voice (e.g. their own "My voice"); it's an
+  // innocuous family-internal playback. RLS + the family filter keep it scoped.
   const active = await getActiveMembership();
-  if (!active || !roleAtLeast(active.role, "admin")) {
-    return NextResponse.json({ error: "admin required" }, { status: 403 });
+  if (!active) {
+    return NextResponse.json({ error: "not signed in" }, { status: 401 });
   }
 
   let body: { voice_profile_id?: string; lang?: string };

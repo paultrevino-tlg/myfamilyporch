@@ -46,27 +46,28 @@ export async function POST(req: NextRequest) {
 
   const db = supabaseService();
 
-  // Resolve the interviewer's cloned voice for this storyteller. Prefer the
-  // member flagged as interviewer; fall back to any relationship that has a voice.
-  const { data: rels } = await db
+  // Resolve the interviewer for this storyteller, then THAT member's voice.
+  // Voice attaches to the family member (voice_profiles.owner_user_id), not to
+  // the relationship — so whoever is flagged as interviewer lends their voice.
+  const { data: rel } = await db
     .from("storyteller_relationships")
-    .select("voice_profile_id, is_interviewer")
+    .select("user_id")
     .eq("storyteller_id", session.storyteller_id)
-    .not("voice_profile_id", "is", null)
-    .order("is_interviewer", { ascending: false })
-    .limit(1);
-  const voiceProfileId = rels?.[0]?.voice_profile_id ?? null;
-  if (!voiceProfileId) {
-    return new NextResponse(null, { status: 204 }); // no cloned voice yet → text only
+    .eq("family_id", session.family_id)
+    .eq("is_interviewer", true)
+    .maybeSingle();
+  if (!rel?.user_id) {
+    return new NextResponse(null, { status: 204 }); // no interviewer chosen yet → text only
   }
 
   const { data: profile } = await db
     .from("voice_profiles")
     .select("provider_voice")
-    .eq("id", voiceProfileId)
+    .eq("family_id", session.family_id)
+    .eq("owner_user_id", rel.user_id)
     .maybeSingle();
   if (!profile?.provider_voice) {
-    return new NextResponse(null, { status: 204 });
+    return new NextResponse(null, { status: 204 }); // interviewer hasn't recorded a voice → text only
   }
 
   try {

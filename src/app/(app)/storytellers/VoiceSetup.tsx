@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { deleteVoiceProfile } from "./actions";
+import { deleteMyVoice } from "./actions";
 
-// Voice profile setup (TODO 4.1). Shown in the interviewer's relationship section.
-// The interviewer records a short sample in the browser (reusing the storyteller
-// flow's MediaRecorder/codec pattern); we POST it to api/voice/clone, which sends
-// it to ElevenLabs and links the returned voice to this relationship. Once linked,
-// en/es preview buttons prove the SAME cloned voice speaks both languages.
+// "My voice" recorder (voice-per-member). A family member records themselves once
+// in Settings → My voice; the clone is stored against THEM and reused wherever
+// they're chosen as a storyteller's interviewer. Reuses the storyteller flow's
+// MediaRecorder/codec pattern; POSTs to api/voice/clone (owner = the caller).
+// The clone is multilingual, so the read-aloud script offers en/es.
 
 type Linked = { id: string; label: string } | null;
 
-// A short read-aloud script per language → a clean ~20–40s sample for the clone.
 const SCRIPT: Record<"en" | "es", string> = {
   en: "Hi, it's me. I've been thinking about all the stories you carry — the everyday ones and the big ones. I'd love to just sit and listen for a little while. There's no rush, and no wrong answer. Whenever you're ready, tell me whatever comes to mind.",
   es: "Hola, soy yo. He estado pensando en todas las historias que llevas contigo — las de cada día y las más grandes. Me encantaría sentarme y escucharte un rato. No hay prisa, y no hay respuesta incorrecta. Cuando estés listo, cuéntame lo que te venga a la mente.",
@@ -26,16 +25,9 @@ function pickRecorderMime(): string {
   return "";
 }
 
-export default function VoiceSetup({
-  storytellerId,
-  lang,
-  linked,
-}: {
-  storytellerId: string;
-  lang: "en" | "es";
-  linked: Linked;
-}) {
+export default function VoiceSetup({ linked }: { linked: Linked }) {
   const router = useRouter();
+  const [scriptLang, setScriptLang] = useState<"en" | "es">("en");
   const [recording, setRecording] = useState(false);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [seconds, setSeconds] = useState(0);
@@ -102,9 +94,8 @@ export default function VoiceSetup({
     setError(null);
     const ext = blob.type.includes("mp4") ? "mp4" : blob.type.includes("ogg") ? "ogg" : "webm";
     const fd = new FormData();
-    fd.set("storyteller_id", storytellerId);
     fd.set("label", label.trim() || "My voice");
-    fd.set("lang", lang);
+    fd.set("lang", scriptLang);
     fd.set("samples", blob, `voice-sample.${ext}`);
     try {
       const res = await fetch("/api/voice/clone", { method: "POST", body: fd });
@@ -154,7 +145,7 @@ export default function VoiceSetup({
     return (
       <div className="mt-3 space-y-3">
         <p className="text-ink/70">
-          Cloned voice: <span className="font-medium">{linked.label}</span>
+          Your cloned voice: <span className="font-medium">{linked.label}</span>
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -173,8 +164,7 @@ export default function VoiceSetup({
           >
             {previewing === "es" ? "Reproduciendo…" : "▶ Vista previa (Español)"}
           </button>
-          <form action={deleteVoiceProfile}>
-            <input type="hidden" name="storyteller_id" value={storytellerId} />
+          <form action={deleteMyVoice}>
             <button type="submit" className="font-semibold text-red-600 underline-offset-4 hover:underline">
               Remove voice
             </button>
@@ -196,8 +186,24 @@ export default function VoiceSetup({
     return (
       <div className="space-y-3">
         <div className="rounded-xl border border-line bg-surface2 p-3.5 text-ink/70">
-          <p className="mb-1 font-semibold text-ink/80">Read this aloud (about 20–40 seconds):</p>
-          <p className="italic">{SCRIPT[lang]}</p>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="font-semibold text-ink/80">Read this aloud (about 20–40 seconds):</span>
+            <div className="ml-auto flex gap-1">
+              {(["en", "es"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setScriptLang(l)}
+                  className={`rounded-full border px-2.5 py-0.5 text-xs ${
+                    scriptLang === l ? "border-ink bg-ink text-white" : "text-ink/60 hover:bg-ink/5"
+                  }`}
+                >
+                  {l === "en" ? "English" : "Español"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="italic">{SCRIPT[scriptLang]}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

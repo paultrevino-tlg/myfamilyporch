@@ -3,6 +3,7 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
 import { setAlertPhone } from "./actions";
 import { createInvitation } from "../actions";
+import VoiceSetup from "../storytellers/VoiceSetup";
 
 // Settings (TODO 5.5). The prototype's four fields: storyteller phone numbers,
 // the signed-in admin's own alert number, cloned-voice status, and family
@@ -19,7 +20,7 @@ export default async function SettingsPage({
 
   const sp = await searchParams;
   const canManage = roleAtLeast(active.role, "admin");
-  const { myAlertPhone, roster, invitations } = await loadSettings(active.family_id);
+  const { myAlertPhone, myVoice, roster, invitations } = await loadSettings(active.family_id);
 
   const inputCls = "mt-1 input";
 
@@ -39,8 +40,20 @@ export default async function SettingsPage({
         </p>
       )}
 
-      {/* Storyteller phone numbers + cloned voice now live on each storyteller's
-          page (reach them from the dashboard). */}
+      {/* My voice (voice-per-member). Record yourself once; you can then be chosen
+          as any storyteller's interviewer and they'll hear the questions in your
+          voice. Each member manages their own here. */}
+      <section className="card mt-7 p-6">
+        <h2 className="text-lg font-semibold">My voice</h2>
+        <p className="text-sm text-ink/55">
+          Record yourself once. When you&apos;re set as a storyteller&apos;s interviewer, they hear
+          the questions in your voice (English &amp; Spanish).
+        </p>
+        <VoiceSetup linked={myVoice} />
+      </section>
+
+      {/* Storyteller phone numbers now live on each storyteller's page (reach
+          them from the dashboard). */}
 
       {/* Alert me by text. The signed-in admin's OWN number. */}
       <section className="card mt-7 p-6">
@@ -84,13 +97,20 @@ export default async function SettingsPage({
           {roster.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
+              className="flex items-center justify-between gap-2 rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
             >
-              <span className="font-medium">
-                {m.email ?? "Family member"}
+              <span className="min-w-0">
+                <span className="font-medium">{m.email ?? m.name}</span>
                 {m.isYou && <span className="font-normal text-ink/50"> · you</span>}
               </span>
-              <span className="chip bg-brand/10 capitalize text-brand">{m.role}</span>
+              <span className="flex shrink-0 items-center gap-2">
+                {m.hasVoice && (
+                  <span className="chip bg-emerald-100 text-emerald-700" title="Has a cloned voice">
+                    🎙 voice
+                  </span>
+                )}
+                <span className="chip bg-brand/10 capitalize text-brand">{m.role}</span>
+              </span>
             </li>
           ))}
         </ul>

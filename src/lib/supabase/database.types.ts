@@ -472,7 +472,6 @@ export type Database = {
           kind: Database["public"]["Enums"]["relationship_type"]
           storyteller_id: string
           user_id: string
-          voice_profile_id: string | null
         }
         Insert: {
           address_term: string
@@ -484,7 +483,6 @@ export type Database = {
           kind?: Database["public"]["Enums"]["relationship_type"]
           storyteller_id: string
           user_id: string
-          voice_profile_id?: string | null
         }
         Update: {
           address_term?: string
@@ -496,7 +494,6 @@ export type Database = {
           kind?: Database["public"]["Enums"]["relationship_type"]
           storyteller_id?: string
           user_id?: string
-          voice_profile_id?: string | null
         }
         Relationships: [
           {
@@ -511,13 +508,6 @@ export type Database = {
             columns: ["storyteller_id"]
             isOneToOne: false
             referencedRelation: "storytellers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "storyteller_relationships_voice_profile_id_fkey"
-            columns: ["voice_profile_id"]
-            isOneToOne: false
-            referencedRelation: "voice_profiles"
             referencedColumns: ["id"]
           },
         ]

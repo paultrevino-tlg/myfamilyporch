@@ -20,9 +20,10 @@ import {
   type TopicPreference,
 } from "@/lib/topics";
 import { decryptToken } from "@/lib/storyteller/crypto";
+import { loadFamilyMembers } from "@/lib/members";
 import {
   updateStoryteller,
-  updateMyRelationship,
+  setInterviewer,
   createRecordingLink,
   revokeRecordingLinks,
   sendNudge,
@@ -31,7 +32,6 @@ import {
 import { setStorytellerPhone } from "../../settings/actions";
 import { saveSchedule, askNow } from "../../schedule/actions";
 import { setTopicPreference } from "../../topics/actions";
-import VoiceSetup from "../VoiceSetup";
 
 // Per-storyteller hub. RLS scopes every read to the member's families; we also
 // pin to the active family + this storyteller id. This is the single place to
@@ -113,13 +113,6 @@ function daysSummary(days: DayCode[]): string {
     .join(" · ");
 }
 
-// PostgREST embeds a to-one relation as an object at runtime but the generated
-// types widen it to an array — normalize either shape (same gotcha as auth.ts).
-function one<T>(rel: unknown): T | null {
-  if (Array.isArray(rel)) return (rel[0] as T) ?? null;
-  return (rel as T) ?? null;
-}
-
 export default async function StorytellerDetailPage({
   params,
   searchParams,
@@ -139,44 +132,40 @@ export default async function StorytellerDetailPage({
   } = await sb.auth.getUser();
   if (!user) redirect("/login");
 
-  // The storyteller, with the current member's own relationship (filtered by
-  // user_id so other members' edges stay out) + the linked cloned voice. The
-  // nested voice_profiles embed defeats PostgREST's static type inference, so
-  // we type the row explicitly below.
   const { data: stData } = await sb
     .from("storytellers")
-    .select(
-      "id,name,pronouns,birth_year,language,phone," +
-        "storyteller_relationships(address_term,kind,asker_relation,is_interviewer,voice_profile_id,voice_profiles(id,label))"
-    )
+    .select("id,name,pronouns,birth_year,language,phone")
     .eq("family_id", active.family_id)
     .eq("id", id)
-    .eq("storyteller_relationships.user_id", user.id)
     .maybeSingle();
 
   // Not in this family (or doesn't exist) → 404, never leak another tenant.
   if (!stData) notFound();
-  const st = stData as unknown as {
+  const st = stData as {
     id: string;
     name: string;
     pronouns: string;
     birth_year: number | null;
     language: string;
     phone: string | null;
-    storyteller_relationships: unknown;
   };
-  const stLang: "en" | "es" = st.language === "es" ? "es" : "en";
 
-  const rel = one<{
-    address_term: string | null;
-    kind: string | null;
-    asker_relation: string | null;
-    is_interviewer: boolean | null;
-    voice_profile_id: string | null;
-    voice_profiles: unknown;
-  }>(st.storyteller_relationships);
-  const voice = rel ? one<{ id: string; label: string }>(rel.voice_profiles) : null;
-  const linkedVoice = voice ? { id: voice.id, label: voice.label } : null;
+  // Who interviews this storyteller (voice-per-member): the single is_interviewer
+  // relationship, plus the family roster (with each member's voice status) for the
+  // picker. The interviewer lends their own cloned voice.
+  const [{ data: interviewerRel }, members] = await Promise.all([
+    sb
+      .from("storyteller_relationships")
+      .select("user_id, address_term, kind, asker_relation")
+      .eq("storyteller_id", id)
+      .eq("family_id", active.family_id)
+      .eq("is_interviewer", true)
+      .maybeSingle(),
+    loadFamilyMembers(active.family_id),
+  ]);
+  const interviewer = interviewerRel
+    ? members.find((m) => m.userId === interviewerRel.user_id) ?? null
+    : null;
 
   // Recording links, schedule, topics, and this elder's answers, in parallel.
   const [tokenRes, schedule, topics, stories] = await Promise.all([
@@ -223,7 +212,7 @@ export default async function StorytellerDetailPage({
             {PRONOUN_LABEL[st.pronouns] ?? st.pronouns}
             {st.birth_year ? ` · b. ${st.birth_year}` : ""}
             {` · ${st.language === "es" ? "Español" : "English"}`}
-            {rel?.is_interviewer ? " · you interview" : ""}
+            {interviewer ? ` · ${interviewer.name} interviews` : ""}
           </p>
         </div>
       </div>
@@ -231,6 +220,10 @@ export default async function StorytellerDetailPage({
       {/* Banners surfaced by the inline editors' redirects. */}
       {sp.saved === "phone" && <Banner tone="green">Phone number saved. 📱</Banner>}
       {sp.saved === "schedule" && <Banner tone="green">Schedule saved. 🗓️</Banner>}
+      {sp.saved === "interviewer" && <Banner tone="green">Interviewer saved. 🎙</Banner>}
+      {sp.error === "interviewer" && (
+        <Banner tone="red">Pick a family member and what {st.name} is called.</Banner>
+      )}
       {sp.error === "phone" && (
         <Banner tone="red">
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
@@ -305,35 +298,53 @@ export default async function StorytellerDetailPage({
           )}
         </ConfigBox>
 
-        {/* Your relationship + cloned voice --------------------------------- */}
+        {/* Interviewer + voice (voice-per-member) --------------------------- */}
         <ConfigBox
-          label="Your relationship"
-          value={rel?.address_term ?? "—"}
+          label="Interviewer"
+          value={interviewer ? interviewer.name : "Not set"}
           sub={
-            rel?.kind
-              ? `${KIND_LABEL[rel.kind] ?? rel.kind}${
-                  rel.asker_relation ? ` · you're their ${rel.asker_relation}` : ""
-                }`
-              : undefined
+            interviewerRel?.address_term
+              ? `Calls ${st.name} “${interviewerRel.address_term}”`
+              : "Who asks the questions"
           }
         >
           {canManage ? (
             <>
-              <form action={updateMyRelationship} className="flex flex-wrap items-end gap-3">
+              <form action={setInterviewer} className="flex flex-wrap items-end gap-3">
                 <input type="hidden" name="storyteller_id" value={st.id} />
                 <label className="flex flex-col text-sm">
-                  <span className="text-ink/60">You call them</span>
+                  <span className="text-ink/60">Who asks the questions?</span>
+                  <select
+                    name="user_id"
+                    defaultValue={interviewerRel?.user_id ?? ""}
+                    required
+                    className={inputCls}
+                  >
+                    <option value="" disabled>
+                      Choose a family member…
+                    </option>
+                    {members.map((m) => (
+                      <option key={m.userId} value={m.userId}>
+                        {m.name}
+                        {m.email ? ` (${m.email})` : ""}
+                        {m.hasVoice ? " · 🎙" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col text-sm">
+                  <span className="text-ink/60">They call {st.name}</span>
                   <input
                     name="address_term"
                     required
                     placeholder="Dad, Grandma, Uncle Joe"
-                    defaultValue={rel?.address_term ?? ""}
+                    defaultValue={interviewerRel?.address_term ?? ""}
                     className={inputCls}
                   />
                 </label>
                 <label className="flex flex-col text-sm">
                   <span className="text-ink/60">Relationship</span>
-                  <select name="kind" defaultValue={rel?.kind ?? "other"} className={inputCls}>
+                  <select name="kind" defaultValue={interviewerRel?.kind ?? "other"} className={inputCls}>
                     {KINDS.map((k) => (
                       <option key={k} value={k}>
                         {KIND_LABEL[k]}
@@ -342,35 +353,39 @@ export default async function StorytellerDetailPage({
                   </select>
                 </label>
                 <label className="flex flex-col text-sm">
-                  <span className="text-ink/60">They are your…</span>
+                  <span className="text-ink/60">They are {st.name}&apos;s…</span>
                   <input
                     name="asker_relation"
                     placeholder="son, niece"
-                    defaultValue={rel?.asker_relation ?? ""}
+                    defaultValue={interviewerRel?.asker_relation ?? ""}
                     className={inputCls}
                   />
-                </label>
-                <label className="flex items-center gap-2 pb-2 text-sm">
-                  <input
-                    type="checkbox"
-                    name="is_interviewer"
-                    defaultChecked={rel?.is_interviewer ?? false}
-                  />
-                  <span className="text-ink/70">I&apos;m the interviewer</span>
                 </label>
                 <SaveButton />
               </form>
 
-              {/* Cloned voice (TODO 4.1) — only once a relationship exists. */}
-              {rel && (
-                <div className="mt-4 border-t pt-3 text-sm">
-                  <p className="text-ink/70">
-                    Cloned voice — record yourself once; {st.name} hears the questions in your
-                    voice (en &amp; es).
+              {/* The interviewer lends their cloned voice (managed in Settings). */}
+              <div className="mt-4 border-t pt-3 text-sm">
+                {!interviewer ? (
+                  <p className="text-ink/60">
+                    Pick who interviews {st.name}. They&apos;ll hear the questions in that
+                    person&apos;s cloned voice.
                   </p>
-                  <VoiceSetup storytellerId={st.id} lang={stLang} linked={linkedVoice} />
-                </div>
-              )}
+                ) : interviewer.hasVoice ? (
+                  <p className="text-ink/70">
+                    🎙 {st.name} will hear questions in{" "}
+                    <span className="font-medium">{interviewer.name}</span>&apos;s voice.
+                  </p>
+                ) : (
+                  <p className="text-amber-800">
+                    {interviewer.name} hasn&apos;t recorded a voice yet — they can add it in{" "}
+                    <Link href="/settings" className="font-semibold underline">
+                      Settings → My voice
+                    </Link>
+                    . Until then, {st.name} sees the question as text.
+                  </p>
+                )}
+              </div>
             </>
           ) : (
             <ViewerNote />

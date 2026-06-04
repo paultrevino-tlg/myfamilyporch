@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
-import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { getActiveMembership } from "@/lib/auth";
 import { cloneVoice, deleteVoice, type VoiceSample } from "@/lib/voice/elevenlabs";
 
-// Voice profile setup (TODO 4.1). An admin records the interviewer's voice in the
-// browser; those samples are POSTed here, sent straight to ElevenLabs for an
-// Instant Voice Clone, and we persist ONLY the returned voice_id in a
-// voice_profiles row, then link it to the interviewer's relationship.
+// Record MY voice (voice-per-member). A family member records themselves once in
+// Settings → My voice; the clone is stored against THEM (voice_profiles
+// .owner_user_id), and is reused wherever they're chosen as a storyteller's
+// interviewer. There's no storyteller/relationship link anymore.
 //
-// Auth: the cookie-bound SSR client means RLS scopes every read/write to the
-// signed-in member; we additionally require admin of the active family and that
-// the caller owns a relationship to the target storyteller. The ElevenLabs key is
-// server-only (this route).
+// Auth: any signed-in member of the active family may record their OWN voice
+// (owner_user_id is always the caller — you can't write someone else's voice).
+// The ElevenLabs key is server-only (this route). Re-recording replaces the
+// member's single profile and deletes the old ElevenLabs voice.
 
 const MAX_TOTAL_BYTES = 24 * 1024 * 1024; // ElevenLabs IVC accepts ~25MB total
 
 export async function POST(req: NextRequest) {
   const active = await getActiveMembership();
-  if (!active || !roleAtLeast(active.role, "admin")) {
-    return NextResponse.json({ error: "admin required" }, { status: 403 });
+  if (!active) {
+    return NextResponse.json({ error: "not signed in" }, { status: 401 });
   }
 
   let form: FormData;
@@ -28,12 +28,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "expected multipart form" }, { status: 400 });
   }
 
-  const storytellerId = String(form.get("storyteller_id") ?? "");
-  const label = (String(form.get("label") ?? "").trim() || "Interviewer voice").slice(0, 80);
+  const label = (String(form.get("label") ?? "").trim() || "My voice").slice(0, 80);
   const lang = String(form.get("lang") ?? "en") === "es" ? "es" : "en";
-  if (!storytellerId) {
-    return NextResponse.json({ error: "missing storyteller_id" }, { status: 400 });
-  }
 
   const files = form.getAll("samples").filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) {
@@ -50,19 +46,13 @@ export async function POST(req: NextRequest) {
   } = await sb.auth.getUser();
   if (!user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
-  // The caller must own a relationship to this storyteller in the active family.
-  // RLS already constrains this read to the member's families; the explicit
-  // checks refuse a stray id and capture any voice we're replacing.
-  const { data: rel } = await sb
-    .from("storyteller_relationships")
-    .select("id, voice_profile_id")
-    .eq("user_id", user.id)
-    .eq("storyteller_id", storytellerId)
+  // Any voice this member already has — we replace it (one voice per member).
+  const { data: existing } = await sb
+    .from("voice_profiles")
+    .select("id, provider_voice")
     .eq("family_id", active.family_id)
+    .eq("owner_user_id", user.id)
     .maybeSingle();
-  if (!rel) {
-    return NextResponse.json({ error: "no relationship to this storyteller" }, { status: 404 });
-  }
 
   // Read the recorded samples into memory for the multipart upload to ElevenLabs.
   const samples: VoiceSample[] = await Promise.all(
@@ -82,47 +72,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "voice clone failed" }, { status: 502 });
   }
 
-  // Persist the profile (only the voice_id, never the audio) and link it.
-  const { data: profile, error: insErr } = await sb
-    .from("voice_profiles")
-    .insert({
-      family_id: active.family_id,
-      owner_user_id: user.id,
-      label,
-      provider: "elevenlabs",
-      provider_voice: voiceId,
-      lang,
-    })
-    .select("id")
-    .single();
-  if (insErr || !profile) {
-    console.error("[voice/clone] profile insert failed", insErr);
-    await deleteVoice(voiceId); // don't leak an orphaned ElevenLabs voice
-    return NextResponse.json({ error: "could not save voice profile" }, { status: 500 });
-  }
-
-  const { error: linkErr } = await sb
-    .from("storyteller_relationships")
-    .update({ voice_profile_id: profile.id })
-    .eq("id", rel.id);
-  if (linkErr) {
-    console.error("[voice/clone] link failed", linkErr);
-    await sb.from("voice_profiles").delete().eq("id", profile.id);
-    await deleteVoice(voiceId);
-    return NextResponse.json({ error: "could not link voice profile" }, { status: 500 });
-  }
-
-  // Replace any previous voice this relationship pointed at (re-clone): unlink is
-  // done; now drop the old ElevenLabs voice + row so nothing is orphaned.
-  if (rel.voice_profile_id && rel.voice_profile_id !== profile.id) {
-    const { data: old } = await sb
+  // Persist the profile (only the voice_id, never the audio), keyed to the member.
+  let profileId: string;
+  if (existing) {
+    // Replace in place: point the member's row at the new voice, then retire the old.
+    const { error: updErr } = await sb
       .from("voice_profiles")
-      .select("provider_voice")
-      .eq("id", rel.voice_profile_id)
-      .maybeSingle();
-    if (old?.provider_voice) await deleteVoice(old.provider_voice);
-    await sb.from("voice_profiles").delete().eq("id", rel.voice_profile_id);
+      .update({ label, provider: "elevenlabs", provider_voice: voiceId, lang })
+      .eq("id", existing.id);
+    if (updErr) {
+      console.error("[voice/clone] profile update failed", updErr);
+      await deleteVoice(voiceId);
+      return NextResponse.json({ error: "could not save voice profile" }, { status: 500 });
+    }
+    profileId = existing.id;
+    if (existing.provider_voice && existing.provider_voice !== voiceId) {
+      await deleteVoice(existing.provider_voice); // don't leak the old ElevenLabs voice
+    }
+  } else {
+    const { data: profile, error: insErr } = await sb
+      .from("voice_profiles")
+      .insert({
+        family_id: active.family_id,
+        owner_user_id: user.id,
+        label,
+        provider: "elevenlabs",
+        provider_voice: voiceId,
+        lang,
+      })
+      .select("id")
+      .single();
+    if (insErr || !profile) {
+      console.error("[voice/clone] profile insert failed", insErr);
+      await deleteVoice(voiceId); // don't leak an orphaned ElevenLabs voice
+      return NextResponse.json({ error: "could not save voice profile" }, { status: 500 });
+    }
+    profileId = profile.id;
   }
 
-  return NextResponse.json({ ok: true, voice_profile_id: profile.id, label });
+  return NextResponse.json({ ok: true, voice_profile_id: profileId, label });
 }
