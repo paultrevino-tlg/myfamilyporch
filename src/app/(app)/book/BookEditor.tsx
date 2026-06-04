@@ -3,7 +3,9 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import PlayAudioButton from "../PlayAudioButton";
+import VoiceQrTag from "./VoiceQrTag";
 import type { Book, BookChapter, BookStory, BookPhoto } from "@/lib/book";
+import type { VoiceQr } from "@/lib/book/voice-qr";
 import {
   reorderChapters,
   reorderStories,
@@ -32,7 +34,13 @@ type Drag =
   | { kind: "photo"; chapter: number; story: number; index: number }
   | null;
 
-export default function BookEditor({ book }: { book: Book }) {
+export default function BookEditor({
+  book,
+  qrs,
+}: {
+  book: Book;
+  qrs: Record<string, VoiceQr>;
+}) {
   const [chapters, setChapters] = useState<BookChapter[]>(book.chapters);
   const [, startTransition] = useTransition();
   const drag = useRef<Drag>(null);
@@ -195,6 +203,7 @@ export default function BookEditor({ book }: { book: Book }) {
                       }}
                       onPhotoDrop={(index) => onDropPhoto(ci, si, index)}
                     />
+                    <VoiceQrTag qr={qrs[story.id]} name={book.storytellerName} lang={book.language} />
                   </div>
                   <div className="flex shrink-0 flex-col gap-1">
                     <MoveBtn dir="up" disabled={si === 0} onClick={() => moveStory(ci, si, si - 1)} />

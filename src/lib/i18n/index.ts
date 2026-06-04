@@ -53,6 +53,15 @@ export const ui: Record<Lang, Record<string, string>> = {
     // sender, never interpolated into the translated string.
     sms_nudge: "Hi {address}, it's {interviewer} — tap here to tell me a story 💬",
     sms_nudge_no_interviewer: "Hi {address} — tap here to tell me a story 💬",
+    // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
+    // storyteller's own language — the recording's language.
+    qr_caption: "Scan to hear {name} tell it",
+    play_kicker: "In their own voice",
+    play_in_voice: "{name}, in their own voice",
+    play_more: "More of the story",
+    play_no_audio: "No recording for this part.",
+    play_dead_title: "This recording link isn't active",
+    play_dead_sub: "No worries at all. Ask your family for the keepsake again, and the story will be right here.",
   },
   es: {
     // Welcome
@@ -96,6 +105,14 @@ export const ui: Record<Lang, Record<string, string>> = {
     // SMS nudge (TODO 4.3)
     sms_nudge: "Hola {address}, soy {interviewer} — toca aquí para contarme una historia 💬",
     sms_nudge_no_interviewer: "Hola {address} — toca aquí para contarme una historia 💬",
+    // Voice-QR play page (TODO 7.2)
+    qr_caption: "Escanea para escuchar a {name} contarlo",
+    play_kicker: "Con su propia voz",
+    play_in_voice: "{name}, con su propia voz",
+    play_more: "Más de la historia",
+    play_no_audio: "No hay grabación para esta parte.",
+    play_dead_title: "Este enlace de la grabación no está activo",
+    play_dead_sub: "No te preocupes. Pídele a tu familia el recuerdo otra vez y la historia estará aquí mismo.",
   },
 };
 

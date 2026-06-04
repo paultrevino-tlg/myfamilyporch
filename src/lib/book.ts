@@ -59,6 +59,7 @@ export type BookChapter = {
 export type Book = {
   storytellerId: string;
   storytellerName: string;
+  language: "en" | "es"; // drives the voice-QR caption language in the printed book
   chapters: BookChapter[];
   storyCount: number;
 };
@@ -137,7 +138,7 @@ export async function loadBook(
 
   const stRes = await sb
     .from("storytellers")
-    .select("id, name, book_chapter_order")
+    .select("id, name, language, book_chapter_order")
     .eq("family_id", familyId)
     .eq("id", storytellerId)
     .maybeSingle();
@@ -229,5 +230,11 @@ export async function loadBook(
   }));
   const storyCount = [...byCategory.values()].reduce((n, l) => n + l.length, 0);
 
-  return { storytellerId: st.id, storytellerName: st.name, chapters, storyCount };
+  return {
+    storytellerId: st.id,
+    storytellerName: st.name,
+    language: st.language === "es" ? "es" : "en",
+    chapters,
+    storyCount,
+  };
 }

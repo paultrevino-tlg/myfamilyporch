@@ -1,8 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadBook } from "@/lib/book";
+import { buildVoiceQrs, type VoiceQr } from "@/lib/book/voice-qr";
 import PlayAudioButton from "../../PlayAudioButton";
 import BookEditor from "../BookEditor";
+import VoiceQrTag from "../VoiceQrTag";
 
 // One storyteller's keepsake (TODO 7.1). Admins get the drag-and-drop editor
 // (arrange chapters/stories, attach photos); viewers get a calm read-only
@@ -20,6 +22,11 @@ export default async function BookForStorytellerPage({
   if (!book) notFound();
 
   const canManage = roleAtLeast(active.role, "admin");
+
+  // Voice QRs for every in-book story (TODO 7.2) — built server-side so the
+  // inline SVGs print sharp and the play token never reaches the client unminted.
+  const storyIds = book.chapters.flatMap((c) => c.stories.map((s) => s.id));
+  const qrs = await buildVoiceQrs(storyIds);
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
@@ -51,9 +58,9 @@ export default async function BookForStorytellerPage({
 
       <div className="mt-7">
         {canManage ? (
-          <BookEditor book={book} />
+          <BookEditor book={book} qrs={qrs} />
         ) : (
-          <ReadOnlyBook book={book} />
+          <ReadOnlyBook book={book} qrs={qrs} />
         )}
       </div>
     </main>
@@ -61,7 +68,13 @@ export default async function BookForStorytellerPage({
 }
 
 // Viewer rendering: chapters + stories + photos, no controls. Server component.
-function ReadOnlyBook({ book }: { book: Awaited<ReturnType<typeof loadBook>> }) {
+function ReadOnlyBook({
+  book,
+  qrs,
+}: {
+  book: Awaited<ReturnType<typeof loadBook>>;
+  qrs: Record<string, VoiceQr>;
+}) {
   if (!book || book.chapters.length === 0) {
     return (
       <div className="card px-4 py-10 text-center text-sm text-ink/50">
@@ -105,6 +118,7 @@ function ReadOnlyBook({ book }: { book: Awaited<ReturnType<typeof loadBook>> }) 
                         ))}
                       </ul>
                     )}
+                    <VoiceQrTag qr={qrs[story.id]} name={book.storytellerName} lang={book.language} />
                   </div>
                 </div>
               </li>
