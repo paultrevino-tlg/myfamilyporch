@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "./BrandMark";
 import { SITE_TAGLINE } from "@/lib/seo";
 
 // Marketing footer (Phase 8.1): wordmark + tagline, four link columns, a short
@@ -49,9 +50,7 @@ export function SiteFooter() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5 font-bold tracking-tight">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-lg shadow-sm">
-                🏡
-              </span>
+              <BrandMark className="h-9 w-9 rounded-xl shadow-sm" />
               <span className="font-serif text-lg font-semibold">My Family Porch</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-ink/60">{SITE_TAGLINE}</p>

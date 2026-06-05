@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MobileNav from "./MobileNav";
+import { BrandMark } from "./BrandMark";
 import { NAV_LINKS, PRIMARY_CTA } from "./nav";
 
 // Sticky marketing header (Phase 8.1): wordmark left, primary nav + warm CTA
@@ -14,9 +15,7 @@ export function SiteHeader() {
           className="flex items-center gap-2.5 font-bold tracking-tight"
           aria-label="My Family Porch — home"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-lg shadow-sm">
-            🏡
-          </span>
+          <BrandMark className="h-9 w-9 rounded-xl shadow-sm" />
           <span className="font-serif text-lg font-semibold">My Family Porch</span>
         </Link>
 

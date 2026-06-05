@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="My Family Porch — a rocking chair on the porch">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded tile in the brand blue gradient -->
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+
+  <!-- Porch roof eave -->
+  <path d="M13 20 L32 11 L51 20" fill="none" stroke="#fff" stroke-width="3.2"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.92"/>
+
+  <!-- Porch floor line -->
+  <line x1="14" y1="51" x2="50" y2="51" stroke="#fff" stroke-width="2.6"
+        stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Rocking chair (side view) -->
+  <g fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- curved rocker runner -->
+    <path d="M19 48 Q32 55 47 47"/>
+    <!-- back leg rising into the backrest -->
+    <path d="M24 48 L26 37 L24 22"/>
+    <!-- second back rail / slat -->
+    <path d="M29 37 L28 23"/>
+    <!-- headrest curve joining the back rails -->
+    <path d="M24 22 Q26 19 28 23"/>
+    <!-- seat -->
+    <path d="M26 37 L41 37"/>
+    <!-- front leg -->
+    <path d="M41 37 L44 48"/>
+    <!-- armrest -->
+    <path d="M25 29 L41 31"/>
+    <!-- front arm post -->
+    <path d="M41 31 L41 37"/>
+  </g>
+</svg>
