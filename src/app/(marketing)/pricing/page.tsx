@@ -25,6 +25,7 @@ export const metadata = pageMeta({
 });
 
 const CTA_HREF = "/login"; // real Stripe Checkout signup is 8.5 / 9.2
+const GIFT_HREF = "/login"; // TODO: repoint to /gift in 8.7 (the gift flow)
 
 function Check() {
   return (
@@ -139,6 +140,28 @@ export default function PricingPage() {
         </div>
         <Link href={CTA_HREF} className="btn-ink shrink-0 px-6 py-3 text-base">
           {LIFETIME.cta}
+        </Link>
+      </section>
+
+      {/* Gift band — gifting is a primary use case (brief §4.7) */}
+      <section className="card mt-10 flex flex-col items-start gap-5 bg-surface2 p-7 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div className="text-3xl" aria-hidden>
+            🎁
+          </div>
+          <div>
+            <h2 className="font-serif text-2xl font-semibold">
+              {PRICING_COPY.giftCallout.h2}
+            </h2>
+            <p className="mt-2 max-w-2xl leading-relaxed text-ink/70">
+              {PRICING_COPY.giftCallout.body}
+            </p>
+          </div>
+        </div>
+        {/* TODO: repoint to /gift in 8.7 (the gift flow). Routes to /login now to
+            avoid a dead button per the marketing-site rule. */}
+        <Link href={GIFT_HREF} className="btn-primary shrink-0 px-6 py-3 text-base">
+          {PRICING_COPY.giftCallout.cta}
         </Link>
       </section>
 

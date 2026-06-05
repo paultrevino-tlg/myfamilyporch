@@ -241,6 +241,11 @@ export const PRICING_COPY = {
     h2: "A book you can actually hear.",
     body: "Every printed book includes voice QR codes — scan a page and hear the story in their own voice. No one else does this.",
   },
+  giftCallout: {
+    h2: "Giving it as a gift?",
+    body: "My Family Porch is one of the most meaningful gifts you can give — for a birthday, Mother's or Father's Day, a holiday, or a milestone anniversary. Set it up for someone you love and we'll help their stories find their way home.",
+    cta: "Give it as a gift",
+  },
 } as const;
 
 export const FAQ: FaqItem[] = [
