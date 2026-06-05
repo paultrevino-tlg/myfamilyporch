@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Children, isValidElement, useEffect, useRef, useState } from "react";
 import { t, type Lang } from "@/lib/i18n";
 
 // The storyteller's voice session as a client-side state machine. Matches
@@ -163,7 +163,7 @@ export default function SessionFlow({
     // the root <html lang> can't know the token's language.
     <main
       lang={lang}
-      className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-10 text-ink"
+      className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-8 text-ink"
     >
       <div className="flex w-full max-w-md flex-1 flex-col">
         {step === "welcome" && (
@@ -468,16 +468,39 @@ function AnswerScreen({
 
 // --- Presentational pieces ----------------------------------------------------
 
+// Matches the prototype's per-screen geometry (docs/prototypes/storyteller-flow.html):
+// content is vertically centered in a growing stage, with the action button(s)
+// pinned near the bottom — thumb-reachable, no big mid-screen void. The <Spacer/>
+// in a step's children marks the boundary between the centered content and the
+// bottom button group; screens without one (terminal/loading) just center all.
 function Screen({ children }: { children: React.ReactNode }) {
+  const items = Children.toArray(children);
+  const splitAt = items.findIndex((c) => isValidElement(c) && c.type === Spacer);
+
+  if (splitAt === -1) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      {children}
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+        {items.slice(0, splitAt)}
+      </div>
+      <div className="flex flex-col items-center gap-2 pt-6">
+        {items.slice(splitAt + 1)}
+      </div>
     </div>
   );
 }
 
+// Boundary marker between a screen's centered content and its bottom buttons —
+// Screen splits its children here. Renders nothing itself.
 function Spacer() {
-  return <div className="flex-1" />;
+  return null;
 }
 
 function DisplayText({ children }: { children: React.ReactNode }) {
