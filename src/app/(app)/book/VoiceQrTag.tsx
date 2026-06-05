@@ -18,9 +18,13 @@ export default function VoiceQrTag({
   if (!qr) return null;
   return (
     <figure className="mt-3 flex w-fit flex-col items-center gap-1">
-      <div
-        className="h-24 w-24 [&>svg]:h-full [&>svg]:w-full"
-        // Inline SVG markup from the qrcode lib (no user input → safe).
+      <a
+        href={qr.url}
+        target="_blank"
+        rel="noopener"
+        className="block h-24 w-24 [&>svg]:h-full [&>svg]:w-full"
+        // Inline SVG markup from the qrcode lib (no user input → safe). The QR
+        // both scans (phone camera) and clicks/taps through to the same /p/<token>.
         dangerouslySetInnerHTML={{ __html: qr.svg }}
       />
       <figcaption className="max-w-[6.5rem] text-center text-[11px] leading-tight text-ink/55">

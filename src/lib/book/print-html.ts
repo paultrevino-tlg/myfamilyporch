@@ -109,8 +109,10 @@ function renderPhoto(id: string, caption: string | null, src: string | undefined
 
 function renderQr(qr: VoiceQr | undefined, name: string, lang: Lang): string {
   if (!qr) return "";
-  // qr.svg is library-generated markup (no user input) — safe to inline.
-  return `<figure class="qr">${qr.svg}<figcaption>${esc(t(lang, "qr_caption", { name }))}</figcaption></figure>`;
+  // qr.svg is library-generated markup (no user input) — safe to inline. Wrap it
+  // in an anchor so the QR is also a clickable/tappable link (preserved as a real
+  // hyperlink in the headless-Chrome PDF), not just a scannable code.
+  return `<figure class="qr"><a href="${esc(qr.url)}">${qr.svg}</a><figcaption>${esc(t(lang, "qr_caption", { name }))}</figcaption></figure>`;
 }
 
 // Build the complete, self-contained HTML document for a book.
