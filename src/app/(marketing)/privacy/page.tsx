@@ -17,9 +17,10 @@ export default function PrivacyPolicy() {
       <p className="mt-2 text-ink/60 text-sm">Last updated: June 5, 2026</p>
 
       <p className="mt-6 text-ink/80">
-        My Family Porch (&ldquo;we,&rdquo; &ldquo;us&rdquo;) records a family
-        elder&apos;s life stories as a short, AI-guided voice interview and turns
-        them into a keepsake. This policy explains what information we collect,
+        My Family Porch, a service of Technology Leadership Group, LLC
+        (&ldquo;we,&rdquo; &ldquo;us&rdquo;), records a family elder&apos;s life
+        stories as a short, AI-guided voice interview and turns them into a
+        keepsake. This policy explains what information we collect,
         how we use it, and the choices you have. We do not sell your information,
         and we do not share it with third parties for their own marketing.
       </p>

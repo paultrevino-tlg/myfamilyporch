@@ -18,10 +18,11 @@ export default function Terms() {
       <p className="mt-2 text-ink/60 text-sm">Last updated: June 5, 2026</p>
 
       <p className="mt-6 text-ink/80">
-        These terms govern your use of My Family Porch, a service that records a
-        family elder&apos;s life stories as a short, AI-guided voice interview and
-        turns them into a keepsake. By using the service you agree to these
-        terms.
+        These terms govern your use of My Family Porch, a service operated by
+        Technology Leadership Group, LLC (&ldquo;we,&rdquo; &ldquo;us&rdquo;) that
+        records a family elder&apos;s life stories as a short, AI-guided voice
+        interview and turns them into a keepsake. By using the service you agree
+        to these terms.
       </p>
 
       <h2 className="mt-8 font-semibold text-xl">The service</h2>

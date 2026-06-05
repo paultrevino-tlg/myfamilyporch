@@ -83,7 +83,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-line pt-6 text-sm text-ink/50">
-          © {year} My Family Porch
+          © {year} My Family Porch — a service of Technology Leadership Group, LLC.
         </div>
       </div>
     </footer>
