@@ -11,6 +11,7 @@ import {
   type FeatureMatrixRow,
 } from "@/lib/pricing";
 import { pageMeta } from "@/lib/seo";
+import { GIFT_HREF } from "../_components/nav";
 
 // Public pricing page (TODO 7.5). Renders entirely from src/lib/pricing.ts —
 // the single source of truth shared with Phase 8.3 (marketing) and 9.1/9.2
@@ -25,7 +26,7 @@ export const metadata = pageMeta({
 });
 
 const CTA_HREF = "/login"; // real Stripe Checkout signup is 8.5 / 9.2
-const GIFT_HREF = "/login"; // TODO: repoint to /gift in 8.7 (the gift flow)
+// GIFT_HREF now points at the dedicated /gift landing page (8.7, imported above).
 
 function Check() {
   return (
@@ -158,8 +159,8 @@ export default function PricingPage() {
             </p>
           </div>
         </div>
-        {/* TODO: repoint to /gift in 8.7 (the gift flow). Routes to /login now to
-            avoid a dead button per the marketing-site rule. */}
+        {/* Routes to the dedicated /gift landing page (8.7); the gift checkout
+            itself is wired in 9.7. */}
         <Link href={GIFT_HREF} className="btn-primary shrink-0 px-6 py-3 text-base">
           {PRICING_COPY.giftCallout.cta}
         </Link>

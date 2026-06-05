@@ -3,9 +3,8 @@ import { SITE_TAGLINE } from "@/lib/seo";
 
 // Marketing footer (Phase 8.1): wordmark + tagline, four link columns, a short
 // privacy-reassurance line (the #1 buyer concern for this product), copyright.
-// Links point at live pages or landing anchors — no dead 404s. /how-it-works and
-// /about (our story) are live (8.6); the /gift page arrives in 8.7 (anchor /#gift
-// until then).
+// Links point at live pages or landing anchors — no dead 404s. /how-it-works,
+// /about (our story), and /gift (8.7) are all live pages.
 
 type Col = { title: string; links: { label: string; href: string }[] };
 
@@ -22,7 +21,7 @@ const COLUMNS: Col[] = [
     title: "Company",
     links: [
       { label: "Our story", href: "/about" },
-      { label: "Gift a porch", href: "/#gift" },
+      { label: "Gift a porch", href: "/gift" },
     ],
   },
   {

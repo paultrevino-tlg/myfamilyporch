@@ -21,3 +21,8 @@ export const NAV_LINKS: NavLink[] = [
 // constant to an `${APP_BASE_URL}/signup` absolute. The real Stripe Checkout
 // paywall lives behind /signup and is wired in 9.2 — the CTA never changes.
 export const PRIMARY_CTA: NavLink = { label: "Get started", href: "/signup" };
+
+// Single source for the gift *landing* link (Phase 8.7). Used by the pricing
+// gift band and the footer so they never drift. The page's own purchase CTA
+// routes to /signup until the gift checkout lands in 9.7.
+export const GIFT_HREF = "/gift";
