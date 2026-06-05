@@ -1,21 +1,22 @@
 import Link from "next/link";
+import { Container } from "./_components/Container";
+import { PRIMARY_CTA } from "./_components/nav";
+import { pageMeta } from "@/lib/seo";
 
-// Public landing. TODO 5: full marketing site — this is the modern hero baseline.
+export const metadata = pageMeta({
+  title: "My Family Porch",
+  description:
+    "My Family Porch records a loved one's life stories through short, AI-guided voice interviews — gentle to use, and kept as a keepsake your whole family can hear.",
+  path: "/",
+});
+
+// Public landing. The marketing shell (Phase 8.1) now provides the nav + footer;
+// this page renders the hero only. Full landing sections (problem / how-it-works
+// / why-voice / what-you-get / social proof / pricing / FAQ / final CTA) land in
+// Phase 8.2 and fill the /#how-it-works · /#stories · /#faq anchor targets.
 export default function Home() {
   return (
-    <main className="mx-auto max-w-5xl px-5 sm:px-7">
-      <header className="flex items-center justify-between py-6">
-        <div className="flex items-center gap-2.5 font-bold tracking-tight">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-xl shadow-sm">
-            🏡
-          </span>
-          My Family Porch
-        </div>
-        <Link href="/login" className="btn-ghost">
-          Sign in
-        </Link>
-      </header>
-
+    <Container>
       <section className="grid items-center gap-10 py-12 sm:grid-cols-2 sm:py-20">
         <div>
           <span className="chip bg-brand/10 text-brand">For families</span>
@@ -28,8 +29,8 @@ export default function Home() {
             whole family can hear.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/login" className="btn-primary px-6 py-3 text-base">
-              Get started
+            <Link href={PRIMARY_CTA.href} className="btn-primary px-6 py-3 text-base">
+              {PRIMARY_CTA.label}
             </Link>
             <Link href="/login" className="btn-ghost px-6 py-3 text-base">
               I have an invite
@@ -74,16 +75,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-line py-8 text-sm text-ink/50">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span>© My Family Porch</span>
-          <div className="flex gap-5">
-            <Link href="/privacy" className="hover:text-ink">Privacy</Link>
-            <Link href="/terms" className="hover:text-ink">Terms</Link>
-          </div>
-        </div>
-      </footer>
-    </main>
+    </Container>
   );
 }

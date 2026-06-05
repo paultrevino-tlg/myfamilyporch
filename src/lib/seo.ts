@@ -1,0 +1,61 @@
+import type { Metadata } from "next";
+
+// Centralized marketing SEO (Phase 8.1). One source for the canonical site URL,
+// the site name, and the per-page metadata shape (canonical + OpenGraph +
+// Twitter card) so every (marketing) page emits consistent, share-ready tags.
+// Pages call pageMeta() in their exported `metadata`; the root layout sets
+// metadataBase so the relative URLs here resolve to absolute ones.
+
+// TODO: confirm the public production domain (project memory: myfamilyporch.net).
+export const SITE_URL = "https://myfamilyporch.net";
+export const SITE_NAME = "My Family Porch";
+export const SITE_TAGLINE = "Their stories, in their own voice.";
+
+// TODO: 8.9 generates the real 1200×630 social image at this path.
+export const DEFAULT_OG_IMAGE = "/og.png";
+
+type PageMetaArgs = {
+  /** Short, page-specific title — the site name is appended automatically. */
+  title: string;
+  description: string;
+  /** Absolute path from the site root, e.g. "/pricing" (home is "/"). */
+  path: string;
+  /** Override the default social image. */
+  ogImage?: string;
+};
+
+/**
+ * Build a Next `Metadata` object for a marketing page: a consistent title,
+ * a canonical URL, and matching OpenGraph + Twitter (summary_large_image) cards.
+ */
+export function pageMeta({
+  title,
+  description,
+  path,
+  ogImage = DEFAULT_OG_IMAGE,
+}: PageMetaArgs): Metadata {
+  const fullTitle =
+    path === "/" ? `${SITE_NAME} — ${SITE_TAGLINE}` : `${title} — ${SITE_NAME}`;
+
+  return {
+    // `absolute` opts out of the root layout's title template so the site-name
+    // suffix isn't appended twice.
+    title: { absolute: fullTitle },
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      url: path,
+      title: fullTitle,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: SITE_NAME }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [ogImage],
+    },
+  };
+}

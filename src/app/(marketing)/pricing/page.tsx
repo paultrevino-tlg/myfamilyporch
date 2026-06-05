@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import {
   TIERS,
   LIFETIME,
@@ -11,17 +10,19 @@ import {
   type PricingTier,
   type FeatureMatrixRow,
 } from "@/lib/pricing";
+import { pageMeta } from "@/lib/seo";
 
 // Public pricing page (TODO 7.5). Renders entirely from src/lib/pricing.ts —
 // the single source of truth shared with Phase 8.3 (marketing) and 9.1/9.2
 // (Stripe). No Stripe here: CTAs route to /login until the signup funnel (8.5).
-// Renders standalone for now; the marketing nav/footer shell is Phase 8.1.
+// Wrapped by the marketing shell (Phase 8.1) for nav/footer + SEO.
 
-export const metadata: Metadata = {
-  title: "Pricing — My Family Porch",
+export const metadata = pageMeta({
+  title: "Pricing",
   description:
     "Capture an elder's life stories in their own voice. Simple yearly plans, a one-time Lifetime option, and a printed book with voice QR codes. Cancel anytime and keep everything, forever.",
-};
+  path: "/pricing",
+});
 
 const CTA_HREF = "/login"; // real Stripe Checkout signup is 8.5 / 9.2
 
@@ -96,19 +97,7 @@ function TierCard({ tier }: { tier: PricingTier }) {
 
 export default function PricingPage() {
   return (
-    <main className="mx-auto max-w-6xl px-5 pb-24 sm:px-7">
-      <header className="flex items-center justify-between py-6">
-        <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-xl shadow-sm">
-            🏡
-          </span>
-          My Family Porch
-        </Link>
-        <Link href="/login" className="btn-ghost">
-          Sign in
-        </Link>
-      </header>
-
+    <div className="mx-auto max-w-6xl px-5 pb-24 pt-12 sm:px-7">
       {/* Hero */}
       <section className="mx-auto max-w-3xl py-12 text-center sm:py-16">
         <h1 className="font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
@@ -288,6 +277,6 @@ export default function PricingPage() {
           Get started
         </Link>
       </section>
-    </main>
+    </div>
   );
 }

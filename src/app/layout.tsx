@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
+import { SITE_URL, SITE_NAME, SITE_TAGLINE, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 // Site-wide type: Inter for UI, Fraunces for warm display lines. Exposed as CSS
 // variables so Tailwind's font-sans / font-serif resolve everywhere. The
@@ -19,9 +20,25 @@ const serif = Fraunces({
   display: "swap",
 });
 
+// metadataBase makes the relative canonical/OG URLs from lib/seo resolve to
+// absolute ones. The defaults here are inherited site-wide and overridden
+// per-page (marketing pages via pageMeta()).
 export const metadata: Metadata = {
-  title: "My Family Porch",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    template: `%s — ${SITE_NAME}`,
+  },
   description: "Capture a loved one's life stories, in their own voice.",
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

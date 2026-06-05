@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — My Family Porch",
+export const metadata = pageMeta({
+  title: "Privacy Policy",
   description:
     "How My Family Porch collects, uses, and protects your information, including text-message reminders.",
-};
+  path: "/privacy",
+});
 
 // Minimal, A2P/CTIA-compliant privacy policy. Required as a live, reachable URL
 // for Twilio A2P 10DLC campaign registration (TODO 4.3). Full marketing/legal
 // pass is Phase 8.4 — this is the compliant baseline.
 export default function PrivacyPolicy() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 leading-relaxed">
+    <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Privacy Policy</h1>
       <p className="mt-2 text-ink/60 text-sm">Last updated: June 3, 2026</p>
 
@@ -96,6 +97,6 @@ export default function PrivacyPolicy() {
         </a>
         .
       </p>
-    </main>
+    </div>
   );
 }

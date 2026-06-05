@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Terms & Conditions — My Family Porch",
+export const metadata = pageMeta({
+  title: "Terms & Conditions",
   description:
     "Terms of service for My Family Porch, including the SMS reminder program, message frequency, and opt-out.",
-};
+  path: "/terms",
+});
 
 // Minimal, A2P/CTIA-compliant terms. Required as a live, reachable URL for
 // Twilio A2P 10DLC campaign registration (TODO 4.3). Must name the program,
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 // marketing/legal pass is Phase 8.4 — this is the compliant baseline.
 export default function Terms() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 leading-relaxed">
+    <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Terms &amp; Conditions</h1>
       <p className="mt-2 text-ink/60 text-sm">Last updated: June 3, 2026</p>
 
@@ -96,6 +97,6 @@ export default function Terms() {
         </a>
         .
       </p>
-    </main>
+    </div>
   );
 }
