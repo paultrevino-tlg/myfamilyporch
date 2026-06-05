@@ -12,6 +12,11 @@ export const NAV_LINKS: NavLink[] = [
   { label: "FAQ", href: "/faq" },
 ];
 
-// Primary call to action. Stripe Checkout signup is 8.5; for now it's the app
-// entry point on the same origin (one codebase, one deploy on the apex).
-export const PRIMARY_CTA: NavLink = { label: "Get started", href: "/login" };
+// Primary call to action → the app's stable signup entry (Phase 8.5). The
+// target is a SAME-ORIGIN relative path on purpose: marketing + app ship as one
+// deploy on the apex (== APP_BASE_URL), so a relative href resolves against the
+// live origin automatically AND keeps these marketing pages statically rendered
+// (no runtime env read). If the app ever moves to its own origin, flip this one
+// constant to an `${APP_BASE_URL}/signup` absolute. The real Stripe Checkout
+// paywall lives behind /signup and is wired in 9.2 — the CTA never changes.
+export const PRIMARY_CTA: NavLink = { label: "Get started", href: "/signup" };
