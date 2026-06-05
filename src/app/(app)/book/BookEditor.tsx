@@ -42,10 +42,21 @@ export default function BookEditor({
   qrs: Record<string, VoiceQr>;
 }) {
   const [chapters, setChapters] = useState<BookChapter[]>(book.chapters);
+  // Stories start collapsed; this holds the ids of the ones the user opened.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
   const drag = useRef<Drag>(null);
   const router = useRouter();
   const sid = book.storytellerId;
+
+  function toggleStory(storyId: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(storyId)) next.delete(storyId);
+      else next.add(storyId);
+      return next;
+    });
+  }
 
   // --- chapter order -------------------------------------------------------
   function commitChapters(next: BookChapter[]) {
@@ -171,39 +182,55 @@ export default function BookEditor({
                   <Grip title="Drag to reorder stories" className="mt-1" />
                   <PlayAudioButton answerId={story.id} hasAudio={story.hasAudio} className="shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="font-serif text-base leading-snug">
-                      {story.question ?? "Untitled story"}
-                    </div>
-                    {story.transcript && (
-                      <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-ink/65">
-                        {story.transcript}
-                      </p>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => toggleStory(story.id)}
+                      aria-expanded={expanded.has(story.id)}
+                      aria-controls={`story-body-${story.id}`}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      className="flex w-full items-start gap-1.5 text-left"
+                    >
+                      <Chevron open={expanded.has(story.id)} />
+                      <span className="font-serif text-base leading-snug">
+                        {story.question ?? "Untitled story"}
+                      </span>
+                    </button>
 
-                    <PhotoStrip
-                      story={story}
-                      onUploaded={() => router.refresh()}
-                      onRemove={(photoId) =>
-                        startTransition(async () => {
-                          await removePhoto(sid, photoId);
-                          router.refresh();
-                        })
-                      }
-                      onCaption={(photoId, caption) =>
-                        startTransition(() => setPhotoCaption(sid, photoId, caption))
-                      }
-                      onMovePhoto={(from, to) => movePhoto(ci, si, from, to)}
-                      onPhotoDragStart={(index) =>
-                        (drag.current = { kind: "photo", chapter: ci, story: si, index })
-                      }
-                      onPhotoDragOver={(e) => {
-                        const d = drag.current;
-                        if (d?.kind === "photo" && d.chapter === ci && d.story === si)
-                          e.preventDefault();
-                      }}
-                      onPhotoDrop={(index) => onDropPhoto(ci, si, index)}
-                    />
-                    <VoiceQrTag qr={qrs[story.id]} name={book.storytellerName} lang={book.language} />
+                    {expanded.has(story.id) && (
+                      <div id={`story-body-${story.id}`}>
+                        {story.transcript && (
+                          <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-ink/65">
+                            {story.transcript}
+                          </p>
+                        )}
+
+                        <PhotoStrip
+                          story={story}
+                          onUploaded={() => router.refresh()}
+                          onRemove={(photoId) =>
+                            startTransition(async () => {
+                              await removePhoto(sid, photoId);
+                              router.refresh();
+                            })
+                          }
+                          onCaption={(photoId, caption) =>
+                            startTransition(() => setPhotoCaption(sid, photoId, caption))
+                          }
+                          onMovePhoto={(from, to) => movePhoto(ci, si, from, to)}
+                          onPhotoDragStart={(index) =>
+                            (drag.current = { kind: "photo", chapter: ci, story: si, index })
+                          }
+                          onPhotoDragOver={(e) => {
+                            const d = drag.current;
+                            if (d?.kind === "photo" && d.chapter === ci && d.story === si)
+                              e.preventDefault();
+                          }}
+                          onPhotoDrop={(index) => onDropPhoto(ci, si, index)}
+                        />
+                        <VoiceQrTag qr={qrs[story.id]} name={book.storytellerName} lang={book.language} />
+                      </div>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col gap-1">
                     <MoveBtn dir="up" disabled={si === 0} onClick={() => moveStory(ci, si, si - 1)} />
@@ -348,6 +375,25 @@ function PhotoStrip({
         />
       </div>
     </div>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`mt-1 shrink-0 text-ink/40 transition-transform ${open ? "rotate-90" : ""}`}
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
   );
 }
 
