@@ -2,12 +2,6 @@ import Link from "next/link";
 import { Container } from "./_components/Container";
 import { Section } from "./_components/Section";
 import { EmailCapture } from "./_components/EmailCapture";
-import { BrandMark } from "./_components/BrandMark";
-import {
-  KeepsakeMockup,
-  PorchScene,
-  WaveRailing,
-} from "./_components/illustrations";
 import { PRIMARY_CTA } from "./_components/nav";
 import { JsonLd } from "./_components/JsonLd";
 import { pageMeta } from "@/lib/seo";
@@ -102,7 +96,9 @@ function Hero() {
         <div className="card relative overflow-hidden p-7 shadow-lg">
           <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand/20 to-sky2/20 blur-2xl" />
           <div className="flex items-center gap-3">
-            <BrandMark className="h-12 w-12 rounded-xl shadow-sm" />
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-[#6366F1] to-sky2 text-2xl shadow-sm">
+              🏡
+            </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-widest text-accent">A question for you</div>
               <div className="font-serif text-xl font-semibold">What was your first home like?</div>
@@ -154,7 +150,6 @@ function Problem() {
           the chance quietly slips away. My Family Porch is that conversation, made
           easy enough to actually happen, and saved before it&apos;s gone.
         </p>
-        <PorchScene className="mx-auto mt-10 h-40 w-auto text-brand/25" />
       </div>
     </Section>
   );
@@ -305,10 +300,7 @@ function WhatYouGet() {
           Their stories come back to you in the ways your family will actually use.
         </p>
       </div>
-      <div className="mt-10 flex justify-center">
-        <KeepsakeMockup className="w-full max-w-[18rem] drop-shadow-sm" />
-      </div>
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {KEEPSAKE.map((k) => (
           <div key={k.title} className="card flex flex-col p-6">
             <div className="text-3xl" aria-hidden>
@@ -507,7 +499,6 @@ function FinalCta() {
               It takes a few minutes to set up, and there&apos;s no better day than
               today to begin.
             </p>
-            <WaveRailing className="mx-auto mt-7 h-4 w-40 text-white/35" />
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={PRIMARY_CTA.href}

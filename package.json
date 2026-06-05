@@ -12,8 +12,7 @@
     "cf-typegen": "wrangler types",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
-    "seed:prompts": "tsx supabase/seed/seed-prompts.ts",
-    "gen:icons": "node scripts/gen-icons.mjs"
+    "seed:prompts": "tsx supabase/seed/seed-prompts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
@@ -29,15 +28,12 @@
   "devDependencies": {
     "@cloudflare/puppeteer": "^1.1.0",
     "@opennextjs/cloudflare": "^1.0.0",
-    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
-    "png-to-ico": "^3.0.1",
     "postcss": "^8.4.0",
-    "sharp": "^0.34.5",
     "supabase": "^1.200.0",
     "tailwindcss": "^3.4.0",
     "tsx": "^4.19.0",
