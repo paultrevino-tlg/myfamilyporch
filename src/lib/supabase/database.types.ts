@@ -107,6 +107,69 @@ export type Database = {
           },
         ]
       }
+      exports: {
+        Row: {
+          created_at: string
+          error: string | null
+          expires_at: string | null
+          family_id: string
+          id: string
+          ready_at: string | null
+          requested_by: string | null
+          requested_email: string | null
+          status: Database["public"]["Enums"]["export_status"]
+          story_count: number | null
+          storyteller_id: string
+          updated_at: string
+          zip_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          expires_at?: string | null
+          family_id: string
+          id?: string
+          ready_at?: string | null
+          requested_by?: string | null
+          requested_email?: string | null
+          status?: Database["public"]["Enums"]["export_status"]
+          story_count?: number | null
+          storyteller_id: string
+          updated_at?: string
+          zip_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          expires_at?: string | null
+          family_id?: string
+          id?: string
+          ready_at?: string | null
+          requested_by?: string | null
+          requested_email?: string | null
+          status?: Database["public"]["Enums"]["export_status"]
+          story_count?: number | null
+          storyteller_id?: string
+          updated_at?: string
+          zip_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exports_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exports_storyteller_id_fkey"
+            columns: ["storyteller_id"]
+            isOneToOne: false
+            referencedRelation: "storytellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       families: {
         Row: {
           created_at: string
@@ -715,6 +778,7 @@ export type Database = {
     Enums: {
       emo_weight: "light" | "medium" | "heavy"
       engagement_sensitivity: "gentle" | "standard" | "sensitive"
+      export_status: "queued" | "preparing" | "ready" | "failed"
       insight_type: "mic_failed" | "schedule_suggestion" | "engagement_drop"
       membership_role: "owner" | "admin" | "viewer"
       pronoun_set: "he_him" | "she_her" | "they_them"
@@ -863,6 +927,7 @@ export const Constants = {
     Enums: {
       emo_weight: ["light", "medium", "heavy"],
       engagement_sensitivity: ["gentle", "standard", "sensitive"],
+      export_status: ["queued", "preparing", "ready", "failed"],
       insight_type: ["mic_failed", "schedule_suggestion", "engagement_drop"],
       membership_role: ["owner", "admin", "viewer"],
       pronoun_set: ["he_him", "she_her", "they_them"],

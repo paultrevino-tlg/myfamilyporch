@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import PlayAudioButton from "../../PlayAudioButton";
+import ExportPanel, { type ExportJob } from "./ExportPanel";
 import {
   loadStorytellerSchedule,
   DAY_CODES,
@@ -118,7 +119,7 @@ export default async function StorytellerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; sent?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; sent?: string; export?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
@@ -167,8 +168,9 @@ export default async function StorytellerDetailPage({
     ? members.find((m) => m.userId === interviewerRel.user_id) ?? null
     : null;
 
-  // Recording links, schedule, topics, and this elder's answers, in parallel.
-  const [tokenRes, schedule, topics, stories] = await Promise.all([
+  // Recording links, schedule, topics, this elder's answers, and the latest
+  // export job (7.6) — in parallel. The export read is RLS-scoped (exp_select).
+  const [tokenRes, schedule, topics, stories, exportRes] = await Promise.all([
     sb
       .from("storyteller_tokens")
       .select("created_at,last_used_at,token_enc")
@@ -179,7 +181,22 @@ export default async function StorytellerDetailPage({
     loadStorytellerSchedule(active.family_id, id),
     loadStorytellerTopics(active.family_id, id),
     loadStories(active.family_id, id),
+    sb
+      .from("exports")
+      .select("id, status, expires_at")
+      .eq("family_id", active.family_id)
+      .eq("storyteller_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
+  const exportJob: ExportJob = exportRes.data
+    ? {
+        id: exportRes.data.id,
+        status: exportRes.data.status,
+        expiresAt: exportRes.data.expires_at,
+      }
+    : null;
 
   // Rebuild the shareable /s/<token> URL from the encrypted-at-rest copy of the
   // newest link (same logic the old list page used).
@@ -245,6 +262,12 @@ export default async function StorytellerDetailPage({
       )}
       {(sp.sent === "nudge_failed" || sp.sent === "asked_failed") && (
         <Banner tone="red">Couldn&apos;t send it. The SMS provider may not be configured.</Banner>
+      )}
+      {sp.export === "preparing" && (
+        <Banner tone="green">Preparing your download — we&apos;ll email you when it&apos;s ready. 📦</Banner>
+      )}
+      {sp.export === "error" && (
+        <Banner tone="red">Couldn&apos;t start the export. Please try again.</Banner>
       )}
 
       {/* Setup — one expandable box per setting, each with that storyteller's
@@ -501,6 +524,23 @@ export default async function StorytellerDetailPage({
           ) : (
             <ViewerNote />
           )}
+        </ConfigBox>
+
+        {/* Download everything (7.6) — every member can export their own
+            content; ownership is never gated. */}
+        <ConfigBox
+          label="Download everything"
+          value={
+            exportJob?.status === "ready" &&
+            !(exportJob.expiresAt && new Date(exportJob.expiresAt).getTime() < Date.now())
+              ? "Ready"
+              : exportJob?.status === "queued" || exportJob?.status === "preparing"
+                ? "Preparing…"
+                : "Your data"
+          }
+          sub="Audio, transcripts & book"
+        >
+          <ExportPanel storytellerId={st.id} job={exportJob} />
         </ConfigBox>
 
         {/* Remove ----------------------------------------------------------- */}

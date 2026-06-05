@@ -8,6 +8,7 @@
 // (st_write / rel_write) enforces the same boundary regardless of this guard.
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
@@ -19,6 +20,11 @@ import {
   collectStorytellerPhotoPaths,
   removePhotoObjects,
 } from "@/lib/storage/cleanup";
+import {
+  processExport,
+  collectStorytellerExportPaths,
+  removeExportObjects,
+} from "@/lib/export/run";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Pronouns = Database["public"]["Enums"]["pronoun_set"];
@@ -284,6 +290,79 @@ export async function deleteMyVoice() {
   redirect("/settings");
 }
 
+// Request a full-archive export ("Download everything", TODO 7.6). AVAILABLE TO
+// ANY MEMBER — ownership of one's own content is never paywalled or role-gated.
+// Authorize via the RLS-scoped client (the storyteller must be visible to the
+// caller in the active family), insert the job THROUGH RLS (exp_insert =
+// is_member_of is the boundary), then kick off the background build via
+// ctx.waitUntil so the action returns immediately. The hourly cron is the
+// backstop if the waitUntil is cut short. Coalesces: if a job is already
+// queued/preparing for this storyteller, reuse it rather than pile on.
+export async function requestExport(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active) return; // any role may proceed — no roleAtLeast gate here
+
+  const storytellerId = String(formData.get("storyteller_id") ?? "");
+  if (!storytellerId) return;
+
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: storyteller } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!storyteller) return; // not visible to this member → refuse
+
+  // Don't pile up duplicate jobs.
+  const { data: pending } = await sb
+    .from("exports")
+    .select("id")
+    .eq("family_id", active.family_id)
+    .eq("storyteller_id", storytellerId)
+    .in("status", ["queued", "preparing"])
+    .limit(1);
+
+  let jobId = pending?.[0]?.id ?? null;
+  if (!jobId) {
+    const { data: job, error } = await sb
+      .from("exports")
+      .insert({
+        family_id: active.family_id,
+        storyteller_id: storytellerId,
+        requested_by: user.id,
+        requested_email: user.email ?? null,
+        status: "queued",
+      })
+      .select("id")
+      .single();
+    if (error || !job) {
+      console.error("[storytellers/requestExport] insert failed", error);
+      redirect(`/storytellers/${storytellerId}?export=error`);
+    }
+    jobId = job.id;
+  }
+
+  // Build in the background. With a Cloudflare context use waitUntil; without
+  // one (local dev) fire-and-forget — the cron backstop covers either way.
+  try {
+    const { ctx } = getCloudflareContext();
+    ctx.waitUntil(processExport(jobId));
+  } catch {
+    void processExport(jobId).catch((err) =>
+      console.error("[storytellers/requestExport] background build failed", err),
+    );
+  }
+
+  revalidatePath(`/storytellers/${storytellerId}`);
+  redirect(`/storytellers/${storytellerId}?export=preparing`);
+}
+
 // Remove a storyteller. Cascades drop their relationships, sessions, answers, etc.
 // DB cascades DON'T touch Storage, so we erase the private recordings first
 // (5.2a) — before the row delete, so a storage failure aborts and never leaves
@@ -295,11 +374,12 @@ export async function deleteStoryteller(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  // Erase the storyteller's audio + keepsake photos (7.1), then the row
-  // (answers + story_photos cascade). Objects go before the row delete so a
-  // storage failure aborts and never orphans media.
+  // Erase the storyteller's audio + keepsake photos (7.1) + export ZIPs (7.6),
+  // then the row (answers + story_photos + exports cascade). Objects go before
+  // the row delete so a storage failure aborts and never orphans media.
   await removeAudioObjects(await collectStorytellerAudioPaths(active.family_id, id));
   await removePhotoObjects(await collectStorytellerPhotoPaths(active.family_id, id));
+  await removeExportObjects(await collectStorytellerExportPaths(active.family_id, id));
 
   const sb = await supabaseServer();
   const { error } = await sb
