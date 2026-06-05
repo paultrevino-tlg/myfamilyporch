@@ -28,6 +28,7 @@ import {
   createRecordingLink,
   revokeRecordingLinks,
   sendNudge,
+  translateAllStories,
   deleteStoryteller,
 } from "../actions";
 import { setStorytellerPhone } from "../../settings/actions";
@@ -119,7 +120,7 @@ export default async function StorytellerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; sent?: string; export?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; sent?: string; export?: string; translated?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
@@ -268,6 +269,13 @@ export default async function StorytellerDetailPage({
       )}
       {sp.export === "error" && (
         <Banner tone="red">Couldn&apos;t start the export. Please try again.</Banner>
+      )}
+      {sp.translated === "done" && <Banner tone="green">Translated {st.name}&apos;s stories. 🌐</Banner>}
+      {sp.translated === "none" && (
+        <Banner tone="green">Every story is already translated. 🌐</Banner>
+      )}
+      {sp.translated === "failed" && (
+        <Banner tone="red">Couldn&apos;t translate. The AI provider may not be configured.</Banner>
       )}
 
       {/* Setup — one expandable box per setting, each with that storyteller's
@@ -564,11 +572,23 @@ export default async function StorytellerDetailPage({
       {/* This storyteller's answers. Read-only here — review/edit/in-book live
           on /stories (one source of truth). */}
       <section className="mt-10">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{st.name}&apos;s stories</h2>
-          <Link href="/stories" className="text-sm font-semibold text-brand hover:underline">
-            Manage in Stories →
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Translate the whole archive into the other language (extends 7.4,
+                both directions). Only offered when something still needs it. */}
+            {canManage && stories.some(needsTranslation) && (
+              <form action={translateAllStories}>
+                <input type="hidden" name="storyteller_id" value={st.id} />
+                <button type="submit" className="btn-ghost text-sm">
+                  Translate to {st.language === "es" ? "English" : "Spanish"}
+                </button>
+              </form>
+            )}
+            <Link href="/stories" className="text-sm font-semibold text-brand hover:underline">
+              Manage in Stories →
+            </Link>
+          </div>
         </div>
         <div className="mt-3 space-y-3">
           {stories.map((story) => (
@@ -916,6 +936,43 @@ function TopicRowItem({
   );
 }
 
+// The cached translation in the OTHER language, behind a toggle so the elder's
+// own words stay primary: a Spanish story shows its English reading, an English
+// story its Spanish. Nothing until an admin has generated it.
+function Translation({
+  lang,
+  transcriptEn,
+  transcriptEs,
+}: {
+  lang: string;
+  transcriptEn: string | null;
+  transcriptEs: string | null;
+}) {
+  const translated = lang === "es" ? transcriptEn : lang === "en" ? transcriptEs : null;
+  if (!translated) return null;
+  const label = lang === "es" ? "English translation" : "Spanish translation";
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer text-xs font-semibold text-accent hover:underline">
+        {label}
+      </summary>
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/55">{translated}</p>
+    </details>
+  );
+}
+
+// True when any part of the story (opening answer or a follow-up) still lacks its
+// other-language translation — drives whether the "Translate" button is offered.
+function needsTranslation(story: Story): boolean {
+  const missing = (lang: string, t: string | null, en: string | null, es: string | null) =>
+    !!(t ?? "").trim() &&
+    ((lang === "es" && !(en ?? "").trim()) || (lang === "en" && !(es ?? "").trim()));
+  return (
+    missing(story.lang, story.transcript, story.transcriptEn, story.transcriptEs) ||
+    story.followUps.some((f) => missing(f.lang, f.transcript, f.transcriptEn, f.transcriptEs))
+  );
+}
+
 // One story, read-only: question, meta, transcript, audio, follow-up thread.
 function StoryCard({ story }: { story: Story }) {
   const duration = formatDuration(story.durationSec);
@@ -936,7 +993,10 @@ function StoryCard({ story }: { story: Story }) {
         {meta && <span>{meta}</span>}
       </div>
       {story.transcript && (
-        <p className="mt-3 border-ink/10 border-l-2 pl-3 text-sm text-ink/70">{story.transcript}</p>
+        <>
+          <p className="mt-3 border-ink/10 border-l-2 pl-3 text-sm text-ink/70">{story.transcript}</p>
+          <Translation lang={story.lang} transcriptEn={story.transcriptEn} transcriptEs={story.transcriptEs} />
+        </>
       )}
       {story.followUps.length > 0 && (
         <div className="mt-3 space-y-3 border-ink/10 border-t pt-3">
@@ -956,7 +1016,16 @@ function FollowUpRow({ followUp }: { followUp: StoryFollowUp }) {
         <PlayAudioButton answerId={followUp.id} hasAudio={followUp.hasAudio} className="-ml-1 shrink-0" />
         {followUp.question && <div className="text-sm text-ink/60">↳ {followUp.question}</div>}
       </div>
-      {followUp.transcript && <p className="mt-1 text-sm text-ink/70">{followUp.transcript}</p>}
+      {followUp.transcript && (
+        <>
+          <p className="mt-1 text-sm text-ink/70">{followUp.transcript}</p>
+          <Translation
+            lang={followUp.lang}
+            transcriptEn={followUp.transcriptEn}
+            transcriptEs={followUp.transcriptEs}
+          />
+        </>
+      )}
     </div>
   );
 }

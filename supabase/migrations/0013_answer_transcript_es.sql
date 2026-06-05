@@ -1,0 +1,12 @@
+-- ============================================================================
+-- Optional Spanish translation view of English transcripts
+-- The mirror of 0011 (transcript_en): caches a faithful Spanish translation of
+-- an English (or code-switched) answer transcript so it's generated once
+-- (admin-triggered, opt-in) and read many times. Nullable: null = not
+-- translated (the default; Spanish-language answers never need it — they use
+-- transcript_en for the English view instead). Lives on `answers`, so it covers
+-- both opening answers and follow-up rows. No new RLS needed — answers already
+-- has ans_select (member read) and ans_write (admin write); the translate
+-- action writes under the admin boundary.
+-- ============================================================================
+alter table answers add column transcript_es text;

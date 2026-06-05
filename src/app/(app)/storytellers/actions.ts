@@ -13,6 +13,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
 import { sendStorytellerNudge } from "@/lib/sms/nudge";
+import { translateToEnglish, translateToSpanish } from "@/lib/ai/translate";
 import { deleteVoice } from "@/lib/voice/elevenlabs";
 import {
   collectStorytellerAudioPaths,
@@ -259,6 +260,73 @@ export async function sendNudge(formData: FormData) {
 
   revalidatePath(`/storytellers/${storytellerId}`);
   redirect(`/storytellers/${storytellerId}?sent=${flag}`);
+}
+
+// Translate ALL of a storyteller's stories into the other language, on demand
+// (extends TODO 7.4 from one-story to the whole archive, both directions). One
+// admin-gated button on the storyteller hub. For each answer (opening + its
+// follow-up thread) with a transcript: a Spanish/code-switched story is rendered
+// to English (transcript_en), an English story to Spanish (transcript_es) — the
+// faithful reading for family who don't speak the recording's language. Already-
+// translated rows are skipped, so re-clicking only fills the gaps. Fail-soft per
+// row: a model error leaves that row's translation null rather than failing the
+// batch. Caches mean it's generated once and read on Stories + the keepsake.
+export async function translateAllStories(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const storytellerId = String(formData.get("storyteller_id") ?? "");
+  if (!storytellerId) return;
+
+  const sb = await supabaseServer();
+  const { data: storyteller } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  if (!storyteller) return; // not visible to this admin → refuse
+
+  // Every answer for this storyteller (opening answers AND follow-ups), scoped
+  // to the active family.
+  const { data: rows } = await sb
+    .from("answers")
+    .select("id, transcript, transcript_en, transcript_es, lang")
+    .eq("family_id", active.family_id)
+    .eq("storyteller_id", storytellerId);
+
+  // Each row needs the translation in the OTHER language: es → transcript_en,
+  // en → transcript_es. Skip rows with no transcript or one already cached.
+  const todo = (rows ?? []).filter((r) => {
+    const t = (r.transcript ?? "").trim();
+    if (!t) return false;
+    if (r.lang === "es") return !(r.transcript_en ?? "").trim();
+    if (r.lang === "en") return !(r.transcript_es ?? "").trim();
+    return false;
+  });
+
+  let translated = 0;
+  await Promise.all(
+    todo.map(async (r) => {
+      try {
+        if (r.lang === "es") {
+          const en = await translateToEnglish(r.transcript as string);
+          await sb.from("answers").update({ transcript_en: en }).eq("id", r.id).eq("family_id", active.family_id);
+        } else {
+          const es = await translateToSpanish(r.transcript as string);
+          await sb.from("answers").update({ transcript_es: es }).eq("id", r.id).eq("family_id", active.family_id);
+        }
+        translated += 1;
+      } catch (e) {
+        console.error("[storytellers/translateAllStories] translate failed", r.id, e);
+      }
+    }),
+  );
+
+  revalidatePath(`/storytellers/${storytellerId}`);
+  revalidatePath(`/book/${storytellerId}`);
+  const flag = todo.length === 0 ? "none" : translated > 0 ? "done" : "failed";
+  redirect(`/storytellers/${storytellerId}?translated=${flag}`);
 }
 
 // Remove MY cloned voice (voice-per-member). A member manages their own voice in

@@ -11,6 +11,7 @@ export type StoryFollowUp = {
   question: string | null;
   transcript: string | null;
   transcriptEn: string | null; // cached English translation (7.4), es rows only
+  transcriptEs: string | null; // cached Spanish translation, en rows only
   lang: string;
   durationSec: number | null;
   hasAudio: boolean;
@@ -26,6 +27,7 @@ export type Story = {
   durationSec: number | null;
   transcript: string | null;
   transcriptEn: string | null; // cached English translation (7.4), es rows only
+  transcriptEs: string | null; // cached Spanish translation, en rows only
   lang: string;
   inBook: boolean;
   hasAudio: boolean;
@@ -54,9 +56,9 @@ export async function loadStories(
   let query = sb
     .from("answers")
     .select(
-      "id, question_text, transcript, transcript_en, lang, in_book, duration_sec, audio_path, created_at, " +
+      "id, question_text, transcript, transcript_en, transcript_es, lang, in_book, duration_sec, audio_path, created_at, " +
         "storyteller:storytellers(name), prompt:prompts(category), " +
-        "followups:answers!parent_answer_id(id, question_text, transcript, transcript_en, lang, duration_sec, audio_path, created_at)"
+        "followups:answers!parent_answer_id(id, question_text, transcript, transcript_en, transcript_es, lang, duration_sec, audio_path, created_at)"
     )
     .eq("family_id", familyId)
     .eq("is_followup", false);
@@ -68,6 +70,7 @@ export async function loadStories(
     question_text: string | null;
     transcript: string | null;
     transcript_en: string | null;
+    transcript_es: string | null;
     lang: string;
     duration_sec: number | null;
     audio_path: string | null;
@@ -78,6 +81,7 @@ export async function loadStories(
     question_text: string | null;
     transcript: string | null;
     transcript_en: string | null;
+    transcript_es: string | null;
     lang: string;
     in_book: boolean;
     duration_sec: number | null;
@@ -97,6 +101,7 @@ export async function loadStories(
     durationSec: a.duration_sec ?? null,
     transcript: a.transcript ?? null,
     transcriptEn: a.transcript_en ?? null,
+    transcriptEs: a.transcript_es ?? null,
     lang: a.lang ?? "en",
     inBook: a.in_book,
     hasAudio: !!a.audio_path,
@@ -109,6 +114,7 @@ export async function loadStories(
         question: f.question_text ?? null,
         transcript: f.transcript ?? null,
         transcriptEn: f.transcript_en ?? null,
+        transcriptEs: f.transcript_es ?? null,
         lang: f.lang ?? "en",
         durationSec: f.duration_sec ?? null,
         hasAudio: !!f.audio_path,

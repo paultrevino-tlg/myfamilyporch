@@ -49,11 +49,11 @@ export async function editTranscript(formData: FormData) {
   const transcript = raw.length ? raw : null;
 
   const sb = await supabaseServer();
-  // Clear any cached English translation (7.4): editing the Spanish source makes
-  // the old translation stale; an admin can re-translate on demand.
+  // Clear any cached translation (7.4): editing the source makes the old
+  // translation stale, in either direction; an admin can re-translate on demand.
   await sb
     .from("answers")
-    .update({ transcript, transcript_en: null })
+    .update({ transcript, transcript_en: null, transcript_es: null })
     .eq("id", id)
     .eq("family_id", active.family_id);
 
