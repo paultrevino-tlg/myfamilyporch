@@ -65,7 +65,7 @@ export default function TopNav({
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-lg shadow-sm">
             🏡
           </span>
-          <span className="hidden sm:inline">Porch</span>
+          <span className="hidden sm:inline">My Family Porch</span>
         </Link>
 
         {/* Section links — inline on desktop, in the hamburger menu on mobile. */}
