@@ -8,6 +8,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": true },
+  // Browser Rendering (TODO 7.3): headless Chromium for server-side keepsake PDF
+  // generation. Requires Workers Paid (already on it). Absent locally → the PDF
+  // generator fails soft and the in-browser print view is the fallback.
+  "browser": { "binding": "BROWSER" },
   // Hourly so each storyteller's local send time is honored within the hour;
   // the scheduler itself dedupes to at most one nudge per local day.
   "triggers": { "crons": ["0 * * * *"] },

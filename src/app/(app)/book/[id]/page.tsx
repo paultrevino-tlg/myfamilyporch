@@ -56,6 +56,32 @@ export default async function BookForStorytellerPage({
         </div>
       </div>
 
+      {/* Export / print (TODO 7.3). Download a print-ready PDF, or open the print
+          view to Save-as-PDF from the browser. "Order a printed book" is a
+          placeholder until the print-on-demand task wires it to checkout. */}
+      {book.storyCount > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a href={`/api/book/pdf?storyteller=${book.storytellerId}`} className="btn-primary">
+            Download PDF
+          </a>
+          <a
+            href={`/book/${book.storytellerId}/print`}
+            target="_blank"
+            rel="noopener"
+            className="btn-ghost"
+          >
+            Open print view
+          </a>
+          <span
+            className="btn-ghost cursor-not-allowed opacity-60"
+            aria-disabled="true"
+            title="Coming soon — order a professionally printed keepsake"
+          >
+            Order a printed book · coming soon
+          </span>
+        </div>
+      )}
+
       <div className="mt-7">
         {canManage ? (
           <BookEditor book={book} qrs={qrs} />

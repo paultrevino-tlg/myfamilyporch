@@ -25,6 +25,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@cloudflare/puppeteer": "^1.1.0",
     "@opennextjs/cloudflare": "^1.0.0",
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.6",
