@@ -16,6 +16,7 @@ const LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/stories", label: "Stories" },
   { href: "/book", label: "Book" },
+  { href: "/family-access", label: "Family Access" },
   { href: "/settings", label: "Settings" },
 ];
 

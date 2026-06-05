@@ -149,20 +149,6 @@ export default async function Dashboard() {
         )}
       </ul>
 
-      {/* Family access now lives on Settings (TODO 5.5) — one source of truth. */}
-      <SectionHead title="Family access" href="/settings" cta="Manage in Settings" />
-      <Link href="/settings" className="card flex items-center gap-4 px-5 py-4 transition hover:shadow-md">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand/10 text-brand">
-          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden>
-            <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.7 0-8 1.3-8 4v3h9v-3c0-1 .4-1.9 1-2.6A13 13 0 0 0 8 14zm8 0c-.3 0-.7 0-1.1.1A5 5 0 0 1 17 18v3h7v-3c0-2.7-5.3-4-8-4z" />
-          </svg>
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold">Who can see {active.name}&apos;s stories</h3>
-          <p className="text-sm text-ink/55">Manage members and invitations in Settings.</p>
-        </div>
-        <span className="text-ink/30" aria-hidden>›</span>
-      </Link>
     </main>
   );
 }
