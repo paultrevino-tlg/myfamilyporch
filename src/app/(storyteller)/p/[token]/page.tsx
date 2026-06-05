@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { readPlayToken } from "@/lib/book/play-token";
 import { loadPublicStory } from "@/lib/book/public-story";
 import { t, type Lang } from "@/lib/i18n";
+import AutoPlayAudio from "./AutoPlayAudio";
 
 // Public voice-QR play page (TODO 7.2). The destination of a story's QR code in
 // the printed keepsake — scanned by anyone holding the book, with NO login. The
@@ -59,9 +60,7 @@ export default async function VoiceQrPlayPage({
           <h2 className="font-serif text-xl leading-snug">{story.question}</h2>
         )}
         {story.hasAudio ? (
-          <audio
-            controls
-            preload="none"
+          <AutoPlayAudio
             className="mt-4 w-full"
             src={`/api/p/audio?t=${encodeURIComponent(token)}`}
           />
