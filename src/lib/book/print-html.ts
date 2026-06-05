@@ -74,6 +74,11 @@ h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 .story-body { margin: 0; }
 .transcript { margin: 0.04in 0; white-space: pre-wrap; }
 
+/* Optional English translation of a Spanish transcript (7.4) — quieter, labeled,
+   printed under the elder's own words. */
+.translation { margin: 0.04in 0 0.1in; white-space: pre-wrap; color: #5a6b85; font-size: 10.5pt; }
+.tlabel { display: block; font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-size: 8pt; letter-spacing: 0.07em; text-transform: uppercase; color: #0284C7; margin-bottom: 0.02in; }
+
 /* Follow-up thread — indented, quieter. */
 .followups { margin: 0.1in 0 0 0.2in; padding-left: 0.18in; border-left: 2px solid #E1E9F2; }
 .followup { margin: 0 0 0.12in; }
@@ -122,6 +127,10 @@ export function renderBookHtml({
 }): string {
   const lang = book.language;
   const name = book.storytellerName;
+  // Only an es book carries Spanish transcripts worth an English reading (7.4).
+  const showEn = lang === "es";
+  const translation = (en: string | null) =>
+    showEn && en ? `<p class="translation"><span class="tlabel">English</span>${esc(en)}</p>` : "";
 
   const cover = `
 <div class="cover">
@@ -146,7 +155,9 @@ export function renderBookHtml({
                 (f) =>
                   `<div class="followup">${
                     f.question ? `<p class="followup-q">${esc(f.question)}</p>` : ""
-                  }${f.transcript ? `<p class="transcript">${esc(f.transcript)}</p>` : ""}</div>`,
+                  }${f.transcript ? `<p class="transcript">${esc(f.transcript)}</p>` : ""}${translation(
+                    f.transcriptEn,
+                  )}</div>`,
               )
               .join("");
             return `
@@ -154,6 +165,7 @@ export function renderBookHtml({
   <h3 class="story-q">${esc(story.question ?? "Untitled story")}</h3>
   <div class="story-body">
     ${story.transcript ? `<p class="transcript">${esc(story.transcript)}</p>` : ""}
+    ${translation(story.transcriptEn)}
     ${photos ? `<div class="photos">${photos}</div>` : ""}
     ${followUps ? `<div class="followups">${followUps}</div>` : ""}
     ${renderQr(qrs[story.id], name, lang)}

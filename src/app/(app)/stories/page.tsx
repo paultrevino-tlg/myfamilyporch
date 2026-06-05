@@ -1,8 +1,42 @@
 import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
-import { toggleInBook, editTranscript, deleteStory } from "./actions";
+import { toggleInBook, editTranscript, deleteStory, translateStory } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
+
+// The cached English translation of a Spanish transcript (TODO 7.4), tucked
+// behind a toggle so the elder's own Spanish stays primary. Shown to everyone
+// (incl. viewers) once an admin has generated it; nothing for en transcripts.
+function EnglishTranslation({
+  lang,
+  transcriptEn,
+}: {
+  lang: string;
+  transcriptEn: string | null;
+}) {
+  if (lang !== "es" || !transcriptEn) return null;
+  return (
+    <details className="mt-2">
+      <summary className="cursor-pointer text-xs font-semibold text-accent hover:underline">
+        English translation
+      </summary>
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/60">
+        {transcriptEn}
+      </p>
+    </details>
+  );
+}
+
+// True when any Spanish part of the story still lacks a cached translation —
+// drives whether the admin "Translate to English" button is offered.
+function needsTranslation(story: Story): boolean {
+  const untranslated = (lang: string, t: string | null, en: string | null) =>
+    lang === "es" && !!t && !en;
+  return (
+    untranslated(story.lang, story.transcript, story.transcriptEn) ||
+    story.followUps.some((f) => untranslated(f.lang, f.transcript, f.transcriptEn))
+  );
+}
 
 // A calm date surface for elders — date headings group stories by day, never a
 // raw timestamp. Calendar-date key (local midnight) used to bucket each story.
@@ -108,9 +142,12 @@ function StoryCard({ story, canManage }: { story: Story; canManage: boolean }) {
       </div>
 
       {story.transcript && (
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
-          {story.transcript}
-        </p>
+        <>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
+            {story.transcript}
+          </p>
+          <EnglishTranslation lang={story.lang} transcriptEn={story.transcriptEn} />
+        </>
       )}
 
       {/* The follow-up thread reads like a conversation under the opening answer. */}
@@ -137,9 +174,12 @@ function FollowUp({ followUp }: { followUp: StoryFollowUp }) {
         )}
       </div>
       {followUp.transcript && (
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
-          {followUp.transcript}
-        </p>
+        <>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">
+            {followUp.transcript}
+          </p>
+          <EnglishTranslation lang={followUp.lang} transcriptEn={followUp.transcriptEn} />
+        </>
       )}
     </div>
   );
@@ -164,6 +204,20 @@ function StoryActions({ story }: { story: Story }) {
           {story.inBook ? "✓ In the book" : "Add to the book"}
         </button>
       </form>
+
+      {/* Translate to English (7.4): only when a Spanish part isn't yet translated.
+          Once done, the cached English shows under each transcript via the toggle. */}
+      {needsTranslation(story) && (
+        <form action={translateStory}>
+          <input type="hidden" name="answer_id" value={story.id} />
+          <button
+            type="submit"
+            className="rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold text-ink/70 hover:bg-ink/5"
+          >
+            Translate to English
+          </button>
+        </form>
+      )}
 
       <details className="text-sm">
         <summary className="cursor-pointer rounded-full border border-line px-3.5 py-1.5 font-semibold text-ink/70 hover:bg-ink/5">

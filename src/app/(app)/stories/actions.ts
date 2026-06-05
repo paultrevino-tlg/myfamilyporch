@@ -6,6 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { translateToEnglish } from "@/lib/ai/translate";
 import {
   collectAnswerAudioPaths,
   removeAudioObjects,
@@ -48,13 +49,62 @@ export async function editTranscript(formData: FormData) {
   const transcript = raw.length ? raw : null;
 
   const sb = await supabaseServer();
+  // Clear any cached English translation (7.4): editing the Spanish source makes
+  // the old translation stale; an admin can re-translate on demand.
   await sb
     .from("answers")
-    .update({ transcript })
+    .update({ transcript, transcript_en: null })
     .eq("id", id)
     .eq("family_id", active.family_id);
 
   revalidatePath("/stories");
+}
+
+// Translate a Spanish story to English on demand (TODO 7.4). Admin-gated, opt-in,
+// cached: translates the opening answer AND its follow-up thread, storing each
+// row's transcript_en so it's generated once and read on Stories + in the book.
+// Already-translated or non-Spanish rows are skipped. Fail-soft per row (a model
+// error leaves that row's transcript_en null rather than failing the whole story).
+export async function translateStory(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const id = String(formData.get("answer_id") ?? "");
+  if (!UUID_RE.test(id)) return;
+
+  const sb = await supabaseServer();
+  // The opening answer plus its follow-up thread, scoped to the active family.
+  const { data: rows } = await sb
+    .from("answers")
+    .select("id, transcript, transcript_en, lang, storyteller_id")
+    .eq("family_id", active.family_id)
+    .or(`id.eq.${id},parent_answer_id.eq.${id}`);
+  if (!rows || rows.length === 0) return;
+
+  const todo = rows.filter(
+    (r) =>
+      r.lang === "es" &&
+      (r.transcript ?? "").trim() &&
+      !(r.transcript_en ?? "").trim(),
+  );
+  await Promise.all(
+    todo.map(async (r) => {
+      try {
+        const en = await translateToEnglish(r.transcript as string);
+        await sb
+          .from("answers")
+          .update({ transcript_en: en })
+          .eq("id", r.id)
+          .eq("family_id", active.family_id);
+      } catch (e) {
+        console.error("[stories/translateStory] translate failed", r.id, e);
+      }
+    }),
+  );
+
+  revalidatePath("/stories");
+  const storytellerId = rows[0]?.storyteller_id;
+  if (storytellerId) revalidatePath(`/book/${storytellerId}`);
 }
 
 // Delete a whole story: the opening answer and its follow-up thread. The voice

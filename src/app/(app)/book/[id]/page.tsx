@@ -127,6 +127,17 @@ function ReadOnlyBook({
                     {story.transcript && (
                       <p className="mt-1 text-sm leading-relaxed text-ink/70">{story.transcript}</p>
                     )}
+                    {/* Optional English translation of a Spanish story (7.4). */}
+                    {book.language === "es" && story.transcriptEn && (
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer text-xs font-semibold text-accent hover:underline">
+                          English translation
+                        </summary>
+                        <p className="mt-1 text-sm leading-relaxed text-ink/55">
+                          {story.transcriptEn}
+                        </p>
+                      </details>
+                    )}
                     {story.photos.length > 0 && (
                       <ul className="mt-3 flex flex-wrap gap-3">
                         {story.photos.map((photo) => (

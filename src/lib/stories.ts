@@ -10,6 +10,8 @@ export type StoryFollowUp = {
   id: string;
   question: string | null;
   transcript: string | null;
+  transcriptEn: string | null; // cached English translation (7.4), es rows only
+  lang: string;
   durationSec: number | null;
   hasAudio: boolean;
 };
@@ -23,6 +25,8 @@ export type Story = {
   createdAt: string;
   durationSec: number | null;
   transcript: string | null;
+  transcriptEn: string | null; // cached English translation (7.4), es rows only
+  lang: string;
   inBook: boolean;
   hasAudio: boolean;
   followUps: StoryFollowUp[];
@@ -50,9 +54,9 @@ export async function loadStories(
   let query = sb
     .from("answers")
     .select(
-      "id, question_text, transcript, in_book, duration_sec, audio_path, created_at, " +
+      "id, question_text, transcript, transcript_en, lang, in_book, duration_sec, audio_path, created_at, " +
         "storyteller:storytellers(name), prompt:prompts(category), " +
-        "followups:answers!parent_answer_id(id, question_text, transcript, duration_sec, audio_path, created_at)"
+        "followups:answers!parent_answer_id(id, question_text, transcript, transcript_en, lang, duration_sec, audio_path, created_at)"
     )
     .eq("family_id", familyId)
     .eq("is_followup", false);
@@ -63,6 +67,8 @@ export async function loadStories(
     id: string;
     question_text: string | null;
     transcript: string | null;
+    transcript_en: string | null;
+    lang: string;
     duration_sec: number | null;
     audio_path: string | null;
     created_at: string;
@@ -71,6 +77,8 @@ export async function loadStories(
     id: string;
     question_text: string | null;
     transcript: string | null;
+    transcript_en: string | null;
+    lang: string;
     in_book: boolean;
     duration_sec: number | null;
     audio_path: string | null;
@@ -88,6 +96,8 @@ export async function loadStories(
     createdAt: a.created_at,
     durationSec: a.duration_sec ?? null,
     transcript: a.transcript ?? null,
+    transcriptEn: a.transcript_en ?? null,
+    lang: a.lang ?? "en",
     inBook: a.in_book,
     hasAudio: !!a.audio_path,
     // Oldest-first within a thread reads like a conversation.
@@ -98,6 +108,8 @@ export async function loadStories(
         id: f.id,
         question: f.question_text ?? null,
         transcript: f.transcript ?? null,
+        transcriptEn: f.transcript_en ?? null,
+        lang: f.lang ?? "en",
         durationSec: f.duration_sec ?? null,
         hasAudio: !!f.audio_path,
       })),

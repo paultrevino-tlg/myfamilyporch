@@ -1,0 +1,11 @@
+-- ============================================================================
+-- TODO 7.4 — Optional English translation view of Spanish transcripts
+-- Caches a faithful English translation of a Spanish (or code-switched) answer
+-- transcript so it's generated once (admin-triggered, opt-in) and read many
+-- times — on Stories review and in the keepsake book + PDF export. Nullable:
+-- null = not translated (the default; English-language answers never need it).
+-- Lives on `answers`, so it covers both opening answers and follow-up rows.
+-- No new RLS needed — answers already has ans_select (member read) and
+-- ans_write (admin write); the translate action writes under the admin boundary.
+-- ============================================================================
+alter table answers add column transcript_en text;

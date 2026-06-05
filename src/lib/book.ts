@@ -35,6 +35,7 @@ export type BookFollowUp = {
   id: string;
   question: string | null;
   transcript: string | null;
+  transcriptEn: string | null; // cached English translation (7.4)
   durationSec: number | null;
   hasAudio: boolean;
 };
@@ -43,6 +44,7 @@ export type BookStory = {
   id: string;
   question: string | null;
   transcript: string | null;
+  transcriptEn: string | null; // cached English translation (7.4)
   durationSec: number | null;
   hasAudio: boolean;
   bookSort: number | null;
@@ -149,10 +151,10 @@ export async function loadBook(
   const { data } = await sb
     .from("answers")
     .select(
-      "id, question_text, transcript, duration_sec, audio_path, book_sort, created_at, " +
+      "id, question_text, transcript, transcript_en, duration_sec, audio_path, book_sort, created_at, " +
         "prompt:prompts(category), " +
         "photos:story_photos(id, caption, sort), " +
-        "followups:answers!parent_answer_id(id, question_text, transcript, duration_sec, audio_path, created_at)",
+        "followups:answers!parent_answer_id(id, question_text, transcript, transcript_en, duration_sec, audio_path, created_at)",
     )
     .eq("family_id", familyId)
     .eq("storyteller_id", storytellerId)
@@ -164,6 +166,7 @@ export async function loadBook(
     id: string;
     question_text: string | null;
     transcript: string | null;
+    transcript_en: string | null;
     duration_sec: number | null;
     audio_path: string | null;
     created_at: string;
@@ -172,6 +175,7 @@ export async function loadBook(
     id: string;
     question_text: string | null;
     transcript: string | null;
+    transcript_en: string | null;
     duration_sec: number | null;
     audio_path: string | null;
     book_sort: number | null;
@@ -189,6 +193,7 @@ export async function loadBook(
       id: a.id,
       question: a.question_text ?? null,
       transcript: a.transcript ?? null,
+      transcriptEn: a.transcript_en ?? null,
       durationSec: a.duration_sec ?? null,
       hasAudio: !!a.audio_path,
       bookSort: a.book_sort ?? null,
@@ -204,6 +209,7 @@ export async function loadBook(
           id: f.id,
           question: f.question_text ?? null,
           transcript: f.transcript ?? null,
+          transcriptEn: f.transcript_en ?? null,
           durationSec: f.duration_sec ?? null,
           hasAudio: !!f.audio_path,
         })),

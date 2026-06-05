@@ -31,6 +31,7 @@ export type Database = {
           session_id: string | null
           storyteller_id: string
           transcript: string | null
+          transcript_en: string | null
         }
         Insert: {
           audio_path?: string | null
@@ -48,6 +49,7 @@ export type Database = {
           session_id?: string | null
           storyteller_id: string
           transcript?: string | null
+          transcript_en?: string | null
         }
         Update: {
           audio_path?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           session_id?: string | null
           storyteller_id?: string
           transcript?: string | null
+          transcript_en?: string | null
         }
         Relationships: [
           {
