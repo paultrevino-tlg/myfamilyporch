@@ -1,0 +1,43 @@
+# Local server-side secrets for `npm run dev` (Cloudflare reads these from
+# .dev.vars; the *.example file is the committed template — copy it to
+# `.dev.vars` and fill in real values). NEVER commit `.dev.vars`. Production
+# values are set on Cloudflare as Workers secrets / build variables, not here.
+
+# ---- Supabase ----
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# ---- Anthropic (server-side only, via /api/ai/*) ----
+ANTHROPIC_API_KEY=sk-ant-...
+
+# ---- Twilio (SMS nudges + alert-to-admin) ----
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=your-auth-token
+TWILIO_FROM_NUMBER=+1XXXXXXXXXX
+
+# ---- ElevenLabs (cloned-voice TTS) ----
+ELEVENLABS_API_KEY=sk_...
+
+# ---- App ----
+APP_BASE_URL=http://localhost:3000
+STORYTELLER_TOKEN_SECRET=generate-a-long-random-hex-string
+
+# ---- EmailJS (transactional auth email via api/auth/email-hook) ----
+EMAILJS_SERVICE_ID=service_xxxxxxx
+EMAILJS_TEMPLATE_ID=template_xxxxxxx
+EMAILJS_PUBLIC_KEY=your-public-key
+EMAILJS_PRIVATE_KEY=your-private-key
+
+# ---- Supabase Auth "Send Email" hook (Standard Webhooks signing secret) ----
+SUPABASE_AUTH_HOOK_SECRET=v1,whsec_...
+
+# ---- Deepgram STT ----
+DEEPGRAM_API_KEY=your-deepgram-key
+
+# ---- Cron: shared secret the weekly cron presents to /api/cron/scheduler ----
+CRON_SECRET=generate-a-shared-secret
+
+# ---- Marketing: where email-capture leads are notified (TODO 8.8) ----
+# Optional — falls back to support@myfamilyporch.net if unset.
+LEAD_NOTIFY_EMAIL=support@myfamilyporch.net

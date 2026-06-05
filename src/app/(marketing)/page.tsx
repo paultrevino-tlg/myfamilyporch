@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "./_components/Container";
 import { Section } from "./_components/Section";
+import { EmailCapture } from "./_components/EmailCapture";
 import { PRIMARY_CTA } from "./_components/nav";
 import { pageMeta } from "@/lib/seo";
 import { TIERS, FAQ, formatPrice, type PricingTier } from "@/lib/pricing";
@@ -34,8 +35,32 @@ export default function Home() {
       <SocialProof />
       <PricingPreview />
       <Faq />
+      <NotReady />
       <FinalCta />
     </>
+  );
+}
+
+// --- Not ready yet? (email capture) ----------------------------------------
+// For visitors who aren't ready to start (brief §6/§7). The only place the
+// email-capture island lives — this is where not-ready visitors land. The
+// island hydrates client-side; the page itself stays statically prerendered.
+
+function NotReady() {
+  return (
+    <Section className="bg-surface2/50">
+      <div className="mx-auto mb-8 max-w-xl text-center">
+        <p className="chip">No pressure</p>
+        <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
+          Not ready yet? Stay on the porch with us.
+        </h2>
+        <p className="mt-3 text-lg leading-relaxed text-ink/70">
+          Leave your name and email and we&apos;ll send a gentle note when the
+          time feels right. No spam, ever.
+        </p>
+      </div>
+      <EmailCapture />
+    </Section>
   );
 }
 
