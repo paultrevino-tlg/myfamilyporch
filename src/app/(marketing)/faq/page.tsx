@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { pageMeta } from "@/lib/seo";
+import { faqPageLd } from "@/lib/jsonld";
 import { FAQ_GROUPS } from "@/lib/pricing";
 import { Section } from "../_components/Section";
+import { JsonLd } from "../_components/JsonLd";
 
 export const metadata = pageMeta({
   title: "FAQ",
@@ -16,6 +18,7 @@ export const metadata = pageMeta({
 export default function FaqPage() {
   return (
     <Section>
+      <JsonLd data={faqPageLd()} />
       <div className="mx-auto max-w-3xl">
         <header className="text-center">
           <span className="chip bg-accent/10 text-accent">FAQ</span>

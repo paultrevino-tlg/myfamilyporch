@@ -9,7 +9,9 @@ import {
   WaveRailing,
 } from "./_components/illustrations";
 import { PRIMARY_CTA } from "./_components/nav";
+import { JsonLd } from "./_components/JsonLd";
 import { pageMeta } from "@/lib/seo";
+import { organizationLd } from "@/lib/jsonld";
 import { TIERS, FAQ, formatPrice, type PricingTier } from "@/lib/pricing";
 
 export const metadata = pageMeta({
@@ -33,6 +35,7 @@ export const metadata = pageMeta({
 export default function Home() {
   return (
     <>
+      <JsonLd data={organizationLd()} />
       <Hero />
       <Problem />
       <HowItWorks />

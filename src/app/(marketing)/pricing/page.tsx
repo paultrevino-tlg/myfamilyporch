@@ -11,7 +11,9 @@ import {
   type FeatureMatrixRow,
 } from "@/lib/pricing";
 import { pageMeta } from "@/lib/seo";
+import { pricingProductLd } from "@/lib/jsonld";
 import { GIFT_HREF } from "../_components/nav";
+import { JsonLd } from "../_components/JsonLd";
 
 // Public pricing page (TODO 7.5). Renders entirely from src/lib/pricing.ts —
 // the single source of truth shared with Phase 8.3 (marketing) and 9.1/9.2
@@ -100,6 +102,7 @@ function TierCard({ tier }: { tier: PricingTier }) {
 export default function PricingPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24 pt-12 sm:px-7">
+      <JsonLd data={pricingProductLd()} />
       {/* Hero */}
       <section className="mx-auto max-w-3xl py-12 text-center sm:py-16">
         <h1 className="font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
