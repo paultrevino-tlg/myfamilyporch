@@ -7,14 +7,14 @@ export const metadata = pageMeta({
   path: "/privacy",
 });
 
-// Minimal, A2P/CTIA-compliant privacy policy. Required as a live, reachable URL
-// for Twilio A2P 10DLC campaign registration (TODO 4.3). Full marketing/legal
-// pass is Phase 8.4 — this is the compliant baseline.
+// A2P/CTIA-compliant privacy policy, expanded in the Phase 8.4 legal pass to
+// spell out how voice recordings are stored, who can access them, and that they
+// are never sold. The SMS section is preserved for Twilio A2P 10DLC (TODO 4.3).
 export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Privacy Policy</h1>
-      <p className="mt-2 text-ink/60 text-sm">Last updated: June 3, 2026</p>
+      <p className="mt-2 text-ink/60 text-sm">Last updated: June 5, 2026</p>
 
       <p className="mt-6 text-ink/80">
         My Family Porch (&ldquo;we,&rdquo; &ldquo;us&rdquo;) records a family
@@ -23,6 +23,37 @@ export default function PrivacyPolicy() {
         how we use it, and the choices you have. We do not sell your information,
         and we do not share it with third parties for their own marketing.
       </p>
+
+      <section className="mt-8 rounded-2xl border border-line bg-surface2/40 p-6">
+        <h2 className="font-semibold text-xl">Your voice recordings</h2>
+        <p className="mt-3 text-ink/80">
+          The voice recordings of your family&apos;s stories are the most
+          personal thing we hold, so we want to be direct about exactly how they
+          are handled.
+        </p>
+        <ul className="mt-3 list-disc space-y-2 pl-6 text-ink/80">
+          <li>
+            <strong>How they&apos;re stored:</strong> recordings are kept in
+            private storage and are encrypted in transit. Each family&apos;s
+            recordings are isolated from every other family&apos;s — one family
+            can never reach another family&apos;s content.
+          </li>
+          <li>
+            <strong>Who can access them:</strong> only signed-in members of your
+            family account can listen, and only after an access check. The
+            storyteller reaches their own session through a private, single-use
+            link — never a public page. Audio is delivered only over short-lived,
+            signed links after that same check. Our service providers may process
+            recordings strictly to operate the service on our behalf (for
+            example, to transcribe them), never for their own purposes.
+          </li>
+          <li>
+            <strong>They are never sold:</strong> we do not sell your recordings
+            or transcripts, and we never share them with third parties for their
+            own marketing or to train their own products.
+          </li>
+        </ul>
+      </section>
 
       <h2 className="mt-8 font-semibold text-xl">Information we collect</h2>
       <ul className="mt-3 list-disc space-y-1 pl-6 text-ink/80">
@@ -81,17 +112,35 @@ export default function PrivacyPolicy() {
         functions and may not use it for their own purposes.
       </p>
 
+      <h2 className="mt-8 font-semibold text-xl">Keeping or deleting your data</h2>
+      <p className="mt-3 text-ink/80">
+        Your stories are yours to keep. You can download everything — every audio
+        recording, the transcripts, and your book — at any time. We keep your
+        content for as long as your account is active so your family can revisit
+        it. You can ask us to permanently delete a single recording or your
+        entire account at any time, and we will remove it from our active
+        systems.
+      </p>
+
       <h2 className="mt-8 font-semibold text-xl">Your choices</h2>
       <ul className="mt-3 list-disc space-y-1 pl-6 text-ink/80">
         <li>Reply STOP to any reminder text to stop receiving messages.</li>
         <li>
-          Ask us to delete a recording or your account data by contacting us.
+          Ask us to delete a recording or your account data by{" "}
+          <a className="text-accent underline" href="/contact">
+            contacting us
+          </a>
+          .
         </li>
       </ul>
 
       <h2 className="mt-8 font-semibold text-xl">Contact</h2>
       <p className="mt-3 text-ink/80">
-        Questions about this policy? Email{" "}
+        Questions about this policy? Visit our{" "}
+        <a className="text-accent underline" href="/contact">
+          contact page
+        </a>{" "}
+        or email{" "}
         <a className="text-accent underline" href="mailto:support@myfamilyporch.net">
           support@myfamilyporch.net
         </a>

@@ -9,7 +9,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "Stories", href: "/#stories" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 // Primary call to action. Stripe Checkout signup is 8.5; for now it's the app

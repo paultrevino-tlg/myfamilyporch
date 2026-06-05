@@ -27,8 +27,8 @@ const COLUMNS: Col[] = [
   {
     title: "Help",
     links: [
-      { label: "FAQ", href: "/#faq" },
-      { label: "Contact", href: "mailto:support@myfamilyporch.net" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {

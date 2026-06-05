@@ -7,15 +7,15 @@ export const metadata = pageMeta({
   path: "/terms",
 });
 
-// Minimal, A2P/CTIA-compliant terms. Required as a live, reachable URL for
-// Twilio A2P 10DLC campaign registration (TODO 4.3). Must name the program,
-// frequency, message/data rates, support contact, and STOP/HELP. Full
-// marketing/legal pass is Phase 8.4 — this is the compliant baseline.
+// A2P/CTIA-compliant terms, expanded in the Phase 8.4 legal pass with content
+// ownership and an AI-processing disclosure. The SMS program section is preserved
+// for Twilio A2P 10DLC (TODO 4.3): it must name the program, frequency,
+// message/data rates, support contact, and STOP/HELP.
 export default function Terms() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Terms &amp; Conditions</h1>
-      <p className="mt-2 text-ink/60 text-sm">Last updated: June 3, 2026</p>
+      <p className="mt-2 text-ink/60 text-sm">Last updated: June 5, 2026</p>
 
       <p className="mt-6 text-ink/80">
         These terms govern your use of My Family Porch, a service that records a
@@ -30,6 +30,31 @@ export default function Terms() {
         transcribes the answers, and assembles them into a keepsake for the
         family. Family members manage storytellers and review stories from their
         account.
+      </p>
+
+      <h2 className="mt-8 font-semibold text-xl">Who owns the content</h2>
+      <p className="mt-3 text-ink/80">
+        Your family&apos;s stories, recordings, transcripts, and keepsake book
+        belong to your family. We don&apos;t claim ownership of them. You grant us
+        only the limited permission needed to operate the service for you — to
+        store, transcribe, and assemble your stories into the keepsake. You can
+        export everything at any time, and if you cancel, your content is still
+        yours to download and keep.
+      </p>
+
+      <h2 className="mt-8 font-semibold text-xl">AI and voice processing</h2>
+      <p className="mt-3 text-ink/80">
+        My Family Porch uses artificial intelligence to guide the interview and
+        to help turn the answers into a keepsake. With your family&apos;s consent,
+        a cloned voice may be used to make the interview feel familiar; it is used
+        only to guide your own family&apos;s sessions and is never shared or used
+        elsewhere. This processing is carried out by service providers acting only
+        on our behalf, who may not use your content for their own purposes. Our
+        handling of this information is described in our{" "}
+        <a className="text-accent underline" href="/privacy">
+          Privacy Policy
+        </a>
+        .
       </p>
 
       <h2 className="mt-8 font-semibold text-xl">
@@ -91,7 +116,11 @@ export default function Terms() {
 
       <h2 className="mt-8 font-semibold text-xl">Contact</h2>
       <p className="mt-3 text-ink/80">
-        Questions about these terms? Email{" "}
+        Questions about these terms? Visit our{" "}
+        <a className="text-accent underline" href="/contact">
+          contact page
+        </a>{" "}
+        or email{" "}
         <a className="text-accent underline" href="mailto:support@myfamilyporch.net">
           support@myfamilyporch.net
         </a>

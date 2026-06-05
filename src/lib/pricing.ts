@@ -71,6 +71,13 @@ export interface FeatureMatrixRow {
 export interface FaqItem {
   q: string;
   a: string;
+  /** Shown in the short homepage FAQ teaser (a curated subset of the full page). */
+  featured?: boolean;
+}
+
+export interface FaqGroup {
+  category: string;
+  items: FaqItem[];
 }
 
 // --- Tiers (docs/PRICING.md §2) -------------------------------------------
@@ -248,32 +255,92 @@ export const PRICING_COPY = {
   },
 } as const;
 
-export const FAQ: FaqItem[] = [
+// Full FAQ, grouped by category — the single source of truth for the dedicated
+// /faq page (8.4). The short homepage teaser (`FAQ` below) is derived from the
+// `featured` items here so the two never drift. Privacy/security answers are
+// kept consistent with /privacy and /terms.
+export const FAQ_GROUPS: FaqGroup[] = [
   {
-    q: "What happens if I cancel?",
-    a: "You keep all stories, audio, and your digital book. Nothing is deleted or locked.",
+    category: "Getting started",
+    items: [
+      {
+        q: "Does the storyteller need a smartphone or app?",
+        a: "No. It works over a normal phone with SMS. There is nothing to install, no account for them to manage, and no password to remember.",
+        featured: true,
+      },
+      {
+        q: "How does an interview actually work?",
+        a: "At a scheduled time we send a private link (or call). An AI guide asks a few warm, simple questions, and your elder just talks. Sessions are short — usually about 10–15 minutes — and they can stop and pick up again any time.",
+      },
+      {
+        q: "Can more than one person record?",
+        a: "Yes, on the Family plan, or add a storyteller to any annual plan.",
+        featured: true,
+      },
+    ],
   },
   {
-    q: "Can more than one person record?",
-    a: "Yes, on the Family plan, or add a storyteller to any annual plan.",
+    category: "Privacy & security",
+    items: [
+      {
+        q: "Who can hear the recordings?",
+        a: "Only signed-in members of your family account, after an access check — and the storyteller, through their own private link. Recordings are kept in private storage and are never made public. We serve audio only over short-lived, signed links after that same check.",
+      },
+      {
+        q: "Is my family's data separate from other families'?",
+        a: "Yes. Every family's stories, recordings, and account are fully isolated. One family can never see, hear, or reach another family's content.",
+      },
+      {
+        q: "Do you sell our data or recordings?",
+        a: "Never. We do not sell your information or recordings, and we don't share them with third parties for their own marketing. The vendors that help us run the service (for example, to transcribe audio or send reminders) may only process data on our behalf, never for their own purposes.",
+      },
+      {
+        q: "Is the cloned voice safe? Who controls it?",
+        a: "A cloned voice is only created with your family's consent and is used solely to help guide your own family's interviews. It is never shared, sold, or used anywhere else.",
+      },
+    ],
   },
   {
-    q: "Can I download all the recordings?",
-    a: "Yes — any time, on every plan. One click gives you a ZIP with every audio recording, the transcripts, and your book. If you ever cancel, it's all still yours to download and keep.",
+    category: "Your keepsake",
+    items: [
+      {
+        q: "What are the voice QR codes?",
+        a: "Printed codes in the book that play the original recording when scanned, so you can hear the story in their own voice.",
+        featured: true,
+      },
+      {
+        q: "Can I download all the recordings?",
+        a: "Yes — any time, on every plan. One click gives you a ZIP with every audio recording, the transcripts, and your book. If you ever cancel, it's all still yours to download and keep.",
+        featured: true,
+      },
+      {
+        q: "Can I order more printed copies?",
+        a: "Yes, any time, softcover or hardcover.",
+        featured: true,
+      },
+    ],
   },
   {
-    q: "Can I order more printed copies?",
-    a: "Yes, any time, softcover or hardcover.",
-  },
-  {
-    q: "Does the storyteller need a smartphone or app?",
-    a: "No. It works over a normal phone with SMS.",
-  },
-  {
-    q: "What are the voice QR codes?",
-    a: "Printed codes in the book that play the original recording when scanned.",
+    category: "Billing & ownership",
+    items: [
+      {
+        q: "What happens if I cancel?",
+        a: "You keep all stories, audio, and your digital book. Nothing is deleted or locked.",
+        featured: true,
+      },
+      {
+        q: "Can I delete everything?",
+        a: "Yes. You can download all your stories at any time, and you can ask us to permanently delete a single recording or your entire account by contacting us.",
+      },
+    ],
   },
 ];
+
+// Short teaser for the homepage — the items marked `featured` above, in source
+// order. The full, grouped list lives on /faq.
+export const FAQ: FaqItem[] = FAQ_GROUPS.flatMap((g) =>
+  g.items.filter((i) => i.featured),
+);
 
 /** Format a whole-dollar USD price, e.g. 99 → "$99". */
 export function formatPrice(dollars: number): string {

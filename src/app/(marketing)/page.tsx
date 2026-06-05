@@ -443,6 +443,11 @@ function Faq() {
             </details>
           ))}
         </div>
+        <p className="mt-8 text-center">
+          <Link href="/faq" className="font-semibold text-accent underline">
+            Read the full FAQ →
+          </Link>
+        </p>
       </div>
     </Section>
   );
