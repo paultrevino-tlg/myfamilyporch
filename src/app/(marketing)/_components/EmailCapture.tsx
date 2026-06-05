@@ -131,7 +131,7 @@ export function EmailCapture() {
           </p>
         )}
 
-        <p className="text-center text-xs text-ink/55">
+        <p className="text-center text-xs text-ink/65">
           We&apos;ll only use your email to tell you about My Family Porch. Never
           sold.
         </p>

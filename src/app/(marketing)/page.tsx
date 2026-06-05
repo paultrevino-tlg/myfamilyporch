@@ -114,7 +114,7 @@ function Hero() {
               </span>
               Listening…
             </div>
-            <p className="mt-2 text-sm text-ink/60">Take your time — there&apos;s no rush, and no wrong answer.</p>
+            <p className="mt-2 text-sm text-ink/65">Take your time — there&apos;s no rush, and no wrong answer.</p>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
             {[
@@ -124,7 +124,7 @@ function Hero() {
             ].map(([v, k]) => (
               <div key={k} className="rounded-xl border border-line bg-surface2 py-3">
                 <div className="font-serif text-2xl font-semibold text-brand">{v}</div>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-ink/45">{k}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-ink/65">{k}</div>
               </div>
             ))}
           </div>
@@ -253,7 +253,7 @@ function WhyVoice() {
               />
             ))}
           </div>
-          <div className="mt-3 text-sm font-semibold text-ink/55">
+          <div className="mt-3 text-sm font-semibold text-ink/65">
             Margaret, 78 — recorded on a Sunday afternoon
           </div>
         </div>
@@ -363,7 +363,7 @@ function SocialProof() {
               </span>
               <span>
                 <span className="block font-semibold">{t.name}</span>
-                <span className="block text-sm text-ink/55">{t.relation}</span>
+                <span className="block text-sm text-ink/65">{t.relation}</span>
               </span>
             </figcaption>
           </figure>
@@ -392,12 +392,12 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         </span>
       )}
       <h3 className="font-serif text-xl font-semibold">{tier.name}</h3>
-      <p className="mt-1 text-sm text-ink/60">{tier.tagline}</p>
+      <p className="mt-1 text-sm text-ink/65">{tier.tagline}</p>
       <div className="mt-4 flex items-baseline gap-1.5">
         <span className="font-serif text-3xl font-semibold tracking-tight">
           {formatPrice(tier.price)}
         </span>
-        <span className="text-sm font-medium text-ink/55">/ year</span>
+        <span className="text-sm font-medium text-ink/65">/ year</span>
       </div>
       <Link
         href="/pricing"

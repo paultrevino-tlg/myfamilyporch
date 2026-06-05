@@ -89,7 +89,7 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <p className="mt-8 text-center text-ink/60">
+        <p className="mt-8 text-center text-ink/65">
           Curious about something else? Many answers are on our{" "}
           <Link href="/faq" className="text-accent underline">
             FAQ page

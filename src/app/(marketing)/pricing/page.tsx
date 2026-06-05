@@ -42,7 +42,7 @@ function MatrixCell({ value }: { value: boolean | string }) {
   if (value === true) return <Check />;
   if (value === false)
     return (
-      <span aria-hidden className="text-ink/25">
+      <span aria-hidden className="text-ink/55">
         —
       </span>
     );
@@ -64,15 +64,15 @@ function TierCard({ tier }: { tier: PricingTier }) {
         </span>
       )}
       <h3 className="font-serif text-2xl font-semibold">{tier.name}</h3>
-      <p className="mt-1 text-sm text-ink/60">{tier.tagline}</p>
+      <p className="mt-1 text-sm text-ink/65">{tier.tagline}</p>
       <div className="mt-5 flex items-baseline gap-1.5">
         <span className="font-serif text-4xl font-semibold tracking-tight">
           {formatPrice(tier.price)}
         </span>
-        <span className="text-sm font-medium text-ink/55">/ year</span>
+        <span className="text-sm font-medium text-ink/65">/ year</span>
       </div>
       {tier.monthly != null && (
-        <p className="mt-1 text-sm text-ink/55">
+        <p className="mt-1 text-sm text-ink/65">
           or {formatPrice(tier.monthly)}/mo
         </p>
       )}
@@ -128,9 +128,9 @@ export default function PricingPage() {
             <span className="font-serif text-2xl font-semibold tracking-tight text-brand">
               {formatPrice(LIFETIME.price)}
             </span>
-            <span className="text-sm font-medium text-ink/55">one-time</span>
+            <span className="text-sm font-medium text-ink/65">one-time</span>
           </div>
-          <p className="mt-1 text-sm text-ink/60">{LIFETIME.tagline}</p>
+          <p className="mt-1 text-sm text-ink/65">{LIFETIME.tagline}</p>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink/75">
             {LIFETIME.features.map((f) => (
               <li key={f} className="flex gap-2">
@@ -198,7 +198,7 @@ export default function PricingPage() {
       {/* À la carte add-ons */}
       <section className="mt-16">
         <h2 className="font-serif text-2xl font-semibold">Add to any plan</h2>
-        <p className="mt-1 text-sm text-ink/60">
+        <p className="mt-1 text-sm text-ink/65">
           Order more copies or add another storyteller, any time.
         </p>
         <div className="card mt-5 divide-y divide-line">
@@ -209,12 +209,12 @@ export default function PricingPage() {
             >
               <div>
                 <div className="font-semibold">{a.name}</div>
-                <div className="text-sm text-ink/55">{a.note}</div>
+                <div className="text-sm text-ink/65">{a.note}</div>
               </div>
               <div className="shrink-0 whitespace-nowrap font-serif text-lg font-semibold">
                 {formatPrice(a.price)}
                 {a.unit && (
-                  <span className="ml-1 text-sm font-medium text-ink/55">
+                  <span className="ml-1 text-sm font-medium text-ink/65">
                     {a.unit}
                   </span>
                 )}
@@ -238,7 +238,7 @@ export default function PricingPage() {
                     className="px-4 py-4 text-center font-semibold"
                   >
                     {t.name}
-                    <div className="text-xs font-medium text-ink/55">
+                    <div className="text-xs font-medium text-ink/65">
                       {formatPrice(t.price)}/yr
                     </div>
                   </th>

@@ -54,8 +54,8 @@ export function SiteFooter() {
               </span>
               <span className="font-serif text-lg font-semibold">My Family Porch</span>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-ink/60">{SITE_TAGLINE}</p>
-            <p className="mt-4 text-sm leading-relaxed text-ink/55">
+            <p className="mt-3 text-sm leading-relaxed text-ink/65">{SITE_TAGLINE}</p>
+            <p className="mt-4 text-sm leading-relaxed text-ink/65">
               Your family&apos;s recordings are private — yours to keep, and never
               sold.
             </p>
@@ -63,7 +63,7 @@ export function SiteFooter() {
 
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-ink/45">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-ink/65">
                 {col.title}
               </h2>
               <ul className="mt-3 space-y-2.5 text-sm">
@@ -82,7 +82,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-line pt-6 text-sm text-ink/50">
+        <div className="mt-10 border-t border-line pt-6 text-sm text-ink/65">
           © {year} My Family Porch — a service of Technology Leadership Group, LLC.
         </div>
       </div>

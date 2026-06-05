@@ -56,3 +56,30 @@ body {
     @apply font-semibold text-brand underline-offset-4 hover:underline;
   }
 }
+
+/* Accessibility pass (Phase 8.11, brief §9/§12). Applies product-wide. */
+
+/* Always-visible keyboard focus. Colored/rounded buttons and links would
+   otherwise show only the browser's default outline, which gets visually
+   clipped by rounded corners and dark backgrounds. A consistent brand ring
+   with an offset keeps focus obvious for keyboard users (WCAG 2.4.7).
+   :focus-visible (not :focus) so a mouse click doesn't leave a ring. */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect a reduced-motion preference: drop transitions, animations, and
+   transform/scroll motion so nothing slides, spins, or smooth-scrolls
+   (WCAG 2.3.3). Keeps the static layout intact — only the motion is removed. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

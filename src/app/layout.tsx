@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, DEFAULT_OG_IMAGE } from "@/lib/seo";
@@ -39,6 +39,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [DEFAULT_OG_IMAGE],
   },
+};
+
+// Next already injects width=device-width; themeColor tints the mobile browser
+// chrome to match the paper background (Best Practices / brand polish, 8.11).
+export const viewport: Viewport = {
+  themeColor: "#EBF1F8",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

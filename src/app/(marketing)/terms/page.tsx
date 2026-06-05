@@ -15,7 +15,7 @@ export default function Terms() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Terms &amp; Conditions</h1>
-      <p className="mt-2 text-ink/60 text-sm">Last updated: June 5, 2026</p>
+      <p className="mt-2 text-ink/65 text-sm">Last updated: June 5, 2026</p>
 
       <p className="mt-6 text-ink/80">
         These terms govern your use of My Family Porch, a service operated by

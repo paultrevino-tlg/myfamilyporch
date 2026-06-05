@@ -91,7 +91,7 @@ function WhyThePorch() {
               />
             ))}
           </div>
-          <div className="mt-3 text-sm font-semibold text-ink/55">
+          <div className="mt-3 text-sm font-semibold text-ink/65">
             An invitation, not an interview.
           </div>
         </div>

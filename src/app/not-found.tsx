@@ -58,7 +58,7 @@ export default function NotFound() {
             </div>
 
             <div className="mt-12 border-t border-line pt-8">
-              <p className="text-sm font-semibold uppercase tracking-widest text-ink/45">
+              <p className="text-sm font-semibold uppercase tracking-widest text-ink/65">
                 Or head somewhere familiar
               </p>
               <ul className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-base">

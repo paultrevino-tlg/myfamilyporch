@@ -109,7 +109,7 @@ function Steps() {
                 {s.title}
               </h3>
               <p className="mt-2 text-lg leading-relaxed text-ink/80">{s.lead}</p>
-              <p className="mt-3 leading-relaxed text-ink/60">{s.detail}</p>
+              <p className="mt-3 leading-relaxed text-ink/65">{s.detail}</p>
             </div>
           </div>
         ))}
@@ -223,7 +223,7 @@ function WhatYouGet() {
               />
             ))}
           </div>
-          <div className="mt-3 text-sm font-semibold text-ink/55">
+          <div className="mt-3 text-sm font-semibold text-ink/65">
             Scan the page, hear them tell it.
           </div>
         </div>

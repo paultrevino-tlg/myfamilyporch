@@ -104,7 +104,7 @@ function WhyMeaningful() {
               />
             ))}
           </div>
-          <div className="mt-3 text-sm font-semibold text-ink/55">
+          <div className="mt-3 text-sm font-semibold text-ink/65">
             A keepsake you can hear, not just hold.
           </div>
         </div>
