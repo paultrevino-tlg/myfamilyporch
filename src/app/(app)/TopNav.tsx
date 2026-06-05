@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { switchFamily } from "./actions";
@@ -7,6 +8,8 @@ import { switchFamily } from "./actions";
 // Site nav for the authenticated family/admin area. Rendered once in the (app)
 // layout so every page gets the same shell: brand, section links (with the
 // active one highlighted), family switcher, and the member avatar + sign-out.
+// On mobile the links/switcher/sign-out collapse into a hamburger menu (same
+// idiom as the marketing MobileNav: closes on route change and Escape).
 type Family = { family_id: string; name: string };
 
 const LINKS = [
@@ -37,6 +40,22 @@ export default function TopNav({
 }) {
   const pathname = usePathname();
   const hasFamily = activeFamilyId != null;
+  const [open, setOpen] = useState(false);
+
+  // Close the mobile menu when navigating to a new page.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Close on Escape while open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/80 backdrop-blur">
@@ -48,8 +67,9 @@ export default function TopNav({
           <span className="hidden sm:inline">Porch</span>
         </Link>
 
+        {/* Section links — inline on desktop, in the hamburger menu on mobile. */}
         {hasFamily && (
-          <div className="ml-2 flex items-center gap-0.5">
+          <div className="ml-2 hidden items-center gap-0.5 sm:flex">
             {LINKS.map((l) => {
               const current = pathname === l.href || pathname.startsWith(l.href + "/");
               return (
@@ -104,7 +124,7 @@ export default function TopNav({
             {initials(email)}
           </div>
 
-          <form action="/auth/signout" method="post">
+          <form action="/auth/signout" method="post" className="hidden sm:block">
             <button
               type="submit"
               className="rounded-lg px-2 py-2 text-sm font-semibold text-ink/50 hover:bg-ink/5 hover:text-ink"
@@ -113,8 +133,95 @@ export default function TopNav({
               Sign out
             </button>
           </form>
+
+          {/* Hamburger — mobile only. */}
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="app-mobile-menu"
+            onClick={() => setOpen((v) => !v)}
+            className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink/70 transition hover:bg-surface2 sm:hidden"
+          >
+            {open ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile dropdown panel. */}
+      {open && (
+        <div
+          id="app-mobile-menu"
+          className="absolute inset-x-0 top-full border-b border-line bg-surface/95 backdrop-blur sm:hidden"
+        >
+          <div className="mx-auto flex max-w-5xl flex-col gap-1 px-5 py-4">
+            {hasFamily &&
+              LINKS.map((l) => {
+                const current = pathname === l.href || pathname.startsWith(l.href + "/");
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className={`rounded-xl px-3 py-3 text-base font-semibold transition ${
+                      current
+                        ? "bg-ink/5 text-ink ring-1 ring-line"
+                        : "text-ink/80 hover:bg-ink/5"
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              })}
+
+            {/* Family switcher (>1) or the single family's name. */}
+            {families.length > 1 && (
+              <div className="mt-2 border-t border-line pt-3">
+                <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                  Family
+                </p>
+                {families.map((f) => (
+                  <form key={f.family_id} action={switchFamily}>
+                    <input type="hidden" name="family_id" value={f.family_id} />
+                    <button
+                      type="submit"
+                      disabled={f.family_id === activeFamilyId}
+                      className={`w-full rounded-xl px-3 py-3 text-left text-base font-semibold transition ${
+                        f.family_id === activeFamilyId
+                          ? "bg-ink/5 text-ink ring-1 ring-line"
+                          : "text-ink/80 hover:bg-ink/5"
+                      }`}
+                    >
+                      {f.name}
+                    </button>
+                  </form>
+                ))}
+              </div>
+            )}
+            {families.length === 1 && activeFamilyName && (
+              <p className="mt-2 border-t border-line px-3 pt-3 text-sm font-semibold text-ink/55">
+                {activeFamilyName}
+              </p>
+            )}
+
+            <form action="/auth/signout" method="post" className="mt-2 border-t border-line pt-2">
+              <button
+                type="submit"
+                className="w-full rounded-xl px-3 py-3 text-left text-base font-semibold text-ink/70 hover:bg-ink/5"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
