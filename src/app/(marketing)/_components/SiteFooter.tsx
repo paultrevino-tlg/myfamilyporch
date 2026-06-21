@@ -21,6 +21,7 @@ const COLUMNS: Col[] = [
     title: "Company",
     links: [
       { label: "Our story", href: "/about" },
+      { label: "Why I built this", href: "/why" },
       { label: "Gift a porch", href: "/gift" },
     ],
   },
