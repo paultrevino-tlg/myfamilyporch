@@ -14,6 +14,14 @@ const API = "https://api.elevenlabs.io/v1";
 // The multilingual model that lets one cloned voice speak en + es.
 export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
 
+// Neutral stock voice used when an interviewer hasn't linked a cloned voice yet,
+// so the storyteller surface ALWAYS has a voice to read instructions/questions
+// aloud (TODO 4.2 read-aloud). The multilingual model speaks en + es with this
+// one voice. Default is the premade "Rachel"; override per-deploy with
+// ELEVENLABS_DEFAULT_VOICE_ID.
+export const ELEVENLABS_DEFAULT_VOICE =
+  process.env.ELEVENLABS_DEFAULT_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+
 function apiKey(): string {
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) throw new Error("ELEVENLABS_API_KEY is not set");

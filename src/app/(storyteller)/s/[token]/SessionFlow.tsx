@@ -167,18 +167,18 @@ export default function SessionFlow({
     >
       <div className="flex w-full max-w-md flex-1 flex-col">
         {step === "welcome" && (
-          <Screen>
-            <Avatar>👋</Avatar>
-            <DisplayText>{tr("greeting", { address: greetAddress })}</DisplayText>
-            <Hint>{tr("welcome_sub")}</Hint>
-            <Spacer />
-            <BigButton onClick={() => setStep("prime")}>
-              {tr("lets_talk")}
-            </BigButton>
-            <QuietButton onClick={() => setStep("closed")}>
-              {tr("maybe_later")}
-            </QuietButton>
-          </Screen>
+          <WelcomeScreen
+            token={token}
+            lang={lang}
+            greeting={tr("greeting", { address: greetAddress })}
+            sub={tr("welcome_sub")}
+            ctaLabel={tr("welcome_cta")}
+            playingLabel={tr("playing_question")}
+            talkLabel={tr("lets_talk")}
+            laterLabel={tr("maybe_later")}
+            onContinue={() => setStep("prime")}
+            onDecline={() => setStep("closed")}
+          />
         )}
 
         {step === "prime" && (
@@ -186,6 +186,14 @@ export default function SessionFlow({
             <Mic />
             <DisplayText>{tr("mic_prime_title")}</DisplayText>
             <Hint>{tr("mic_prime_sub")}</Hint>
+            <QuestionVoice
+              token={token}
+              text={`${tr("mic_prime_title")}. ${tr("mic_prime_sub")}`}
+              lang={lang}
+              chipLabel={tr("voice_chip")}
+              hearLabel={tr("hear_question")}
+              playingLabel={tr("playing_question")}
+            />
             <Spacer />
             <BigButton accent onClick={requestMic}>
               {tr("mic_prime_btn")}
@@ -198,6 +206,14 @@ export default function SessionFlow({
             <Avatar>🎤</Avatar>
             <DisplayText>{tr("mic_denied_title")}</DisplayText>
             <Hint>{tr("mic_denied_sub")}</Hint>
+            <QuestionVoice
+              token={token}
+              text={`${tr("mic_denied_title")}. ${tr("mic_denied_sub")}`}
+              lang={lang}
+              chipLabel={tr("voice_chip")}
+              hearLabel={tr("hear_question")}
+              playingLabel={tr("playing_question")}
+            />
             <Spacer />
             <BigButton accent onClick={requestMic}>
               {tr("mic_retry_btn")}
@@ -293,6 +309,14 @@ export default function SessionFlow({
             <Check />
             <DisplayText>{tr("done_title")}</DisplayText>
             <Hint>{tr("done_sub")}</Hint>
+            <QuestionVoice
+              token={token}
+              text={`${tr("done_title")}. ${tr("done_sub")}`}
+              lang={lang}
+              chipLabel={tr("voice_chip")}
+              hearLabel={tr("hear_question")}
+              playingLabel={tr("playing_question")}
+            />
             <Count>{tr("done_count")}</Count>
             <Spacer />
             <BigButton onClick={() => setStep("closed")}>
@@ -309,6 +333,118 @@ export default function SessionFlow({
         )}
       </div>
     </main>
+  );
+}
+
+// --- Welcome screen -----------------------------------------------------------
+// The session opens here. By design the page does NOT autoplay on load (browsers
+// block gesture-less audio, and we want the elder walked through deliberately):
+// it shows a single "Tap to begin" CTA. That tap is the user gesture that lets
+// audio play, so we then read the instructions aloud in the interviewer's voice
+// (or the neutral default voice when none is linked). Only when the reading
+// FINISHES does the button become "Let's talk" → mic priming. Fail-soft: if the
+// audio can't load or play, we reveal "Let's talk" immediately so the elder is
+// never trapped. "Maybe later" stays available throughout.
+function WelcomeScreen({
+  token,
+  lang,
+  greeting,
+  sub,
+  ctaLabel,
+  playingLabel,
+  talkLabel,
+  laterLabel,
+  onContinue,
+  onDecline,
+}: {
+  token: string;
+  lang: Lang;
+  greeting: string;
+  sub: string;
+  ctaLabel: string;
+  playingLabel: string;
+  talkLabel: string;
+  laterLabel: string;
+  onContinue: () => void;
+  onDecline: () => void;
+}) {
+  const [phase, setPhase] = useState<"intro" | "loading" | "playing" | "ready">("intro");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+
+  // Tear down any audio + object URL on unmount.
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+      audioRef.current = null;
+    };
+  }, []);
+
+  async function begin() {
+    setPhase("loading");
+    // The instructions read aloud = the greeting + the gentle sub-line.
+    const instructions = `${greeting}. ${sub}`;
+    let audio: HTMLAudioElement | null = null;
+    try {
+      const res = await fetch("/api/storyteller/voice", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token, text: instructions, lang }),
+      });
+      if (res.status === 200) {
+        const url = URL.createObjectURL(await res.blob());
+        urlRef.current = url;
+        audio = new Audio(url);
+      }
+    } catch {
+      // network/synthesis miss — fall through to ready below
+    }
+    if (!audio) {
+      setPhase("ready");
+      return;
+    }
+    audioRef.current = audio;
+    // Reveal "Let's talk" only when the reading finishes (or on playback error).
+    audio.onended = () => setPhase("ready");
+    audio.onerror = () => setPhase("ready");
+    try {
+      await audio.play();
+      setPhase("playing");
+    } catch {
+      // Even with the gesture, playback can be refused — don't trap the elder.
+      setPhase("ready");
+    }
+  }
+
+  return (
+    <Screen>
+      <Avatar>👋</Avatar>
+      <DisplayText>{greeting}</DisplayText>
+      <Hint>{sub}</Hint>
+      <Spacer />
+      {phase === "intro" && (
+        <BigButton accent onClick={begin}>
+          {ctaLabel}
+        </BigButton>
+      )}
+      {(phase === "loading" || phase === "playing") && (
+        <div
+          aria-live="polite"
+          className="flex w-full items-center justify-center gap-3 rounded-3xl bg-accent/80 px-6 py-6 text-2xl font-bold text-white shadow-lg"
+        >
+          <span aria-hidden>🔊</span>
+          {playingLabel}
+        </div>
+      )}
+      {phase === "ready" && (
+        <BigButton accent onClick={onContinue}>
+          {talkLabel}
+        </BigButton>
+      )}
+      <QuietButton onClick={onDecline}>{laterLabel}</QuietButton>
+    </Screen>
   );
 }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateStorytellerToken } from "@/lib/storyteller/token";
 import { supabaseService } from "@/lib/supabase/service";
-import { synthesize } from "@/lib/voice/elevenlabs";
+import { synthesize, ELEVENLABS_DEFAULT_VOICE } from "@/lib/voice/elevenlabs";
 
 // Cloned-voice question playback for the storyteller surface (TODO 4.2). The
 // storyteller is token-scoped (no Supabase Auth), so this validates the magic-link
@@ -10,7 +10,8 @@ import { synthesize } from "@/lib/voice/elevenlabs";
 // large text on the screen is the always-present backup channel (SPEC § Voice).
 //
 // Fail-soft, never dead-end the elder:
-//   - no cloned voice linked yet        -> 204 (client shows text only)
+//   - no cloned voice linked yet        -> synthesize with a neutral default
+//                                          voice, so every screen still speaks
 //   - synthesis / config failure        -> 502 (client shows text only)
 //   - bad token                         -> 401
 //
@@ -49,6 +50,9 @@ export async function POST(req: NextRequest) {
   // Resolve the interviewer for this storyteller, then THAT member's voice.
   // Voice attaches to the family member (voice_profiles.owner_user_id), not to
   // the relationship — so whoever is flagged as interviewer lends their voice.
+  // When no interviewer is chosen yet, or the chosen one hasn't recorded a voice,
+  // fall back to the neutral default voice so the surface always speaks aloud.
+  let voiceId = ELEVENLABS_DEFAULT_VOICE;
   const { data: rel } = await db
     .from("storyteller_relationships")
     .select("user_id")
@@ -56,22 +60,18 @@ export async function POST(req: NextRequest) {
     .eq("family_id", session.family_id)
     .eq("is_interviewer", true)
     .maybeSingle();
-  if (!rel?.user_id) {
-    return new NextResponse(null, { status: 204 }); // no interviewer chosen yet → text only
-  }
-
-  const { data: profile } = await db
-    .from("voice_profiles")
-    .select("provider_voice")
-    .eq("family_id", session.family_id)
-    .eq("owner_user_id", rel.user_id)
-    .maybeSingle();
-  if (!profile?.provider_voice) {
-    return new NextResponse(null, { status: 204 }); // interviewer hasn't recorded a voice → text only
+  if (rel?.user_id) {
+    const { data: profile } = await db
+      .from("voice_profiles")
+      .select("provider_voice")
+      .eq("family_id", session.family_id)
+      .eq("owner_user_id", rel.user_id)
+      .maybeSingle();
+    if (profile?.provider_voice) voiceId = profile.provider_voice;
   }
 
   try {
-    const audio = await synthesize({ voiceId: profile.provider_voice, text: clipped, lang });
+    const audio = await synthesize({ voiceId, text: clipped, lang });
     return new NextResponse(audio, {
       status: 200,
       headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" },

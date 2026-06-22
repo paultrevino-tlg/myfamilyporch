@@ -13,6 +13,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     // Welcome
     greeting: "Hi {address}",
     welcome_sub: "I've got a question for you whenever you're ready.",
+    welcome_cta: "Tap to begin",
     lets_talk: "Let's talk",
     maybe_later: "Maybe later",
     // Mic priming (prime before the iOS prompt — one clean shot)
@@ -67,6 +68,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     // Welcome
     greeting: "Hola, {address}",
     welcome_sub: "Tengo una pregunta para ti cuando quieras.",
+    welcome_cta: "Toca para empezar",
     lets_talk: "Hablemos",
     maybe_later: "Quizás más tarde",
     // Mic priming (prime before the iOS prompt — one clean shot)
