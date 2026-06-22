@@ -195,7 +195,7 @@ export default function SessionFlow({
               playingLabel={tr("playing_question")}
             />
             <Spacer />
-            <BigButton accent onClick={requestMic}>
+            <BigButton onClick={requestMic}>
               {tr("mic_prime_btn")}
             </BigButton>
           </Screen>
@@ -215,7 +215,7 @@ export default function SessionFlow({
               playingLabel={tr("playing_question")}
             />
             <Spacer />
-            <BigButton accent onClick={requestMic}>
+            <BigButton onClick={requestMic}>
               {tr("mic_retry_btn")}
             </BigButton>
             <QuietButton onClick={() => setStep("closed")}>
@@ -240,7 +240,7 @@ export default function SessionFlow({
               playingLabel={tr("playing_question")}
             />
             <Spacer />
-            <BigButton accent onClick={() => setStep("answer1")}>
+            <BigButton onClick={() => setStep("answer1")}>
               {tr("ready_to_answer")}
             </BigButton>
           </Screen>
@@ -283,7 +283,7 @@ export default function SessionFlow({
               playingLabel={tr("playing_question")}
             />
             <Spacer />
-            <BigButton accent onClick={() => setStep("answer2")}>
+            <BigButton onClick={() => setStep("answer2")}>
               {tr("ready_to_answer")}
             </BigButton>
           </Screen>
@@ -425,7 +425,7 @@ function WelcomeScreen({
       <Hint>{sub}</Hint>
       <Spacer />
       {phase === "intro" && (
-        <BigButton accent onClick={begin}>
+        <BigButton onClick={begin}>
           {ctaLabel}
         </BigButton>
       )}
@@ -439,7 +439,7 @@ function WelcomeScreen({
         </div>
       )}
       {phase === "ready" && (
-        <BigButton accent onClick={onContinue}>
+        <BigButton onClick={onContinue}>
           {talkLabel}
         </BigButton>
       )}
@@ -849,28 +849,30 @@ function Check() {
   );
 }
 
+// Every positive CTA in the flow is the same green button — one clear "go"
+// affordance the elder can always trust to mean "continue / yes".
 function BigButton({
   children,
   onClick,
-  accent = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
-  accent?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-3xl px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98] ${
-        accent ? "bg-accent" : "bg-answer"
-      }`}
+      className="w-full rounded-3xl bg-emerald-600 px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98]"
     >
       {children}
     </button>
   );
 }
 
+// Every negative response ("Maybe later", "Skip") is a red button. Kept as a
+// red outline rather than a solid fill so it reads as clearly negative without
+// visually competing with the green primary or nudging a hesitant elder to
+// decline (elder-facing UX: forgiving, never coercive).
 function QuietButton({
   children,
   onClick,
@@ -882,7 +884,7 @@ function QuietButton({
     <button
       type="button"
       onClick={onClick}
-      className="w-full py-4 text-lg text-ink/60 underline underline-offset-4"
+      className="w-full rounded-3xl border-2 border-red-600 px-6 py-4 text-lg font-bold text-red-600 transition active:scale-[0.98]"
     >
       {children}
     </button>
