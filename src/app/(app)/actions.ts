@@ -66,6 +66,55 @@ export async function createInvitation(formData: FormData) {
   redirect("/settings");
 }
 
+// Remove an accepted family member. Owner/admin only; RLS enforces the same.
+// The owner can never be removed — guarded here and by hiding the button.
+export async function removeMember(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const userId = String(formData.get("user_id") ?? "");
+  if (!userId) return;
+
+  const sb = await supabaseServer();
+
+  // Defense-in-depth: never delete the owner, whatever the form claims.
+  const { data: target } = await sb
+    .from("memberships")
+    .select("role")
+    .eq("family_id", active.family_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!target || target.role === "owner") return;
+
+  const { error } = await sb
+    .from("memberships")
+    .delete()
+    .eq("family_id", active.family_id)
+    .eq("user_id", userId);
+  if (error) throw error;
+
+  redirect("/family-access");
+}
+
+// Cancel a pending (or accepted/expired) invitation. Owner/admin only; RLS matches.
+export async function cancelInvitation(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const sb = await supabaseServer();
+  const { error } = await sb
+    .from("invitations")
+    .delete()
+    .eq("family_id", active.family_id)
+    .eq("id", id);
+  if (error) throw error;
+
+  redirect("/family-access");
+}
+
 // Friendly text for the exceptions raised by the accept_invitation RPC.
 function friendly(raw: string): string {
   if (raw.includes("email_mismatch"))

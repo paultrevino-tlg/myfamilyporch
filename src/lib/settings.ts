@@ -13,6 +13,7 @@ export type MyVoice = { id: string; label: string } | null;
 export type RosterMember = FamilyMember & { isYou: boolean };
 
 export type PendingInvite = {
+  id: string;
   email: string;
   role: "owner" | "admin" | "viewer";
   status: "Accepted" | "Expired" | "Pending";
@@ -37,7 +38,7 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
     sb.from("memberships").select("user_id, alert_phone").eq("family_id", familyId),
     sb
       .from("invitations")
-      .select("email, role, accepted_at, expires_at, created_at")
+      .select("id, email, role, accepted_at, expires_at, created_at")
       .eq("family_id", familyId)
       .order("created_at", { ascending: false }),
     // My own cloned voice (voice-per-member). owner_user_id = me.
@@ -59,6 +60,7 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
   const roster: RosterMember[] = members.map((m) => ({ ...m, isYou: m.userId === myId }));
 
   const invitations: PendingInvite[] = (invRes.data ?? []).map((inv) => ({
+    id: inv.id,
     email: inv.email,
     role: inv.role,
     status: inv.accepted_at

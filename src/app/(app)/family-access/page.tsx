@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
-import { createInvitation } from "../actions";
+import { cancelInvitation, createInvitation, removeMember } from "../actions";
 
 // Family Access (TODO 5.5). Who can listen: the roster, pending invitations, and
 // the invite-by-email form. Admins edit; viewers see a calm read-only view. RLS
@@ -47,6 +47,18 @@ export default async function FamilyAccessPage() {
                   </span>
                 )}
                 <span className="chip bg-brand/10 capitalize text-brand">{m.role}</span>
+                {canManage && m.role !== "owner" && !m.isYou && (
+                  <form action={removeMember}>
+                    <input type="hidden" name="user_id" value={m.userId} />
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-red-600 hover:underline"
+                      title={`Remove ${m.email ?? m.name}`}
+                    >
+                      Remove
+                    </button>
+                  </form>
+                )}
               </span>
             </li>
           ))}
@@ -56,15 +68,29 @@ export default async function FamilyAccessPage() {
           <>
             <h3 className="mt-5 text-sm font-semibold text-ink/70">Invitations</h3>
             <ul className="mt-2 space-y-2">
-              {invitations.map((inv, i) => (
+              {invitations.map((inv) => (
                 <li
-                  key={i}
-                  className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
+                  key={inv.id}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-line bg-surface2 px-3.5 py-2.5 text-sm"
                 >
-                  <span className="font-medium">
+                  <span className="min-w-0 font-medium">
                     {inv.email} <span className="font-normal text-ink/50">· {inv.role}</span>
                   </span>
-                  <span className="chip bg-amber-100 text-amber-700">{inv.status}</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="chip bg-amber-100 text-amber-700">{inv.status}</span>
+                    {canManage && (
+                      <form action={cancelInvitation}>
+                        <input type="hidden" name="id" value={inv.id} />
+                        <button
+                          type="submit"
+                          className="text-xs font-medium text-red-600 hover:underline"
+                          title={`Cancel invitation for ${inv.email}`}
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
