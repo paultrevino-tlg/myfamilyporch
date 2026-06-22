@@ -45,6 +45,11 @@ export async function sendEmail(params: EmailParams): Promise<void> {
         button_label: params.button_label ?? "",
         button_url: params.button_url ?? "",
         footnote: params.footnote ?? "",
+        // EmailJS's Mustache only treats booleans/arrays as truthy for sections
+        // ({{#has_button}}); a non-empty string is NOT enough to render one. So
+        // gate the optional button/footnote blocks on explicit booleans.
+        has_button: Boolean(params.button_url),
+        has_footnote: Boolean(params.footnote),
       },
     }),
   });

@@ -13,10 +13,17 @@
     {{footnote}}       small reassurance line under the button (optional)
     {{to_email}}       recipient address, echoed in the footer
 
-  EmailJS renders with MUSTACHE, not Handlebars. Optional sections use
-  {{#var}}...{{/var}} (renders only when var is truthy — an empty string is
-  falsy). Do NOT use Handlebars {{#if var}}...{{/if}} — Mustache reads that as a
-  variable named "if var" and rejects the send ("dynamic variables are corrupted").
+  EmailJS renders with MUSTACHE, not Handlebars:
+    - Do NOT use Handlebars {{#if var}}...{{/if}} — Mustache reads that as a
+      variable named "if var" and rejects the send ("dynamic variables are
+      corrupted").
+    - Sections {{#var}}...{{/var}} only render when var is a BOOLEAN true or a
+      non-empty array. A non-empty STRING does NOT trigger a section. So the
+      optional button/footnote gate on booleans the helper sends explicitly:
+        {{#has_button}}    true when button_url was provided
+        {{#has_footnote}}  true when footnote was provided
+    - Do NOT use Outlook <!--[if mso]> VML conditional comments — EmailJS's
+      template editor strips them (and can swallow the rest of the document).
 
   Email-client-safe: table layout, all-inline styles, web-safe fonts, and
   solid-color fallbacks behind every gradient (Outlook ignores gradients).
@@ -86,44 +93,34 @@
                 {{{message_html}}}
               </div>
 
-              <!-- CTA button (bulletproof) -->
-              {{#button_url}}
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 4px 0;">
+              <!-- CTA button. Plain padded link in a centering table — no MSO/VML
+                   conditional comments (EmailJS's editor strips those). Outlook
+                   desktop shows square corners; every other client rounds them. -->
+              {{#has_button}}
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px auto 4px auto;">
                 <tr>
-                  <td align="center" bgcolor="#2563EB"
-                      style="border-radius:12px; background-color:#2563EB; background-image:linear-gradient(135deg,#2563EB,#1D4ED8);">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-                      href="{{button_url}}" style="height:48px;v-text-anchor:middle;width:260px;" arcsize="25%" stroke="f" fillcolor="#2563EB">
-                      <w:anchorlock/>
-                      <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">{{button_label}}</center>
-                    </v:roundrect>
-                    <![endif]-->
-                    <!--[if !mso]><!-- -->
+                  <td align="center" bgcolor="#2563EB" style="border-radius:12px;">
                     <a href="{{button_url}}" target="_blank"
-                       style="display:inline-block; padding:14px 32px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; line-height:20px; color:#ffffff; text-decoration:none; border-radius:12px;">
-                      {{button_label}}
-                    </a>
-                    <!--<![endif]-->
+                       style="display:inline-block; padding:14px 32px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; line-height:20px; color:#ffffff; text-decoration:none; border-radius:12px;">{{button_label}}</a>
                   </td>
                 </tr>
               </table>
-              {{/button_url}}
+              {{/has_button}}
 
               <!-- Footnote -->
-              {{#footnote}}
+              {{#has_footnote}}
               <p style="margin:24px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.5; color:#5b6b85;">
                 {{footnote}}
               </p>
-              {{/footnote}}
+              {{/has_footnote}}
 
               <!-- Plain-link fallback for the button -->
-              {{#button_url}}
+              {{#has_button}}
               <p style="margin:20px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#8a98ad;">
                 If the button doesn&rsquo;t work, copy and paste this link into your browser:<br>
                 <a href="{{button_url}}" target="_blank" style="color:#2563EB; text-decoration:underline; word-break:break-all;">{{button_url}}</a>
               </p>
-              {{/button_url}}
+              {{/has_button}}
 
             </td>
           </tr>
