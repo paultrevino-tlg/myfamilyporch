@@ -1,0 +1,18 @@
+My Family Porch
+
+{{headline}}
+
+{{message_html}}
+
+{{#if button_url}}
+{{button_label}}:
+{{button_url}}
+{{/if}}
+
+{{#if footnote}}
+{{footnote}}
+{{/if}}
+
+--
+Sent to {{to_email}}
+My Family Porch · recording your family's stories
