@@ -62,8 +62,8 @@ export async function createInvitation(formData: FormData) {
     footnote: "This invitation expires in 7 days. If you weren't expecting it, you can ignore this email.",
   });
 
-  // Family access is managed on Settings (TODO 5.5) — return there.
-  redirect("/settings");
+  // Family access is its own section now — return there after sending.
+  redirect("/family-access");
 }
 
 // Remove an accepted family member. Owner/admin only; RLS enforces the same.
