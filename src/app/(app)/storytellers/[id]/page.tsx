@@ -529,9 +529,8 @@ export default async function StorytellerDetailPage({
         >
           {topics ? (
             <>
-              <TopicsEditor st={topics} canManage={canManage} />
               {/* Drill from category coverage into the full question library. */}
-              <div className="mt-4 border-t border-line pt-3">
+              <div className="mb-4 border-b border-line pb-3">
                 <Link
                   href={`/storytellers/${st.id}/questions`}
                   className="text-sm font-semibold text-brand hover:underline"
@@ -539,6 +538,7 @@ export default async function StorytellerDetailPage({
                   Show all questions →
                 </Link>
               </div>
+              <TopicsEditor st={topics} canManage={canManage} />
             </>
           ) : (
             <ViewerNote />
