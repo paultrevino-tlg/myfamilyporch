@@ -1,21 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { switchFamily } from "./actions";
 
 // Site nav for the authenticated family/admin area. Rendered once in the (app)
 // layout so every page gets the same shell: brand, section links (with the
-// active one highlighted), family switcher, and the member avatar + sign-out.
-// On mobile the links/switcher/sign-out collapse into a hamburger menu (same
-// idiom as the marketing MobileNav: closes on route change and Escape).
+// active one highlighted), family switcher, and the member avatar. The avatar
+// opens a profile dropdown holding Family Access, My Settings, and Sign out.
+// On mobile the links/switcher collapse into a hamburger menu (same idiom as
+// the marketing MobileNav: closes on route change and Escape).
 type Family = { family_id: string; name: string };
 
+// Primary section links — always inline on desktop, top of the hamburger.
 const LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/stories", label: "Stories" },
   { href: "/book", label: "Book" },
+];
+
+// Account links — live under the profile avatar on desktop, in the hamburger's
+// Profile section on mobile.
+const PROFILE_LINKS = [
   { href: "/family-access", label: "Family Access" },
   { href: "/settings", label: "My Settings" },
 ];
@@ -42,21 +49,39 @@ export default function TopNav({
   const pathname = usePathname();
   const hasFamily = activeFamilyId != null;
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close the mobile menu when navigating to a new page.
+  // Close both menus when navigating to a new page.
   useEffect(() => {
     setOpen(false);
+    setProfileOpen(false);
   }, [pathname]);
 
-  // Close on Escape while open.
+  // Close on Escape while either menu is open.
   useEffect(() => {
-    if (!open) return;
+    if (!open && !profileOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setProfileOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, profileOpen]);
+
+  // Close the profile dropdown on an outside click.
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [profileOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/80 backdrop-blur">
@@ -118,22 +143,65 @@ export default function TopNav({
             </span>
           )}
 
+          {/* Profile avatar + dropdown — desktop only (mobile uses the hamburger). */}
+          <div ref={profileRef} className="relative hidden sm:block">
+            <button
+              type="button"
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((v) => !v)}
+              title={email}
+              className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand to-brand2 text-xs font-bold text-white ring-offset-2 ring-offset-surface transition hover:ring-2 hover:ring-line"
+            >
+              {initials(email)}
+            </button>
+
+            {profileOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-line bg-surface shadow-lg"
+              >
+                <p className="truncate border-b border-line px-4 py-3 text-xs font-semibold text-ink/55">
+                  {email}
+                </p>
+                {PROFILE_LINKS.map((l) => {
+                  const current = pathname === l.href || pathname.startsWith(l.href + "/");
+                  return (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      role="menuitem"
+                      className={`block px-4 py-2.5 text-sm font-semibold transition ${
+                        current
+                          ? "bg-ink/5 text-ink"
+                          : "text-ink/70 hover:bg-ink/5 hover:text-ink"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  );
+                })}
+                <form action="/auth/signout" method="post" className="border-t border-line">
+                  <button
+                    type="submit"
+                    role="menuitem"
+                    className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-ink/70 transition hover:bg-ink/5 hover:text-ink"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Avatar (display only) — mobile, next to the hamburger. */}
           <div
             title={email}
-            className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand to-brand2 text-xs font-bold text-white"
+            className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand to-brand2 text-xs font-bold text-white sm:hidden"
           >
             {initials(email)}
           </div>
-
-          <form action="/auth/signout" method="post" className="hidden sm:block">
-            <button
-              type="submit"
-              className="rounded-lg px-2 py-2 text-sm font-semibold text-ink/50 hover:bg-ink/5 hover:text-ink"
-              title="Sign out"
-            >
-              Sign out
-            </button>
-          </form>
 
           {/* Hamburger — mobile only. */}
           <button
@@ -210,6 +278,31 @@ export default function TopNav({
               <p className="mt-2 border-t border-line px-3 pt-3 text-sm font-semibold text-ink/55">
                 {activeFamilyName}
               </p>
+            )}
+
+            {/* Profile section — Family Access, My Settings, Sign out. */}
+            {hasFamily && (
+              <div className="mt-2 border-t border-line pt-3">
+                <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-ink/40">
+                  Profile
+                </p>
+                {PROFILE_LINKS.map((l) => {
+                  const current = pathname === l.href || pathname.startsWith(l.href + "/");
+                  return (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      className={`rounded-xl px-3 py-3 text-base font-semibold transition ${
+                        current
+                          ? "bg-ink/5 text-ink ring-1 ring-line"
+                          : "text-ink/80 hover:bg-ink/5"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  );
+                })}
+              </div>
             )}
 
             <form action="/auth/signout" method="post" className="mt-2 border-t border-line pt-2">
