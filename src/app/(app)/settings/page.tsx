@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
+import { loadStorytellerStats } from "@/lib/overview";
 import { setAlertPhone } from "./actions";
 import VoiceSetup from "../storytellers/VoiceSetup";
+import StorytellerGrid from "../StorytellerGrid";
 
 // Settings (TODO 5.5). The signed-in admin's own alert number and their
 // cloned-voice status. (Family access — the roster + invitations — moved to its
@@ -20,15 +23,28 @@ export default async function SettingsPage({
   const sp = await searchParams;
   const canManage = roleAtLeast(active.role, "admin");
   const { myAlertPhone, myVoice } = await loadSettings(active.family_id);
+  const storytellerStats = await loadStorytellerStats(active.family_id);
 
   const inputCls = "mt-1 input";
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
       <div>
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="font-serif text-3xl font-semibold tracking-tight">My Settings</h1>
         <p className="mt-1.5 text-sm text-ink/55">People, contact details, and your voice.</p>
       </div>
+
+      {/* Same per-storyteller summary cards as the dashboard, for a quick jump
+          into any elder's hub from here too. */}
+      <section className="mt-7">
+        <div className="mb-3.5 flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-ink/45">Storytellers</h2>
+          <Link href="/storytellers/new" className="text-sm font-semibold text-brand hover:underline">
+            Add storyteller →
+          </Link>
+        </div>
+        <StorytellerGrid stats={storytellerStats} />
+      </section>
 
       {sp.saved === "alert" && (
         <p className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">Alert number saved. 🔔</p>

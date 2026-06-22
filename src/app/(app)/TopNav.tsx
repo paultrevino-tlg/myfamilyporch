@@ -17,7 +17,7 @@ const LINKS = [
   { href: "/stories", label: "Stories" },
   { href: "/book", label: "Book" },
   { href: "/family-access", label: "Family Access" },
-  { href: "/settings", label: "Settings" },
+  { href: "/settings", label: "My Settings" },
 ];
 
 function initials(seed: string): string {
