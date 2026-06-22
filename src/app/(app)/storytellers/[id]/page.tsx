@@ -528,7 +528,18 @@ export default async function StorytellerDetailPage({
           sub="Focus, ease off, or avoid"
         >
           {topics ? (
-            <TopicsEditor st={topics} canManage={canManage} />
+            <>
+              <TopicsEditor st={topics} canManage={canManage} />
+              {/* Drill from category coverage into the full question library. */}
+              <div className="mt-4 border-t border-line pt-3">
+                <Link
+                  href={`/storytellers/${st.id}/questions`}
+                  className="text-sm font-semibold text-brand hover:underline"
+                >
+                  Show all questions →
+                </Link>
+              </div>
+            </>
           ) : (
             <ViewerNote />
           )}
