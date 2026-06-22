@@ -1,6 +1,6 @@
 import Link from "next/link";
 import MobileNav from "./MobileNav";
-import { NAV_LINKS, PRIMARY_CTA } from "./nav";
+import { NAV_LINKS } from "./nav";
 
 // Sticky marketing header (Phase 8.1): wordmark left, primary nav + warm CTA
 // right, hamburger on mobile. The translucent paper background + backdrop blur
@@ -33,10 +33,10 @@ export function SiteHeader() {
         </nav>
 
         <Link
-          href={PRIMARY_CTA.href}
+          href="/login"
           className="btn-primary hidden px-5 py-2.5 sm:inline-flex"
         >
-          {PRIMARY_CTA.label}
+          Login
         </Link>
 
         <MobileNav />

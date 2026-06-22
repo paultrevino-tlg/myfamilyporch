@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_LINKS, PRIMARY_CTA } from "./nav";
+import { NAV_LINKS } from "./nav";
 
 // The marketing site's only JS island (Phase 8.1): the mobile hamburger menu.
 // Everything else in the shell is static server HTML. Closes on route change
@@ -64,10 +64,10 @@ export default function MobileNav() {
               </Link>
             ))}
             <Link
-              href={PRIMARY_CTA.href}
+              href="/login"
               className="btn-primary mt-2 px-5 py-3 text-base"
             >
-              {PRIMARY_CTA.label}
+              Login
             </Link>
           </nav>
         </div>
