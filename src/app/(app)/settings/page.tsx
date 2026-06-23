@@ -54,6 +54,11 @@ export default async function SettingsPage({
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
         </p>
       )}
+      {sp.error === "alert-consent" && (
+        <p className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          Please check the consent box to confirm you agree to receive alert texts at this number.
+        </p>
+      )}
 
       {/* My voice (voice-per-member). Record yourself once; you can then be chosen
           as any storyteller's interviewer and they'll hear the questions in your
@@ -78,21 +83,41 @@ export default async function SettingsPage({
         </p>
 
         {canManage ? (
-          <form action={setAlertPhone} className="mt-4 flex flex-wrap items-end gap-2">
-            <label className="flex flex-col text-sm">
-              <span className="text-ink/60">Your phone</span>
+          <form action={setAlertPhone} className="mt-4 space-y-3">
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="flex flex-col text-sm">
+                <span className="text-ink/60">Your phone</span>
+                <input
+                  type="tel"
+                  name="phone"
+                  defaultValue={myAlertPhone ?? ""}
+                  placeholder="+1 480 555 2208"
+                  className={inputCls}
+                />
+              </label>
+              <button type="submit" className="btn-ink">
+                Save
+              </button>
+              <span className="pb-2 text-xs text-ink/50">Leave blank to turn alerts off.</span>
+            </div>
+            {/* A2P 10DLC consent (TODO 4.3): required to save a real number. */}
+            <label className="flex max-w-prose items-start gap-2 text-xs leading-relaxed text-ink/60">
               <input
-                type="tel"
-                name="phone"
-                defaultValue={myAlertPhone ?? ""}
-                placeholder="+1 480 555 2208"
-                className={inputCls}
+                type="checkbox"
+                name="consent"
+                defaultChecked={!!myAlertPhone?.trim()}
+                className="mt-0.5 h-4 w-4 shrink-0"
               />
+              <span>
+                I agree to receive automated failure-alert text messages from My
+                Family Porch at this number. Message and data rates may apply.
+                Reply STOP to cancel, HELP for help. See our{" "}
+                <a href="/sms" target="_blank" className="underline">
+                  SMS terms
+                </a>
+                .
+              </span>
             </label>
-            <button type="submit" className="btn-ink">
-              Save
-            </button>
-            <span className="pb-2 text-xs text-ink/50">Leave blank to turn alerts off.</span>
           </form>
         ) : (
           <p className="mt-3 text-sm text-ink/60">

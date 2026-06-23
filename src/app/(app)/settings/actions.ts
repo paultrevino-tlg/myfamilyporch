@@ -39,6 +39,13 @@ export async function setStorytellerPhone(formData: FormData) {
     redirect(`/storytellers/${storytellerId}?error=phone`);
   }
 
+  // A2P 10DLC consent gate: a non-blank number can only be saved when the admin
+  // checks the consent box confirming the storyteller agreed to receive
+  // reminders. Clearing the number (value === null) needs no consent.
+  if (phone.value && formData.get("consent") !== "on") {
+    redirect(`/storytellers/${storytellerId}?error=consent`);
+  }
+
   const sb = await supabaseServer();
   const { error } = await sb
     .from("storytellers")
@@ -61,6 +68,12 @@ export async function setAlertPhone(formData: FormData) {
   const phone = normalizePhone(String(formData.get("phone") ?? ""));
   if (!phone.ok) {
     redirect("/settings?error=alert");
+  }
+
+  // A2P 10DLC consent gate: saving a real alert number requires the admin to
+  // confirm they agree to receive failure-alert texts at it. Clearing is exempt.
+  if (phone.value && formData.get("consent") !== "on") {
+    redirect("/settings?error=alert-consent");
   }
 
   const sb = await supabaseServer();

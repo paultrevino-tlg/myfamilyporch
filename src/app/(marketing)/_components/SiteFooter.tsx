@@ -37,6 +37,7 @@ const COLUMNS: Col[] = [
     links: [
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
+      { label: "SMS reminders", href: "/sms" },
     ],
   },
 ];

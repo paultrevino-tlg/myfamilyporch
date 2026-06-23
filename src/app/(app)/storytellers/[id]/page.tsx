@@ -247,6 +247,11 @@ export default async function StorytellerDetailPage({
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
         </Banner>
       )}
+      {sp.error === "consent" && (
+        <Banner tone="red">
+          Please check the consent box to confirm this person agreed to receive reminder texts.
+        </Banner>
+      )}
       {sp.error === "link" && (
         <Banner tone="red">
           Couldn&apos;t create the recording link. The storyteller-token secret may not be configured.
@@ -426,19 +431,46 @@ export default async function StorytellerDetailPage({
         {/* Phone ------------------------------------------------------------ */}
         <ConfigBox label="Phone" value={st.phone?.trim() ? st.phone : "Not set"} sub="Where the story texts go">
           {canManage ? (
-            <form action={setStorytellerPhone} className="flex items-end gap-2">
+            <form action={setStorytellerPhone} className="space-y-3">
               <input type="hidden" name="storyteller_id" value={st.id} />
-              <label className="flex flex-col text-sm">
-                <span className="text-ink/60">Phone</span>
+              <div className="flex items-end gap-2">
+                <label className="flex flex-col text-sm">
+                  <span className="text-ink/60">Phone</span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    defaultValue={st.phone ?? ""}
+                    placeholder="+1 602 555 4471"
+                    className={inputCls}
+                  />
+                </label>
+                <SaveButton />
+              </div>
+              {/* A2P 10DLC consent (TODO 4.3). Required to save a number; the
+                  wording is mirrored on the public /sms opt-in page. */}
+              <label className="flex max-w-prose items-start gap-2 text-xs leading-relaxed text-ink/60">
                 <input
-                  type="tel"
-                  name="phone"
-                  defaultValue={st.phone ?? ""}
-                  placeholder="+1 602 555 4471"
-                  className={inputCls}
+                  type="checkbox"
+                  name="consent"
+                  defaultChecked={!!st.phone?.trim()}
+                  className="mt-0.5 h-4 w-4 shrink-0"
                 />
+                <span>
+                  I confirm {st.name} has agreed to receive recurring automated
+                  reminder text messages from My Family Porch about recording
+                  their life stories. Message frequency varies (typically a few
+                  per week or fewer). Message and data rates may apply. Reply
+                  STOP to cancel, HELP for help. See our{" "}
+                  <a href="/sms" target="_blank" className="underline">
+                    SMS terms
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" className="underline">
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
               </label>
-              <SaveButton />
             </form>
           ) : (
             <ViewerNote />
