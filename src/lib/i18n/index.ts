@@ -52,8 +52,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     // SMS nudge (TODO 4.3). {address} = how the elder is addressed; {interviewer}
     // = who it's from. The deep-link URL is appended after this line by the
     // sender, never interpolated into the translated string.
-    sms_nudge: "Hi {address}, it's {interviewer} — tap here to tell me a story 💬",
-    sms_nudge_no_interviewer: "Hi {address} — tap here to tell me a story 💬",
+    sms_nudge: "My Family Porch: Hi {address}, it's {interviewer} — tap here to tell me a story 💬",
+    sms_nudge_no_interviewer: "My Family Porch: Hi {address} — tap here to tell me a story 💬",
     // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
     // storyteller's own language — the recording's language.
     qr_caption: "Scan to hear {name} tell it",
@@ -105,8 +105,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_count: "Dos preguntas hoy — con eso basta",
     done_btn: "Listo",
     // SMS nudge (TODO 4.3)
-    sms_nudge: "Hola {address}, soy {interviewer} — toca aquí para contarme una historia 💬",
-    sms_nudge_no_interviewer: "Hola {address} — toca aquí para contarme una historia 💬",
+    sms_nudge: "My Family Porch: Hola {address}, soy {interviewer} — toca aquí para contarme una historia 💬",
+    sms_nudge_no_interviewer: "My Family Porch: Hola {address} — toca aquí para contarme una historia 💬",
     // Voice-QR play page (TODO 7.2)
     qr_caption: "Escanea para escuchar a {name} contarlo",
     play_kicker: "Con su propia voz",

@@ -73,12 +73,13 @@ export default function SmsOptInPage() {
           </h2>
           <div className="mt-4 space-y-3">
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
-              Hi Grandpa Tony, it&apos;s Maria — tap here to tell me a story 💬
+              My Family Porch: Hi Grandpa Tony, it&apos;s Maria — tap here to
+              tell me a story 💬
               <br />
               https://myfamilyporch.net/s/abc123
             </p>
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
-              Hi Mom — tap here to tell me a story 💬
+              My Family Porch: Hi Mom — tap here to tell me a story 💬
               <br />
               https://myfamilyporch.net/s/xyz789
             </p>
