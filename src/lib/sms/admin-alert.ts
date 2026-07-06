@@ -29,9 +29,14 @@ export async function alertFamilyAdmins(
       ),
     );
 
+    // A2P 10DLC: every recurring message carries opt-out language (matches the
+    // registered campaign's admin-alert sample). Admin alerts are English-only
+    // today — the dashboard surface they mirror is too.
+    const body = `${message}\nReply STOP to opt out`;
+
     await Promise.all(
       numbers.map((to) =>
-        sendSms(to, message).catch((e) =>
+        sendSms(to, body).catch((e) =>
           console.error("[admin-alert] SMS failed", e),
         ),
       ),
