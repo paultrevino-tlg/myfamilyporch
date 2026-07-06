@@ -9,15 +9,17 @@ export const metadata = pageMeta({
   path: "/sms",
 });
 
-// Public opt-in / Call-to-Action page (A2P 10DLC, TODO 4.3). The real opt-in
-// happens inside the authenticated dashboard (a family admin enters a
-// storyteller's number and checks a required consent box), which a carrier
-// reviewer can't see. This page is the PUBLIC, verifiable record of that flow:
-// it states the program, the EXACT consent language shown on the in-app
-// checkbox, sample messages (verbatim from lib/i18n sms_nudge), frequency,
-// rates, and STOP/HELP — the URL submitted in the campaign's CTA field. Keep
-// the consent sentence here in sync with the checkbox label in
-// storytellers/[id]/page.tsx and settings/page.tsx.
+// Public opt-in / Call-to-Action page (A2P 10DLC, TODO 4.3). Consent is TWO
+// steps and the second comes from the message recipient themself: (1) a family
+// admin enters the storyteller's number in the authenticated dashboard and
+// checks a required attestation box; (2) the storyteller receives a one-time
+// confirmation text and must reply YES before any reminders send (double
+// opt-in — handled by api/sms/inbound + the sms_consent gate in lib/sms/nudge).
+// This page is the PUBLIC, verifiable record of that flow for carrier review:
+// program, exact checkbox language, the confirmation message, sample reminders
+// (verbatim from lib/i18n, variable parts in [brackets]), frequency, rates,
+// STOP/HELP — the URL submitted in the campaign's CTA field. Keep the consent
+// sentence in sync with the checkbox label in storytellers/[id]/page.tsx.
 export default function SmsOptInPage() {
   return (
     <Section>
@@ -41,27 +43,40 @@ export default function SmsOptInPage() {
           </h2>
           <div className="mt-4 space-y-4 text-ink/80 leading-relaxed">
             <p>
-              Reminders are set up by a family member, not by a public sign-up
-              form. A family member creates an account at{" "}
+              Opt-in happens in two steps, and no reminders are ever sent until
+              the person receiving them confirms directly from their own phone.
+            </p>
+            <p>
+              <strong>Step 1 — a family member sets it up.</strong> A family
+              member creates an account at{" "}
               <Link href="/signup" className="text-accent underline">
                 myfamilyporch.net
               </Link>
-              , adds an elder storyteller they are recording, and enters that
+              , adds the storyteller they are recording, and enters that
               storyteller&apos;s mobile number. To save the number, the family
-              member must check a required consent box confirming the
-              storyteller has agreed to receive these reminders. There are no
-              opt-in keywords — consent is given by an authorized family member
-              at the time the number is added.
-            </p>
-            <p>
-              The exact wording shown next to that required checkbox is:
+              member must check a required box attesting the storyteller has
+              agreed. The exact wording of that checkbox is:
             </p>
             <blockquote className="rounded-2xl border border-line bg-surface2/50 p-5 text-ink/85">
               &ldquo;I confirm this person has agreed to receive recurring
               automated reminder text messages from My Family Porch about
-              recording their life stories. Message frequency varies (typically
-              a few per week or fewer). Message and data rates may apply. Reply
-              STOP to cancel, HELP for help.&rdquo;
+              recording their life stories. They will first receive a one-time
+              text and must reply YES before any reminders are sent. Message
+              frequency varies (up to 1 message per day). Message and data
+              rates may apply. Reply STOP to opt out, HELP for help.&rdquo;
+            </blockquote>
+            <p>
+              <strong>
+                Step 2 — the storyteller confirms from their own phone.
+              </strong>{" "}
+              The storyteller then receives a single confirmation text and must
+              reply <strong>YES</strong> before any reminders are sent. If they
+              never reply, no reminders are sent. That confirmation message is:
+            </p>
+            <blockquote className="rounded-2xl border border-line bg-surface2/50 p-5 text-ink/85">
+              My Family Porch: [Family member] signed you up for story reminder
+              texts (up to 1 msg/day). Reply YES to start, STOP to opt out,
+              HELP for help. Msg &amp; data rates may apply.
             </blockquote>
           </div>
         </div>
@@ -73,19 +88,25 @@ export default function SmsOptInPage() {
           </h2>
           <div className="mt-4 space-y-3">
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
-              My Family Porch: Hi Grandpa Tony, it&apos;s Maria — tap here to
-              tell me a story 💬
+              My Family Porch: Hi [Name], it&apos;s [Family member] — tap here
+              to tell me a story 💬
               <br />
-              https://myfamilyporch.net/s/abc123
+              https://myfamilyporch.net/s/[unique-code]
+              <br />
+              Reply STOP to opt out
             </p>
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
-              My Family Porch: Hi Mom — tap here to tell me a story 💬
+              My Family Porch: Hi [Name] — tap here to tell me a story 💬
               <br />
-              https://myfamilyporch.net/s/xyz789
+              https://myfamilyporch.net/s/[unique-code]
+              <br />
+              Reply STOP to opt out
             </p>
             <p className="text-sm text-ink/55">
-              Reminders may be sent in English or Spanish, matching the
-              storyteller&apos;s chosen language.
+              [Name], [Family member], and [unique-code] vary per recipient;
+              the link always points to myfamilyporch.net — we never use
+              third-party link shorteners. Reminders may be sent in English or
+              Spanish, matching the storyteller&apos;s chosen language.
             </p>
           </div>
         </div>
@@ -100,8 +121,8 @@ export default function SmsOptInPage() {
               <strong>Program name:</strong> My Family Porch reminders.
             </li>
             <li>
-              <strong>Message frequency:</strong> recurring, typically a few
-              messages per week or fewer.
+              <strong>Message frequency:</strong> recurring, up to 1 message
+              per day (typically a few per week or fewer).
             </li>
             <li>
               <strong>Message and data rates may apply.</strong> Charges depend

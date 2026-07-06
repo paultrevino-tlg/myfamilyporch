@@ -47,9 +47,25 @@ export async function setStorytellerPhone(formData: FormData) {
   }
 
   const sb = await supabaseServer();
+
+  // Double opt-in (A2P 10DLC): a NEW number starts back at 'pending' — the next
+  // nudge attempt sends the "reply YES" confirmation to the new number instead
+  // of a reminder. Re-saving the same number keeps its consent state.
+  const { data: current } = await sb
+    .from("storytellers")
+    .select("phone")
+    .eq("id", storytellerId)
+    .eq("family_id", active.family_id)
+    .maybeSingle();
+  const changed = (current?.phone ?? null) !== phone.value;
+
   const { error } = await sb
     .from("storytellers")
-    .update({ phone: phone.value })
+    .update(
+      changed
+        ? { phone: phone.value, sms_consent: "pending", sms_confirm_sent_at: null }
+        : { phone: phone.value },
+    )
     .eq("id", storytellerId)
     .eq("family_id", active.family_id);
   if (error) throw error;

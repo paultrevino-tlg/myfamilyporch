@@ -13,13 +13,20 @@ import { sendSms } from "@/lib/sms/twilio";
 import { t, type Lang } from "@/lib/i18n";
 
 export type NudgeResult =
-  | { status: "sent" }
-  | { status: "skipped"; reason: "no-phone" | "no-link" };
+  | { status: "sent"; kind: "nudge" | "confirmation" }
+  | {
+      status: "skipped";
+      reason: "no-phone" | "no-link" | "sms-stopped" | "awaiting-confirmation";
+    };
 
-// Build the SMS body: the localized line + the deep link on its own line. The
-// URL is appended (never interpolated into the translated string) so it can't
-// be mangled by token substitution. Drops the "it's {interviewer}" clause when
-// no interviewer name resolved.
+// Re-send the "reply YES" confirmation at most this often while consent is
+// still pending, so an hourly cron or a repeat "ask now" can't spam it.
+const CONFIRM_RESEND_MS = 24 * 60 * 60 * 1000;
+
+// Build the SMS body: the localized line + the deep link on its own line + the
+// A2P-required opt-out line. The URL is appended (never interpolated into the
+// translated string) so it can't be mangled by token substitution. Drops the
+// "it's {interviewer}" clause when no interviewer name resolved.
 export function buildNudge(
   lang: Lang,
   vars: { address: string; interviewer?: string; url: string },
@@ -29,7 +36,14 @@ export function buildNudge(
     address: vars.address,
     interviewer: vars.interviewer ?? "",
   });
-  return `${line}\n${vars.url}`;
+  return `${line}\n${vars.url}\n${t(lang, "sms_stop_line")}`;
+}
+
+// Build the one-time double-opt-in confirmation (A2P 10DLC): identifies the
+// program and who signed them up, and asks for a YES before any reminders.
+export function buildConfirmation(lang: Lang, interviewer?: string): string {
+  const key = interviewer ? "sms_confirm" : "sms_confirm_no_interviewer";
+  return t(lang, key, { interviewer: interviewer ?? "" });
 }
 
 // Resolve the interviewer's display name from auth metadata (full_name / name,
@@ -93,13 +107,20 @@ export async function sendStorytellerNudge(
 
   const { data: st } = await db
     .from("storytellers")
-    .select("name, language, phone")
+    .select("name, language, phone, sms_consent, sms_confirm_sent_at")
     .eq("id", storytellerId)
     .eq("family_id", familyId)
     .maybeSingle();
   if (!st?.phone?.trim()) return { status: "skipped", reason: "no-phone" };
 
   const lang: Lang = st.language === "es" ? "es" : "en";
+
+  // A2P 10DLC consent gate. STOP is final until they text START/YES again;
+  // pending consent gets the one-time "reply YES" confirmation instead of a
+  // reminder (throttled so repeated cron ticks can't re-send it).
+  if (st.sms_consent === "stopped") {
+    return { status: "skipped", reason: "sms-stopped" };
+  }
 
   // Interviewer edge → address term + who the text is from. Prefer the member
   // flagged as interviewer; otherwise any relationship row (mirrors assembly).
@@ -119,10 +140,24 @@ export async function sendStorytellerNudge(
     rel?.asker_relation ?? null,
   );
 
+  if (st.sms_consent !== "confirmed") {
+    const sentAt = st.sms_confirm_sent_at ? Date.parse(st.sms_confirm_sent_at) : 0;
+    if (sentAt && Date.now() - sentAt < CONFIRM_RESEND_MS) {
+      return { status: "skipped", reason: "awaiting-confirmation" };
+    }
+    await sendSms(st.phone.trim(), buildConfirmation(lang, interviewer));
+    await db
+      .from("storytellers")
+      .update({ sms_confirm_sent_at: new Date().toISOString() })
+      .eq("id", storytellerId)
+      .eq("family_id", familyId);
+    return { status: "sent", kind: "confirmation" };
+  }
+
   const url = await resolveDeepLink(db, storytellerId, familyId);
   if (!url) return { status: "skipped", reason: "no-link" };
 
   const body = buildNudge(lang, { address, interviewer, url });
   await sendSms(st.phone.trim(), body);
-  return { status: "sent" };
+  return { status: "sent", kind: "nudge" };
 }

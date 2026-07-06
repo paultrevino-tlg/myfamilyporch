@@ -127,7 +127,12 @@ export async function askNow(formData: FormData) {
   let flag = "asked";
   try {
     const result = await sendStorytellerNudge(storytellerId, active.family_id);
-    flag = result.status === "sent" ? "asked" : `asked_${result.reason}`;
+    flag =
+      result.status === "sent"
+        ? result.kind === "confirmation"
+          ? "asked_confirm"
+          : "asked"
+        : `asked_${result.reason}`;
   } catch (e) {
     console.error("[schedule/askNow] send failed", e);
     flag = "asked_failed";

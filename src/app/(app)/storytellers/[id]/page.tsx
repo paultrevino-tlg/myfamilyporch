@@ -258,6 +258,21 @@ export default async function StorytellerDetailPage({
         </Banner>
       )}
       {(sp.sent === "nudge" || sp.sent === "asked") && <Banner tone="green">We sent the question. 💬</Banner>}
+      {(sp.sent === "nudge_confirm" || sp.sent === "asked_confirm") && (
+        <Banner tone="green">
+          We texted a one-time confirmation — reminders start once they reply YES. 💬
+        </Banner>
+      )}
+      {(sp.sent === "nudge_awaiting-confirmation" || sp.sent === "asked_awaiting-confirmation") && (
+        <Banner tone="amber">
+          Confirmation already sent — waiting for them to reply YES before reminders can go out.
+        </Banner>
+      )}
+      {(sp.sent === "nudge_sms-stopped" || sp.sent === "asked_sms-stopped") && (
+        <Banner tone="amber">
+          No text sent — this person opted out by replying STOP. They can text START to turn reminders back on.
+        </Banner>
+      )}
       {(sp.sent === "nudge_no-phone" || sp.sent === "asked_no-phone") && (
         <Banner tone="amber">No nudge sent — no phone number on file. Add one in Phone below.</Banner>
       )}
@@ -458,9 +473,11 @@ export default async function StorytellerDetailPage({
                 <span>
                   I confirm {st.name} has agreed to receive recurring automated
                   reminder text messages from My Family Porch about recording
-                  their life stories. Message frequency varies (typically a few
-                  per week or fewer). Message and data rates may apply. Reply
-                  STOP to cancel, HELP for help. See our{" "}
+                  their life stories. They will first receive a one-time text
+                  and must reply YES before any reminders are sent. Message
+                  frequency varies (up to 1 message per day). Message and data
+                  rates may apply. Reply STOP to opt out, HELP for help. See
+                  our{" "}
                   <a href="/sms" target="_blank" className="underline">
                     SMS terms
                   </a>{" "}

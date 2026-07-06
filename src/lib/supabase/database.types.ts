@@ -640,6 +640,8 @@ export type Database = {
           name: string
           phone: string | null
           pronouns: Database["public"]["Enums"]["pronoun_set"]
+          sms_confirm_sent_at: string | null
+          sms_consent: string
           status: string
           updated_at: string
         }
@@ -653,6 +655,8 @@ export type Database = {
           name: string
           phone?: string | null
           pronouns?: Database["public"]["Enums"]["pronoun_set"]
+          sms_confirm_sent_at?: string | null
+          sms_consent?: string
           status?: string
           updated_at?: string
         }
@@ -666,6 +670,8 @@ export type Database = {
           name?: string
           phone?: string | null
           pronouns?: Database["public"]["Enums"]["pronoun_set"]
+          sms_confirm_sent_at?: string | null
+          sms_consent?: string
           status?: string
           updated_at?: string
         }

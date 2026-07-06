@@ -252,7 +252,12 @@ export async function sendNudge(formData: FormData) {
   let flag = "nudge";
   try {
     const result = await sendStorytellerNudge(storytellerId, active.family_id);
-    flag = result.status === "sent" ? "nudge" : `nudge_${result.reason}`;
+    flag =
+      result.status === "sent"
+        ? result.kind === "confirmation"
+          ? "nudge_confirm"
+          : "nudge"
+        : `nudge_${result.reason}`;
   } catch (e) {
     console.error("[storytellers/sendNudge] send failed", e);
     flag = "nudge_failed";
