@@ -81,6 +81,56 @@ export default function SmsOptInPage() {
           </div>
         </div>
 
+        {/* Screenshots of the actual (login-protected) point of collection, so
+            carrier reviewers can verify the consent flow without an account
+            (A2P 10DLC CTA verification — the form lives in the authenticated
+            dashboard, so this public page hosts the visual evidence). Retake
+            these if the form copy or the consent checkbox ever changes. */}
+        <div className="mt-12">
+          <h2 className="font-serif text-xl font-semibold text-ink/90">
+            What the sign-up form looks like
+          </h2>
+          <p className="mt-4 text-ink/80 leading-relaxed">
+            The phone number is collected only inside the family member&apos;s
+            password-protected account. These screenshots show the actual form
+            (with sample data): the number cannot be saved without checking the
+            consent attestation, and no reminders are sent while the app is
+            still waiting for the recipient&apos;s own YES reply.
+          </p>
+          <figure className="mt-6">
+            <div className="card overflow-hidden p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static marketing page, no next/image in this codebase */}
+              <img
+                src="/sms/opt-in-form.png"
+                alt="Dashboard form where a family member enters the storyteller's phone number, with the required consent attestation checkbox and links to the SMS terms and Privacy Policy."
+                width={1424}
+                height={570}
+                className="h-auto w-full rounded-xl"
+              />
+            </div>
+            <figcaption className="mt-2 text-sm text-ink/55">
+              Step 1 — the number can only be saved with the consent attestation
+              checked.
+            </figcaption>
+          </figure>
+          <figure className="mt-6">
+            <div className="card overflow-hidden p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static marketing page, no next/image in this codebase */}
+              <img
+                src="/sms/awaiting-yes.png"
+                alt="Dashboard banner reading: Confirmation already sent — waiting for them to reply YES before reminders can go out."
+                width={1520}
+                height={534}
+                className="h-auto w-full rounded-xl"
+              />
+            </div>
+            <figcaption className="mt-2 text-sm text-ink/55">
+              Step 2 — reminders stay blocked until the recipient replies YES
+              from their own phone.
+            </figcaption>
+          </figure>
+        </div>
+
         {/* Sample messages — must match lib/i18n sms_nudge copy */}
         <div className="mt-12">
           <h2 className="font-serif text-xl font-semibold text-ink/90">
