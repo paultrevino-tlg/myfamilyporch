@@ -52,17 +52,17 @@ export const ui: Record<Lang, Record<string, string>> = {
     // SMS nudge (TODO 4.3). {address} = how the elder is addressed; {interviewer}
     // = who it's from. The deep-link URL is appended after this line by the
     // sender, never interpolated into the translated string.
-    sms_nudge: "My Family Porch: Hi {address}, it's {interviewer} — tap here to tell me a story 💬",
-    sms_nudge_no_interviewer: "My Family Porch: Hi {address} — tap here to tell me a story 💬",
+    sms_nudge: "My Family Porch: Hi {address}, it's {interviewer} — tap here to tell me a story",
+    sms_nudge_no_interviewer: "My Family Porch: Hi {address} — tap here to tell me a story",
     // Appended as the last line of every recurring nudge (A2P 10DLC: opt-out
-    // language must appear in the message samples and the real messages).
-    sms_stop_line: "Reply STOP to opt out",
+    // and HELP language must appear in the message samples and the real messages).
+    sms_stop_line: "Reply STOP to opt out, HELP for help",
     // Double opt-in confirmation (A2P 10DLC): the FIRST text a storyteller ever
     // gets. No reminders send until they reply YES (handled by api/sms/inbound).
     sms_confirm:
-      "My Family Porch: {interviewer} signed you up for story reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
+      "My Family Porch: {interviewer} invited you to record your life stories and get occasional reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
     sms_confirm_no_interviewer:
-      "My Family Porch: Your family signed you up for story reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
+      "My Family Porch: Your family invited you to record your life stories and get occasional reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
     // Auto-replies from the inbound webhook.
     sms_confirmed_reply:
       "My Family Porch: You're all set — story reminders are on. Reply STOP anytime to opt out, HELP for help.",
@@ -119,13 +119,13 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_count: "Dos preguntas hoy — con eso basta",
     done_btn: "Listo",
     // SMS nudge (TODO 4.3)
-    sms_nudge: "My Family Porch: Hola {address}, soy {interviewer} — toca aquí para contarme una historia 💬",
-    sms_nudge_no_interviewer: "My Family Porch: Hola {address} — toca aquí para contarme una historia 💬",
-    sms_stop_line: "Responde STOP para cancelar",
+    sms_nudge: "My Family Porch: Hola {address}, soy {interviewer} — toca aquí para contarme una historia",
+    sms_nudge_no_interviewer: "My Family Porch: Hola {address} — toca aquí para contarme una historia",
+    sms_stop_line: "Responde STOP para cancelar, AYUDA para ayuda",
     sms_confirm:
-      "My Family Porch: {interviewer} te inscribió para recibir recordatorios de historias por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
+      "My Family Porch: {interviewer} te invitó a grabar tus historias de vida y recibir recordatorios ocasionales por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
     sms_confirm_no_interviewer:
-      "My Family Porch: Tu familia te inscribió para recibir recordatorios de historias por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
+      "My Family Porch: Tu familia te invitó a grabar tus historias de vida y recibir recordatorios ocasionales por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
     sms_confirmed_reply:
       "My Family Porch: Listo — los recordatorios de historias están activados. Responde STOP para cancelar, AYUDA para ayuda.",
     sms_help_reply:

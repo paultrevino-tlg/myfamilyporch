@@ -74,9 +74,10 @@ export default function SmsOptInPage() {
               never reply, no reminders are sent. That confirmation message is:
             </p>
             <blockquote className="rounded-2xl border border-line bg-surface2/50 p-5 text-ink/85">
-              My Family Porch: [Family member] signed you up for story reminder
-              texts (up to 1 msg/day). Reply YES to start, STOP to opt out,
-              HELP for help. Msg &amp; data rates may apply.
+              My Family Porch: [Family member] invited you to record your life
+              stories and get occasional reminder texts (up to 1 msg/day). Reply
+              YES to start, STOP to opt out, HELP for help. Msg &amp; data rates
+              may apply.
             </blockquote>
           </div>
         </div>
@@ -139,18 +140,18 @@ export default function SmsOptInPage() {
           <div className="mt-4 space-y-3">
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
               My Family Porch: Hi [Name], it&apos;s [Family member] — tap here
-              to tell me a story 💬
+              to tell me a story
               <br />
               https://myfamilyporch.net/s/[unique-code]
               <br />
-              Reply STOP to opt out
+              Reply STOP to opt out, HELP for help
             </p>
             <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
-              My Family Porch: Hi [Name] — tap here to tell me a story 💬
+              My Family Porch: Hi [Name] — tap here to tell me a story
               <br />
               https://myfamilyporch.net/s/[unique-code]
               <br />
-              Reply STOP to opt out
+              Reply STOP to opt out, HELP for help
             </p>
             <p className="text-sm text-ink/55">
               [Name], [Family member], and [unique-code] vary per recipient;
