@@ -68,6 +68,23 @@ export const ui: Record<Lang, Record<string, string>> = {
       "My Family Porch: You're all set — story reminders are on. Reply STOP anytime to opt out, HELP for help.",
     sms_help_reply:
       "My Family Porch story reminders. Up to 1 msg/day; msg & data rates may apply. Reply STOP to opt out. Support: support@myfamilyporch.net",
+    // Member phone verification (consent-flow.md steps 2-3). {link} = the signed
+    // /verify/<token> URL; sent to the member's OWN number after they enter it
+    // and opt in on the app form (first-party consent — never proxy).
+    magic_link_sms:
+      "My Family Porch: Tap to verify your number and finish setup: {link}\nYou'll get texts to help set up your storyteller.\nMsg & data rates may apply. Reply STOP to opt out, HELP for help.",
+    // The exact opt-in copy shown beside the checkbox on the verify form AND
+    // stored as consent_events.disclosure_text (the audit record of what they
+    // agreed to).
+    member_optin_disclosure:
+      "Yes, text me at this number. I agree to receive automated, recurring texts from My Family Porch to help set up and record my family's stories. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.",
+    // Confirm page (tapped from the SMS, rendered in the member's language).
+    member_confirm_title: "You're all set ✓",
+    member_confirm_sub:
+      "Your number is verified and text reminders are on. You can close this and go back to My Family Porch.",
+    member_confirm_dead_title: "This link isn't active",
+    member_confirm_dead_sub:
+      "It may have expired. Open My Family Porch and request a new verification text from your account.",
     // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
     // storyteller's own language — the recording's language.
     qr_caption: "Scan to hear {name} tell it",
@@ -130,6 +147,17 @@ export const ui: Record<Lang, Record<string, string>> = {
       "My Family Porch: Listo — los recordatorios de historias están activados. Responde STOP para cancelar, AYUDA para ayuda.",
     sms_help_reply:
       "Recordatorios de historias de My Family Porch. Hasta 1 mensaje por día; pueden aplicarse tarifas. Responde STOP para cancelar. Ayuda: support@myfamilyporch.net",
+    // Member phone verification (consent-flow.md steps 2-3)
+    magic_link_sms:
+      "My Family Porch: Toca para verificar tu número y terminar la configuración: {link}\nRecibirás mensajes para ayudarte a configurar a tu narrador.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
+    member_optin_disclosure:
+      "Sí, envíenme mensajes de texto a este número. Acepto recibir mensajes automáticos y recurrentes de My Family Porch para ayudar a configurar y grabar las historias de mi familia. Pueden aplicar tarifas de mensajes y datos. Responde STOP en cualquier momento para cancelar, HELP para ayuda.",
+    member_confirm_title: "¡Todo listo! ✓",
+    member_confirm_sub:
+      "Tu número está verificado y los recordatorios por texto están activados. Puedes cerrar esto y volver a My Family Porch.",
+    member_confirm_dead_title: "Este enlace no está activo",
+    member_confirm_dead_sub:
+      "Es posible que haya expirado. Abre My Family Porch y solicita un nuevo mensaje de verificación desde tu cuenta.",
     // Voice-QR play page (TODO 7.2)
     qr_caption: "Escanea para escuchar a {name} contarlo",
     play_kicker: "Con su propia voz",

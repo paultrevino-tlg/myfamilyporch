@@ -11,6 +11,7 @@ import {
 import { dismissInsight, applyScheduleSuggestion } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
 import StorytellerGrid from "../StorytellerGrid";
+import VerifyPhoneBanner from "../VerifyPhoneBanner";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -76,6 +77,10 @@ export default async function Dashboard() {
           <span aria-hidden>＋</span> Add storyteller
         </Link>
       </div>
+
+      {/* Member SMS opt-in nudge (consent-flow.md): renders only until the
+          signed-in member has verified their number for this family. */}
+      <VerifyPhoneBanner familyId={active.family_id} />
 
       {/* Signals at the top of Overview (TODO 6.2/6.3/6.4): mic-failed is acute
           (rose), schedule-suggestion is a positive recommendation (blue),

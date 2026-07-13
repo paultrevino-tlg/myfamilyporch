@@ -16,7 +16,9 @@ export default async function OnboardingPage() {
     const sb = await supabaseServer();
     const { error } = await sb.rpc("create_family", { p_name: name });
     if (error) throw error;
-    redirect("/dashboard");
+    // Next step of setup: verify the member's number for the reminder + setup
+    // SMS (consent-flow.md steps 1-2). Skippable from that page.
+    redirect("/verify-phone");
   }
 
   return (

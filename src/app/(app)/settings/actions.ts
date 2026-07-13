@@ -10,21 +10,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
+import { normalizePhone } from "@/lib/phone";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// Normalize a phone for SMS: keep a single leading "+" then digits only. Returns
-// the cleaned E.164-ish string, or null when blank / not a plausible number
-// (7–15 digits, per E.164). Twilio wants E.164; we store what the admin typed
-// once it passes this gate. Blank clears the field.
-function normalizePhone(raw: string): { ok: true; value: string | null } | { ok: false } {
-  const trimmed = raw.trim();
-  if (!trimmed) return { ok: true, value: null }; // blank = clear
-  const plus = trimmed.startsWith("+") ? "+" : "";
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.length < 7 || digits.length > 15) return { ok: false };
-  return { ok: true, value: `${plus}${digits}` };
-}
 
 // Set/clear a storyteller's SMS phone (where the story deep link is texted).
 export async function setStorytellerPhone(formData: FormData) {

@@ -58,7 +58,12 @@ than switching primary auth to phone OTP.
   `sms_phone` + `language` on `memberships`; `consent_events.language`. Mechanical
   code rename to keep the build green. **[DONE — migration `0015`.]**
 - **B — Member phone verify + SMS opt-in** at signup (member magic-link SMS,
-  possession + opt-in `consent_event`).
+  possession + opt-in `consent_event`). **[DONE — 2026-07-13.]** Mechanism
+  confirmed: email stays the account identity; the SMS link only proves
+  possession + stamps opt-in. `lib/consent/token.ts` (shared signed token, also
+  used by Phase C) + `lib/consent/member.ts`; `(app)/verify-phone` form +
+  token-gated `/verify/[token]` confirm; onboarding + dashboard-banner entry.
+  16/16 live checks, DB restored.
 - **C — Consent token + storyteller authorization page** (elder-accessible,
   bilingual, "Hear this" audio) → `consent_events` + `opted_in` + step-9/10 sends.
 - **D — Copy-paste P2P block** in-app after number entry; remove the attestation
