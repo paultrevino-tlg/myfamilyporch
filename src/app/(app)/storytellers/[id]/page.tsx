@@ -34,6 +34,9 @@ import {
 import { setStorytellerPhone } from "../../settings/actions";
 import { saveSchedule, askNow } from "../../schedule/actions";
 import { setTopicPreference } from "../../topics/actions";
+import { buildConsentLink } from "@/lib/consent/storyteller";
+import { t, type Lang } from "@/lib/i18n";
+import CopyBlock from "./CopyBlock";
 
 // Per-storyteller hub. RLS scopes every read to the member's families; we also
 // pin to the active family + this storyteller id. This is the single place to
@@ -136,7 +139,7 @@ export default async function StorytellerDetailPage({
 
   const { data: stData } = await sb
     .from("storytellers")
-    .select("id,name,pronouns,birth_year,language,phone")
+    .select("id,name,pronouns,birth_year,language,phone,consent_state")
     .eq("family_id", active.family_id)
     .eq("id", id)
     .maybeSingle();
@@ -150,6 +153,7 @@ export default async function StorytellerDetailPage({
     birth_year: number | null;
     language: string;
     phone: string | null;
+    consent_state: string;
   };
 
   // Who interviews this storyteller (voice-per-member): the single is_interviewer
@@ -215,6 +219,21 @@ export default async function StorytellerDetailPage({
     }
   }
 
+  // Copy-paste invite link → the storyteller's OWN authorization page
+  // (consent-flow.md steps 5-6). Only shown before they opt in; the token is
+  // stateless so it's minted fresh each render. Null if no number or no secret.
+  const stLang: Lang = st.language === "es" ? "es" : "en";
+  const consentLink =
+    st.phone?.trim() && st.consent_state !== "opted_in"
+      ? await buildConsentLink(st.id, active.family_id, st.phone.trim(), stLang)
+      : null;
+  const consentMessage = consentLink
+    ? t(stLang, "copy_paste_block", {
+        name: st.name.trim().split(/\s+/)[0] || st.name,
+        link: consentLink,
+      })
+    : null;
+
   return (
     <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
       <Link href="/dashboard" className="text-sm font-semibold text-ink/50 hover:text-ink">
@@ -245,11 +264,6 @@ export default async function StorytellerDetailPage({
       {sp.error === "phone" && (
         <Banner tone="red">
           That doesn&apos;t look like a phone number. Use the full number, e.g. +1 602 555 4471.
-        </Banner>
-      )}
-      {sp.error === "consent" && (
-        <Banner tone="red">
-          Please check the consent box to confirm this person agreed to receive reminder texts.
         </Banner>
       )}
       {sp.error === "link" && (
@@ -461,36 +475,42 @@ export default async function StorytellerDetailPage({
                 </label>
                 <SaveButton />
               </div>
-              {/* A2P 10DLC consent (TODO 4.3). Required to save a number; the
-                  wording is mirrored on the public /sms opt-in page. */}
-              <label className="flex max-w-prose items-start gap-2 text-xs leading-relaxed text-ink/60">
-                <input
-                  type="checkbox"
-                  name="consent"
-                  defaultChecked={!!st.phone?.trim()}
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                />
-                <span>
-                  I confirm {st.name} has agreed to receive recurring automated
-                  reminder text messages from My Family Porch about recording
-                  their life stories. They will first receive a one-time text
-                  and must reply YES before any reminders are sent. Message
-                  frequency varies (up to 1 message per day). Message and data
-                  rates may apply. Reply STOP to opt out, HELP for help. See
-                  our{" "}
-                  <a href="/sms" target="_blank" className="underline">
-                    SMS terms
-                  </a>{" "}
-                  and{" "}
-                  <a href="/privacy" target="_blank" className="underline">
-                    Privacy Policy
-                  </a>
-                  .
-                </span>
-              </label>
+              <p className="max-w-prose text-xs leading-relaxed text-ink/55">
+                No consent is recorded here. {st.name} confirms it themselves by
+                tapping the invite link below — that first-person opt-in is what
+                lets us text them.
+              </p>
             </form>
           ) : (
             <ViewerNote />
+          )}
+
+          {/* Copy-paste invite (consent-flow.md steps 5-6): the family member
+              sends this from their OWN phone (P2P). Shown until the storyteller
+              opts in on their /c/<token> page; then a calm confirmed status. */}
+          {canManage && st.phone?.trim() && (
+            st.consent_state === "opted_in" ? (
+              <p className="mt-3 rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-800">
+                ✓ {st.name} opted in — story texts are on.
+              </p>
+            ) : consentMessage ? (
+              <div className="mt-3">
+                <p className="text-sm font-semibold text-ink/80">
+                  Send {st.name} their invite
+                </p>
+                <p className="mt-1 max-w-prose text-xs leading-relaxed text-ink/55">
+                  Copy this and text it to {st.name} from your own phone. When they
+                  tap the link and say yes, they&apos;re set up — and we&apos;ll let
+                  you know.
+                </p>
+                <CopyBlock message={consentMessage} />
+              </div>
+            ) : (
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+                Couldn&apos;t build the invite link — the storyteller-token secret
+                may not be configured.
+              </p>
+            )
           )}
         </ConfigBox>
 
@@ -512,7 +532,7 @@ export default async function StorytellerDetailPage({
 
             {canManage && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {st.phone?.trim() && (
+                {st.phone?.trim() && st.consent_state === "opted_in" && (
                   <form action={sendNudge}>
                     <input type="hidden" name="storyteller_id" value={st.id} />
                     <button type="submit" className="btn-ghost">

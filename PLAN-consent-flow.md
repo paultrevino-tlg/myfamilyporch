@@ -73,7 +73,10 @@ than switching primary auth to phone OTP.
   (SpeechSynthesis) + token-gated action. 13/13 live checks, DB restored. Link
   minting is wired into the UI by Phase D.
 - **D — Copy-paste P2P block** in-app after number entry; remove the attestation
-  checkbox.
+  checkbox. **[DONE — 2026-07-13.]** `setStorytellerPhone` drops the proxy-consent
+  gate; storyteller hub renders the localized copy-paste block (via
+  `buildConsentLink`) + `CopyBlock` island until opt-in, then a "✓ opted in"
+  status; "Send a nudge" gated on `opted_in`. 5/5 live checks, DB clean.
 - **E — Setup wizard + `setup-overview` graphic** (responsive, localized,
   `prefers-reduced-motion`); C/D become wizard steps.
 - **F — Inbound rewrite + universal pre-send gate** (bilingual keywords, NL

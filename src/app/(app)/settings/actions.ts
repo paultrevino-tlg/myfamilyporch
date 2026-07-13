@@ -27,18 +27,14 @@ export async function setStorytellerPhone(formData: FormData) {
     redirect(`/storytellers/${storytellerId}?error=phone`);
   }
 
-  // A2P 10DLC consent gate: a non-blank number can only be saved when the admin
-  // checks the consent box confirming the storyteller agreed to receive
-  // reminders. Clearing the number (value === null) needs no consent.
-  if (phone.value && formData.get("consent") !== "on") {
-    redirect(`/storytellers/${storytellerId}?error=consent`);
-  }
-
+  // No family-member attestation here (consent-flow.md): the storyteller's own
+  // first-person tap on the /c/<token> authorization page is the operative
+  // consent, never the admin's. Saving the number just records where the
+  // copy-paste invite link will point.
   const sb = await supabaseServer();
 
-  // Double opt-in (A2P 10DLC): a NEW number starts back at 'pending' — the next
-  // nudge attempt sends the "reply YES" confirmation to the new number instead
-  // of a reminder. Re-saving the same number keeps its consent state.
+  // A NEW number starts back at 'pending' — the storyteller must opt in again on
+  // the authorization page. Re-saving the same number keeps its consent state.
   const { data: current } = await sb
     .from("storytellers")
     .select("phone")

@@ -110,6 +110,12 @@ export const ui: Record<Lang, Record<string, string>> = {
       "No worries at all. Ask the family member who sent it to share a fresh link.",
     consent_terms: "Terms",
     consent_privacy: "Privacy",
+    // Copy-paste P2P block (consent-flow.md steps 5-6). Sent by the family
+    // member from their OWN phone (person-to-person, not A2P). {link} = the
+    // storyteller's /c/<token> authorization link. Rendered in the storyteller's
+    // language — short, warm, link near the top.
+    copy_paste_block:
+      "Hi {name}, I set up something so you can record your life stories just by talking — no app to install. Tap here to start: {link}",
     // Step 9 — storyteller confirmation (first A2P message under valid consent).
     sms_storyteller_welcome:
       "My Family Porch: Thanks {name}! You're all set to record your stories — we'll text you when it's time to start.\nMsg & data rates may apply. Reply STOP to stop, HELP for help.",
@@ -212,6 +218,9 @@ export const ui: Record<Lang, Record<string, string>> = {
       "No te preocupes. Pídele a la persona de tu familia que te envió el enlace que te comparta uno nuevo.",
     consent_terms: "Términos",
     consent_privacy: "Privacidad",
+    // Copy-paste P2P block (consent-flow.md steps 5-6)
+    copy_paste_block:
+      "Hola {name}, configuré algo para que puedas grabar las historias de tu vida solo con hablar — sin instalar ninguna aplicación. Toca aquí para empezar: {link}",
     sms_storyteller_welcome:
       "My Family Porch: ¡Gracias {name}! Ya puedes grabar tus historias — te avisaremos por mensaje cuando sea momento de empezar.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
     sms_family_ready:
