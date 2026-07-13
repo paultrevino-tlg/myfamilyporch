@@ -12,11 +12,15 @@ import { startVerification } from "./actions";
 export default async function VerifyPhonePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; from?: string }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
   const sp = await searchParams;
+  // Keep the member in the setup wizard when they arrived from it.
+  const inSetup = sp.from === "setup";
+  const backHref = inSetup ? "/setup" : "/dashboard";
+  const retryHref = inSetup ? "/verify-phone?from=setup" : "/verify-phone";
 
   const sb = await supabaseServer();
   const {
@@ -47,13 +51,13 @@ export default async function VerifyPhonePage({
           </p>
           <p className="mt-4 text-sm text-ink/55">
             Didn&apos;t get it?{" "}
-            <Link href="/verify-phone" className="text-accent underline">
+            <Link href={retryHref} className="text-accent underline">
               Try a different number
             </Link>
             .
           </p>
-          <Link href="/dashboard" className="btn-ghost mt-6 inline-block">
-            Back to dashboard
+          <Link href={backHref} className="btn-ghost mt-6 inline-block">
+            {inSetup ? "Back to setup" : "Back to dashboard"}
           </Link>
         </div>
       </main>
@@ -93,6 +97,7 @@ export default async function VerifyPhonePage({
         )}
 
         <form action={startVerification} className="mt-6 space-y-4">
+          {inSetup && <input type="hidden" name="from" value="setup" />}
           <label className="flex flex-col text-sm">
             <span className="text-ink/60">Your mobile number</span>
             <input
@@ -130,7 +135,7 @@ export default async function VerifyPhonePage({
         </form>
 
         <Link
-          href="/dashboard"
+          href={backHref}
           className="mt-4 inline-block text-sm text-ink/55 hover:text-ink"
         >
           Skip for now

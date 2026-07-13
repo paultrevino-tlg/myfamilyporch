@@ -24,15 +24,15 @@ export default async function VerifyPhoneBanner({ familyId }: { familyId: string
 
   return (
     <Link
-      href="/verify-phone"
+      href="/setup"
       className="mt-7 flex items-center gap-3 rounded-2xl border border-brand/20 bg-brand/5 px-4 py-3.5 text-sm transition hover:bg-brand/10"
     >
       <span aria-hidden className="text-xl">
         📱
       </span>
       <span className="text-ink/80">
-        <strong className="font-semibold text-ink">Turn on text reminders.</strong> Verify your
-        mobile number to help set up your storyteller and hear when stories arrive.
+        <strong className="font-semibold text-ink">Finish setting up.</strong> Verify your mobile
+        number and send your storyteller their invite.
       </span>
       <span aria-hidden className="ml-auto text-brand">
         →

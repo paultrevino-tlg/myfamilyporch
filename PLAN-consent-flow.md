@@ -78,7 +78,11 @@ than switching primary auth to phone OTP.
   `buildConsentLink`) + `CopyBlock` island until opt-in, then a "✓ opted in"
   status; "Send a nudge" gated on `opted_in`. 5/5 live checks, DB clean.
 - **E — Setup wizard + `setup-overview` graphic** (responsive, localized,
-  `prefers-reduced-motion`); C/D become wizard steps.
+  `prefers-reduced-motion`); C/D become wizard steps. **[DONE — 2026-07-13.]**
+  `lib/setup.ts` (pure `deriveSetupStep` + `loadSetupState`), `SetupOverview.tsx`
+  (SVG rebuilt as responsive/localized HTML), `(app)/setup` orchestrator with a
+  derived step card (verify/add link out, send-link inline copy-block). Onboarding
+  + verify-phone + dashboard banner wired into it. 8/8 checks, DB clean.
 - **F — Inbound rewrite + universal pre-send gate** (bilingual keywords, NL
   opt-out, suppressions, inbound log, START-after-STOP, provider reconciliation);
   drop the confirmation branch in `nudge.ts`.

@@ -29,10 +29,14 @@ export async function startVerification(formData: FormData) {
     .maybeSingle();
   if (!mem) redirect("/onboarding");
 
-  const phone = normalizePhone(String(formData.get("phone") ?? ""));
-  if (!phone.ok || !phone.value) redirect("/verify-phone?error=phone");
+  // Keep the member inside the setup wizard when they came from it.
+  const fromSetup = formData.get("from") === "setup";
+  const suffix = fromSetup ? "&from=setup" : "";
 
-  if (formData.get("consent") !== "on") redirect("/verify-phone?error=consent");
+  const phone = normalizePhone(String(formData.get("phone") ?? ""));
+  if (!phone.ok || !phone.value) redirect(`/verify-phone?error=phone${suffix}`);
+
+  if (formData.get("consent") !== "on") redirect(`/verify-phone?error=consent${suffix}`);
 
   const language: Lang = formData.get("language") === "es" ? "es" : "en";
 
@@ -43,8 +47,8 @@ export async function startVerification(formData: FormData) {
     language,
   );
   if (result.status === "error") {
-    redirect(`/verify-phone?error=${result.reason}`);
+    redirect(`/verify-phone?error=${result.reason}${suffix}`);
   }
 
-  redirect("/verify-phone?sent=1");
+  redirect(`/verify-phone?sent=1${suffix}`);
 }

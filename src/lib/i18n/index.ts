@@ -123,6 +123,48 @@ export const ui: Record<Lang, Record<string, string>> = {
     // MEMBER in the member's language.
     sms_family_ready:
       "My Family Porch: Great news — {name} is all set up and ready to start recording their stories. We'll let you know as new stories come in.\nMsg & data rates may apply. Reply STOP to stop, HELP for help.",
+    // Setup wizard + overview graphic (consent-flow.md). Rendered in the
+    // member's language.
+    setup_title: "Set up My Family Porch",
+    setup_ov_header: "Four steps for you, two taps for them",
+    setup_ov_legend_you: "You do these",
+    setup_ov_legend_them: "Your storyteller does these",
+    setup_ov_handoff: "hands off to them",
+    setup_ov_callout:
+      "We text you the moment your storyteller is set up and recording begins.",
+    setup_ov_aria:
+      "How setup works: you sign up, verify your number, add your storyteller, and send them a link. They tap to approve, then they're ready to record. We text you when they're all set.",
+    setup_ov_1: "Sign up",
+    setup_ov_1_sub: "Create your account",
+    setup_ov_2: "Verify your number",
+    setup_ov_2_sub: "Tap the link we text you",
+    setup_ov_3: "Add your storyteller",
+    setup_ov_3_sub: "Enter their name & number",
+    setup_ov_4: "Send the link",
+    setup_ov_4_sub: "Text it to them from your phone",
+    setup_ov_5: "They approve",
+    setup_ov_5_sub: "They tap and say yes",
+    setup_ov_6: "They're ready",
+    setup_ov_6_sub: "They record just by talking",
+    setup_verify_title: "Verify your number",
+    setup_verify_sub:
+      "So we can help you set up and let you know when stories come in.",
+    setup_verify_cta: "Verify my number",
+    setup_add_title: "Add your storyteller",
+    setup_add_sub: "The person whose stories you want to keep.",
+    setup_add_cta: "Add a storyteller",
+    setup_send_title: "Send {name} their invite",
+    setup_send_help:
+      "Copy this and text it to {name} from your own phone. When they tap the link and say yes, they're set up.",
+    setup_send_waiting:
+      "Waiting for {name} to tap the link. We'll text you the moment they're set up.",
+    setup_send_needphone:
+      "First add {name}'s mobile number so we can make their invite.",
+    setup_send_needphone_cta: "Add their number",
+    setup_ready_title: "You're all set!",
+    setup_ready_sub:
+      "Your storyteller is ready to record. We'll let you know as new stories come in.",
+    setup_dashboard_cta: "Go to dashboard",
     // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
     // storyteller's own language — the recording's language.
     qr_caption: "Scan to hear {name} tell it",
@@ -225,6 +267,47 @@ export const ui: Record<Lang, Record<string, string>> = {
       "My Family Porch: ¡Gracias {name}! Ya puedes grabar tus historias — te avisaremos por mensaje cuando sea momento de empezar.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
     sms_family_ready:
       "My Family Porch: ¡Buenas noticias! {name} ya está listo(a) para empezar a grabar sus historias. Te avisaremos cuando lleguen historias nuevas.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
+    // Setup wizard + overview graphic (consent-flow.md)
+    setup_title: "Configura My Family Porch",
+    setup_ov_header: "Cuatro pasos para ti, dos toques para ellos",
+    setup_ov_legend_you: "Tú haces esto",
+    setup_ov_legend_them: "Tu narrador hace esto",
+    setup_ov_handoff: "pasa a ellos",
+    setup_ov_callout:
+      "Te enviamos un mensaje en cuanto tu narrador esté listo y comience a grabar.",
+    setup_ov_aria:
+      "Cómo funciona la configuración: te registras, verificas tu número, agregas a tu narrador y le envías un enlace. Ellos tocan para aprobar y quedan listos para grabar. Te avisamos cuando todo esté listo.",
+    setup_ov_1: "Regístrate",
+    setup_ov_1_sub: "Crea tu cuenta",
+    setup_ov_2: "Verifica tu número",
+    setup_ov_2_sub: "Toca el enlace que te enviamos",
+    setup_ov_3: "Agrega a tu narrador",
+    setup_ov_3_sub: "Escribe su nombre y número",
+    setup_ov_4: "Envía el enlace",
+    setup_ov_4_sub: "Mándaselo por mensaje desde tu teléfono",
+    setup_ov_5: "Ellos aprueban",
+    setup_ov_5_sub: "Tocan y dicen que sí",
+    setup_ov_6: "Listos",
+    setup_ov_6_sub: "Graban solo con hablar",
+    setup_verify_title: "Verifica tu número",
+    setup_verify_sub:
+      "Para ayudarte a configurar y avisarte cuando lleguen historias.",
+    setup_verify_cta: "Verificar mi número",
+    setup_add_title: "Agrega a tu narrador",
+    setup_add_sub: "La persona cuyas historias quieres guardar.",
+    setup_add_cta: "Agregar un narrador",
+    setup_send_title: "Envía a {name} su invitación",
+    setup_send_help:
+      "Copia esto y mándaselo a {name} por mensaje desde tu propio teléfono. Cuando toque el enlace y diga que sí, quedará listo.",
+    setup_send_waiting:
+      "Esperando a que {name} toque el enlace. Te avisaremos en cuanto quede listo.",
+    setup_send_needphone:
+      "Primero agrega el número de {name} para poder crear su invitación.",
+    setup_send_needphone_cta: "Agregar su número",
+    setup_ready_title: "¡Todo listo!",
+    setup_ready_sub:
+      "Tu narrador está listo para grabar. Te avisaremos cuando lleguen historias nuevas.",
+    setup_dashboard_cta: "Ir al panel",
     // Voice-QR play page (TODO 7.2)
     qr_caption: "Escanea para escuchar a {name} contarlo",
     play_kicker: "Con su propia voz",
