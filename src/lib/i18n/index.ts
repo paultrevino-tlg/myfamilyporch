@@ -85,6 +85,38 @@ export const ui: Record<Lang, Record<string, string>> = {
     member_confirm_dead_title: "This link isn't active",
     member_confirm_dead_sub:
       "It may have expired. Open My Family Porch and request a new verification text from your account.",
+    // Storyteller authorization page (consent-flow.md steps 7-9). Elder-facing:
+    // plain, large, one action. Rendered in the storyteller's language.
+    consent_title: "Record your life stories",
+    consent_what_it_is:
+      "With My Family Porch, you record your life stories just by talking — and we turn them into a keepsake.",
+    consent_whats_next:
+      "We'll send you an occasional text with a link when it's time to record.",
+    consent_name_label: "Your name",
+    consent_number_label: "Your number",
+    // The first-person opt-in control — shown by the checkbox AND stored verbatim
+    // as consent_events.disclosure_text (the operative consent record).
+    consent_optin_control:
+      "Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.",
+    consent_agree_btn: "Yes, text me",
+    consent_hear: "🔊 Hear this",
+    consent_stop: "Stop",
+    consent_optin_required: "Please check the box above so we can text you.",
+    consent_success_title: "You're all set. ✓",
+    consent_success_sub:
+      "We'll text you when it's time to record your first story. You can close this now.",
+    consent_dead_title: "This link isn't active",
+    consent_dead_sub:
+      "No worries at all. Ask the family member who sent it to share a fresh link.",
+    consent_terms: "Terms",
+    consent_privacy: "Privacy",
+    // Step 9 — storyteller confirmation (first A2P message under valid consent).
+    sms_storyteller_welcome:
+      "My Family Porch: Thanks {name}! You're all set to record your stories — we'll text you when it's time to start.\nMsg & data rates may apply. Reply STOP to stop, HELP for help.",
+    // Step 10 — the family member who set it up ("ready to begin"), sent to the
+    // MEMBER in the member's language.
+    sms_family_ready:
+      "My Family Porch: Great news — {name} is all set up and ready to start recording their stories. We'll let you know as new stories come in.\nMsg & data rates may apply. Reply STOP to stop, HELP for help.",
     // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
     // storyteller's own language — the recording's language.
     qr_caption: "Scan to hear {name} tell it",
@@ -158,6 +190,32 @@ export const ui: Record<Lang, Record<string, string>> = {
     member_confirm_dead_title: "Este enlace no está activo",
     member_confirm_dead_sub:
       "Es posible que haya expirado. Abre My Family Porch y solicita un nuevo mensaje de verificación desde tu cuenta.",
+    // Storyteller authorization page (consent-flow.md steps 7-9)
+    consent_title: "Graba las historias de tu vida",
+    consent_what_it_is:
+      "Con My Family Porch, grabas las historias de tu vida con solo hablar — y nosotros las convertimos en un libro de recuerdos.",
+    consent_whats_next:
+      "Te enviaremos un mensaje ocasional con un enlace cuando sea momento de grabar.",
+    consent_name_label: "Tu nombre",
+    consent_number_label: "Tu número",
+    consent_optin_control:
+      "Sí, envíenme mensajes de texto a este número para poder grabar mis historias. Acepto recibir mensajes de texto automáticos y recurrentes de My Family Porch. Pueden aplicar tarifas de mensajes y datos. Responde STOP en cualquier momento para cancelar, HELP para ayuda.",
+    consent_agree_btn: "Sí, envíenme mensajes",
+    consent_hear: "🔊 Escuchar",
+    consent_stop: "Detener",
+    consent_optin_required: "Marca la casilla de arriba para que podamos enviarte mensajes.",
+    consent_success_title: "¡Todo listo! ✓",
+    consent_success_sub:
+      "Te enviaremos un mensaje cuando sea momento de grabar tu primera historia. Puedes cerrar esto.",
+    consent_dead_title: "Este enlace no está activo",
+    consent_dead_sub:
+      "No te preocupes. Pídele a la persona de tu familia que te envió el enlace que te comparta uno nuevo.",
+    consent_terms: "Términos",
+    consent_privacy: "Privacidad",
+    sms_storyteller_welcome:
+      "My Family Porch: ¡Gracias {name}! Ya puedes grabar tus historias — te avisaremos por mensaje cuando sea momento de empezar.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
+    sms_family_ready:
+      "My Family Porch: ¡Buenas noticias! {name} ya está listo(a) para empezar a grabar sus historias. Te avisaremos cuando lleguen historias nuevas.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
     // Voice-QR play page (TODO 7.2)
     qr_caption: "Escanea para escuchar a {name} contarlo",
     play_kicker: "Con su propia voz",

@@ -66,6 +66,12 @@ than switching primary auth to phone OTP.
   16/16 live checks, DB restored.
 - **C — Consent token + storyteller authorization page** (elder-accessible,
   bilingual, "Hear this" audio) → `consent_events` + `opted_in` + step-9/10 sends.
+  **[DONE — 2026-07-13.]** `lib/consent/storyteller.ts` (buildConsentLink /
+  loadConsentContext / confirmStorytellerConsent, fresh opt-in clears
+  suppression, step-9 storyteller + step-10 gated member sends) +
+  `lib/sms/suppression.ts`; `(storyteller)/c/[token]` page + HearThis
+  (SpeechSynthesis) + token-gated action. 13/13 live checks, DB restored. Link
+  minting is wired into the UI by Phase D.
 - **D — Copy-paste P2P block** in-app after number entry; remove the attestation
   checkbox.
 - **E — Setup wizard + `setup-overview` graphic** (responsive, localized,
