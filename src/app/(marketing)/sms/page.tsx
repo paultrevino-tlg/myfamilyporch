@@ -14,7 +14,7 @@ export const metadata = pageMeta({
 // admin enters the storyteller's number in the authenticated dashboard and
 // checks a required attestation box; (2) the storyteller receives a one-time
 // confirmation text and must reply YES before any reminders send (double
-// opt-in — handled by api/sms/inbound + the sms_consent gate in lib/sms/nudge).
+// opt-in — handled by api/sms/inbound + the consent_state gate in lib/sms/nudge).
 // This page is the PUBLIC, verifiable record of that flow for carrier review:
 // program, exact checkbox language, the confirmation message, sample reminders
 // (verbatim from lib/i18n, variable parts in [brackets]), frequency, rates,

@@ -110,6 +110,62 @@ export type Database = {
           },
         ]
       }
+      consent_events: {
+        Row: {
+          disclosure_text: string
+          event_type: string
+          family_id: string
+          id: string
+          ip: unknown
+          language: string | null
+          method: string
+          occurred_at: string
+          phone_e164: string
+          subject_id: string
+          subject_type: string
+          token_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          disclosure_text: string
+          event_type: string
+          family_id: string
+          id?: string
+          ip?: unknown
+          language?: string | null
+          method: string
+          occurred_at?: string
+          phone_e164: string
+          subject_id: string
+          subject_type: string
+          token_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          disclosure_text?: string
+          event_type?: string
+          family_id?: string
+          id?: string
+          ip?: unknown
+          language?: string | null
+          method?: string
+          occurred_at?: string
+          phone_e164?: string
+          subject_id?: string
+          subject_type?: string
+          token_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_events_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exports: {
         Row: {
           created_at: string
@@ -286,26 +342,38 @@ export type Database = {
       memberships: {
         Row: {
           alert_phone: string | null
+          consent_state: string
           created_at: string
           family_id: string
           id: string
+          language: string
           role: Database["public"]["Enums"]["membership_role"]
+          sms_confirm_sent_at: string | null
+          sms_phone: string | null
           user_id: string
         }
         Insert: {
           alert_phone?: string | null
+          consent_state?: string
           created_at?: string
           family_id: string
           id?: string
+          language?: string
           role?: Database["public"]["Enums"]["membership_role"]
+          sms_confirm_sent_at?: string | null
+          sms_phone?: string | null
           user_id: string
         }
         Update: {
           alert_phone?: string | null
+          consent_state?: string
           created_at?: string
           family_id?: string
           id?: string
+          language?: string
           role?: Database["public"]["Enums"]["membership_role"]
+          sms_confirm_sent_at?: string | null
+          sms_phone?: string | null
           user_id?: string
         }
         Relationships: [
@@ -485,6 +553,54 @@ export type Database = {
           },
         ]
       }
+      sms_inbound: {
+        Row: {
+          body: string
+          id: string
+          matched: string | null
+          needs_review: boolean
+          phone_e164: string
+          received_at: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          matched?: string | null
+          needs_review?: boolean
+          phone_e164: string
+          received_at?: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          matched?: string | null
+          needs_review?: boolean
+          phone_e164?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
+      sms_suppressions: {
+        Row: {
+          phone_e164: string
+          reason: string
+          source: string | null
+          suppressed_at: string
+        }
+        Insert: {
+          phone_e164: string
+          reason: string
+          source?: string | null
+          suppressed_at?: string
+        }
+        Update: {
+          phone_e164?: string
+          reason?: string
+          source?: string | null
+          suppressed_at?: string
+        }
+        Relationships: []
+      }
       story_photos: {
         Row: {
           answer_id: string
@@ -633,6 +749,7 @@ export type Database = {
         Row: {
           birth_year: number | null
           book_chapter_order: string[] | null
+          consent_state: string
           created_at: string
           family_id: string
           id: string
@@ -641,13 +758,13 @@ export type Database = {
           phone: string | null
           pronouns: Database["public"]["Enums"]["pronoun_set"]
           sms_confirm_sent_at: string | null
-          sms_consent: string
           status: string
           updated_at: string
         }
         Insert: {
           birth_year?: number | null
           book_chapter_order?: string[] | null
+          consent_state?: string
           created_at?: string
           family_id: string
           id?: string
@@ -656,13 +773,13 @@ export type Database = {
           phone?: string | null
           pronouns?: Database["public"]["Enums"]["pronoun_set"]
           sms_confirm_sent_at?: string | null
-          sms_consent?: string
           status?: string
           updated_at?: string
         }
         Update: {
           birth_year?: number | null
           book_chapter_order?: string[] | null
+          consent_state?: string
           created_at?: string
           family_id?: string
           id?: string
@@ -671,7 +788,6 @@ export type Database = {
           phone?: string | null
           pronouns?: Database["public"]["Enums"]["pronoun_set"]
           sms_confirm_sent_at?: string | null
-          sms_consent?: string
           status?: string
           updated_at?: string
         }

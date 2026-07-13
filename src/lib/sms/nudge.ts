@@ -107,7 +107,7 @@ export async function sendStorytellerNudge(
 
   const { data: st } = await db
     .from("storytellers")
-    .select("name, language, phone, sms_consent, sms_confirm_sent_at")
+    .select("name, language, phone, consent_state, sms_confirm_sent_at")
     .eq("id", storytellerId)
     .eq("family_id", familyId)
     .maybeSingle();
@@ -118,7 +118,7 @@ export async function sendStorytellerNudge(
   // A2P 10DLC consent gate. STOP is final until they text START/YES again;
   // pending consent gets the one-time "reply YES" confirmation instead of a
   // reminder (throttled so repeated cron ticks can't re-send it).
-  if (st.sms_consent === "stopped") {
+  if (st.consent_state === "opted_out") {
     return { status: "skipped", reason: "sms-stopped" };
   }
 
@@ -140,7 +140,7 @@ export async function sendStorytellerNudge(
     rel?.asker_relation ?? null,
   );
 
-  if (st.sms_consent !== "confirmed") {
+  if (st.consent_state !== "opted_in") {
     const sentAt = st.sms_confirm_sent_at ? Date.parse(st.sms_confirm_sent_at) : 0;
     if (sentAt && Date.now() - sentAt < CONFIRM_RESEND_MS) {
       return { status: "skipped", reason: "awaiting-confirmation" };

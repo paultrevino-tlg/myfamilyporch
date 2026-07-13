@@ -5,8 +5,8 @@ import { t, type Lang } from "@/lib/i18n";
 // Twilio inbound-SMS webhook (A2P 10DLC double opt-in, TODO 4.3). Set as the
 // phone number's "A message comes in" URL in the Twilio console. Records the
 // storyteller's own consent decision:
-//   YES / START / UNSTOP / SÍ → sms_consent = 'confirmed' (reminders may send)
-//   STOP / CANCEL / END / QUIT / UNSUBSCRIBE / STOPALL → 'stopped'
+//   YES / START / UNSTOP / SÍ → consent_state = 'opted_in' (reminders may send)
+//   STOP / CANCEL / END / QUIT / UNSUBSCRIBE / STOPALL → 'opted_out'
 //   HELP / AYUDA → program info reply (Twilio only auto-answers HELP on
 //   Messaging Services, so we answer it here)
 // Twilio itself still enforces the carrier-level STOP block and auto-reply; we
@@ -106,10 +106,10 @@ export async function POST(req: Request) {
   if (isHelp) return twiml(t(lang, "sms_help_reply"));
   if (matches.length === 0) return twiml(); // unknown number — nothing to record
 
-  const consent = isStop ? "stopped" : "confirmed";
+  const consent = isStop ? "opted_out" : "opted_in";
   await db
     .from("storytellers")
-    .update({ sms_consent: consent })
+    .update({ consent_state: consent })
     .in(
       "id",
       matches.map((r) => r.id),

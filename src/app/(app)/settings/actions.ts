@@ -63,7 +63,7 @@ export async function setStorytellerPhone(formData: FormData) {
     .from("storytellers")
     .update(
       changed
-        ? { phone: phone.value, sms_consent: "pending", sms_confirm_sent_at: null }
+        ? { phone: phone.value, consent_state: "pending", sms_confirm_sent_at: null }
         : { phone: phone.value },
     )
     .eq("id", storytellerId)
