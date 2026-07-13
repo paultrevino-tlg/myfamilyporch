@@ -9,7 +9,7 @@
 // missing Twilio config).
 import { supabaseService } from "@/lib/supabase/service";
 import { sendSms } from "@/lib/sms/twilio";
-import { isSuppressed } from "@/lib/sms/suppression";
+import { preSendGate } from "@/lib/sms/gate";
 import { signConsentToken, verifyConsentToken } from "./token";
 import { last4 } from "@/lib/phone";
 import { t, type Lang } from "@/lib/i18n";
@@ -160,8 +160,9 @@ async function notifyFamilyReady(
       .eq("family_id", familyId)
       .eq("user_id", userId)
       .maybeSingle();
-    if (!mem?.sms_phone || mem.consent_state !== "opted_in") return;
-    if (await isSuppressed(db, mem.sms_phone)) return;
+    if (!mem?.sms_phone) return;
+    const gate = await preSendGate(db, { consentState: mem.consent_state, phone: mem.sms_phone });
+    if (!gate.ok) return;
 
     const mlang: Lang = mem.language === "es" ? "es" : "en";
     await sendSms(mem.sms_phone, t(mlang, "sms_family_ready", { name: storytellerFirstName }));

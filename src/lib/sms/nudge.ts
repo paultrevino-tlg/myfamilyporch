@@ -1,27 +1,28 @@
-// Storyteller SMS nudge (TODO 4.3). Composes the localized "tap here to tell me
-// a story" text in the storyteller's language, attaches a working magic-link
-// deep link, and sends it via Twilio. SERVER-ONLY (service role + app secret).
+// Storyteller SMS nudge (consent-flow.md). Composes the localized "tap here to
+// tell me a story" text in the storyteller's language, attaches a working
+// magic-link deep link, and sends it via Twilio. SERVER-ONLY (service role + app
+// secret).
 //
-// This is the reusable unit: the weekly cron (TODO 6.1) and the Schedule
-// "ask now" control (TODO 5.4) both call sendStorytellerNudge. The send itself
-// fails soft — no phone, no Twilio config, or no token secret → it records why
-// and returns rather than throwing, so a scheduler loop never dies on one row.
+// The weekly cron (TODO 6.1) and the Schedule "ask now" control (TODO 5.4) both
+// call sendStorytellerNudge. Under the consent-flow redesign there is NO "reply
+// YES" confirmation here anymore: a storyteller becomes opted_in only by tapping
+// their own /c/<token> authorization page. Every send runs the universal
+// pre-send gate first (opted_in + not suppressed); a not-opted-in or suppressed
+// storyteller is simply skipped. The send itself fails soft — no phone, no
+// Twilio config, or no token secret → it records why and returns.
 import { supabaseService } from "@/lib/supabase/service";
 import { decryptToken } from "@/lib/storyteller/crypto";
 import { mintStorytellerToken } from "@/lib/storyteller/token";
 import { sendSms } from "@/lib/sms/twilio";
+import { preSendGate } from "@/lib/sms/gate";
 import { t, type Lang } from "@/lib/i18n";
 
 export type NudgeResult =
-  | { status: "sent"; kind: "nudge" | "confirmation" }
+  | { status: "sent"; kind: "nudge" }
   | {
       status: "skipped";
-      reason: "no-phone" | "no-link" | "sms-stopped" | "awaiting-confirmation";
+      reason: "no-phone" | "no-link" | "not-opted-in" | "suppressed";
     };
-
-// Re-send the "reply YES" confirmation at most this often while consent is
-// still pending, so an hourly cron or a repeat "ask now" can't spam it.
-const CONFIRM_RESEND_MS = 24 * 60 * 60 * 1000;
 
 // Build the SMS body: the localized line + the deep link on its own line + the
 // A2P-required opt-out line. The URL is appended (never interpolated into the
@@ -37,13 +38,6 @@ export function buildNudge(
     interviewer: vars.interviewer ?? "",
   });
   return `${line}\n${vars.url}\n${t(lang, "sms_stop_line")}`;
-}
-
-// Build the one-time double-opt-in confirmation (A2P 10DLC): identifies the
-// program and who signed them up, and asks for a YES before any reminders.
-export function buildConfirmation(lang: Lang, interviewer?: string): string {
-  const key = interviewer ? "sms_confirm" : "sms_confirm_no_interviewer";
-  return t(lang, key, { interviewer: interviewer ?? "" });
 }
 
 // Resolve the interviewer's display name from auth metadata (full_name / name,
@@ -97,6 +91,29 @@ async function resolveDeepLink(
   return `${base}/s/${raw}`;
 }
 
+// Provider reconciliation (consent-flow.md): if Twilio rejects a send because the
+// number is unsubscribed at the carrier (error 21610), mirror that into our
+// suppression list + consent state so our gate agrees with the carrier and we
+// never try again.
+async function reconcileCarrierStop(
+  db: ReturnType<typeof supabaseService>,
+  storytellerId: string,
+  familyId: string,
+  phone: string,
+): Promise<void> {
+  await db
+    .from("sms_suppressions")
+    .upsert(
+      { phone_e164: phone, reason: "carrier_block", source: "provider_webhook" },
+      { onConflict: "phone_e164" },
+    );
+  await db
+    .from("storytellers")
+    .update({ consent_state: "opted_out" })
+    .eq("id", storytellerId)
+    .eq("family_id", familyId);
+}
+
 // Send a localized story nudge to one storyteller. Caller is responsible for
 // authorizing the request (admin of the owning family) before calling.
 export async function sendStorytellerNudge(
@@ -107,20 +124,19 @@ export async function sendStorytellerNudge(
 
   const { data: st } = await db
     .from("storytellers")
-    .select("name, language, phone, consent_state, sms_confirm_sent_at")
+    .select("name, language, phone, consent_state")
     .eq("id", storytellerId)
     .eq("family_id", familyId)
     .maybeSingle();
   if (!st?.phone?.trim()) return { status: "skipped", reason: "no-phone" };
+  const phone = st.phone.trim();
+
+  // Universal pre-send gate: opted_in + not suppressed. A storyteller opts in on
+  // their own /c/<token> authorization page — never here.
+  const gate = await preSendGate(db, { consentState: st.consent_state, phone });
+  if (!gate.ok) return { status: "skipped", reason: gate.reason };
 
   const lang: Lang = st.language === "es" ? "es" : "en";
-
-  // A2P 10DLC consent gate. STOP is final until they text START/YES again;
-  // pending consent gets the one-time "reply YES" confirmation instead of a
-  // reminder (throttled so repeated cron ticks can't re-send it).
-  if (st.consent_state === "opted_out") {
-    return { status: "skipped", reason: "sms-stopped" };
-  }
 
   // Interviewer edge → address term + who the text is from. Prefer the member
   // flagged as interviewer; otherwise any relationship row (mirrors assembly).
@@ -140,24 +156,19 @@ export async function sendStorytellerNudge(
     rel?.asker_relation ?? null,
   );
 
-  if (st.consent_state !== "opted_in") {
-    const sentAt = st.sms_confirm_sent_at ? Date.parse(st.sms_confirm_sent_at) : 0;
-    if (sentAt && Date.now() - sentAt < CONFIRM_RESEND_MS) {
-      return { status: "skipped", reason: "awaiting-confirmation" };
-    }
-    await sendSms(st.phone.trim(), buildConfirmation(lang, interviewer));
-    await db
-      .from("storytellers")
-      .update({ sms_confirm_sent_at: new Date().toISOString() })
-      .eq("id", storytellerId)
-      .eq("family_id", familyId);
-    return { status: "sent", kind: "confirmation" };
-  }
-
   const url = await resolveDeepLink(db, storytellerId, familyId);
   if (!url) return { status: "skipped", reason: "no-link" };
 
   const body = buildNudge(lang, { address, interviewer, url });
-  await sendSms(st.phone.trim(), body);
+  try {
+    await sendSms(phone, body);
+  } catch (e) {
+    const msg = String((e as Error)?.message ?? "");
+    if (msg.includes("21610")) {
+      await reconcileCarrierStop(db, storytellerId, familyId, phone);
+      return { status: "skipped", reason: "suppressed" };
+    }
+    throw e;
+  }
   return { status: "sent", kind: "nudge" };
 }

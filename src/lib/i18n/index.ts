@@ -57,17 +57,14 @@ export const ui: Record<Lang, Record<string, string>> = {
     // Appended as the last line of every recurring nudge (A2P 10DLC: opt-out
     // and HELP language must appear in the message samples and the real messages).
     sms_stop_line: "Reply STOP to opt out, HELP for help",
-    // Double opt-in confirmation (A2P 10DLC): the FIRST text a storyteller ever
-    // gets. No reminders send until they reply YES (handled by api/sms/inbound).
-    sms_confirm:
-      "My Family Porch: {interviewer} invited you to record your life stories and get occasional reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
-    sms_confirm_no_interviewer:
-      "My Family Porch: Your family invited you to record your life stories and get occasional reminder texts (up to 1 msg/day). Reply YES to start, STOP to opt out, HELP for help. Msg & data rates may apply.",
-    // Auto-replies from the inbound webhook.
-    sms_confirmed_reply:
-      "My Family Porch: You're all set — story reminders are on. Reply STOP anytime to opt out, HELP for help.",
+    // Inbound webhook auto-replies (consent-flow.md response copy). Sent by
+    // api/sms/inbound in response to STOP / START / HELP.
+    sms_stop_confirmation:
+      "You're unsubscribed from My Family Porch. You won't receive further texts. Reply START to resubscribe.",
+    sms_start_welcome:
+      "Welcome back to My Family Porch. You're resubscribed. Reply STOP to opt out, HELP for help.",
     sms_help_reply:
-      "My Family Porch story reminders. Up to 1 msg/day; msg & data rates may apply. Reply STOP to opt out. Support: support@myfamilyporch.net",
+      "My Family Porch: record your life stories by text. Up to 1 msg/day; msg & data rates may apply. Reply STOP to opt out. Support: support@myfamilyporch.net",
     // Member phone verification (consent-flow.md steps 2-3). {link} = the signed
     // /verify/<token> URL; sent to the member's OWN number after they enter it
     // and opt in on the app form (first-party consent — never proxy).
@@ -219,14 +216,13 @@ export const ui: Record<Lang, Record<string, string>> = {
     sms_nudge: "My Family Porch: Hola {address}, soy {interviewer} — toca aquí para contarme una historia",
     sms_nudge_no_interviewer: "My Family Porch: Hola {address} — toca aquí para contarme una historia",
     sms_stop_line: "Responde STOP para cancelar, AYUDA para ayuda",
-    sms_confirm:
-      "My Family Porch: {interviewer} te invitó a grabar tus historias de vida y recibir recordatorios ocasionales por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
-    sms_confirm_no_interviewer:
-      "My Family Porch: Tu familia te invitó a grabar tus historias de vida y recibir recordatorios ocasionales por texto (hasta 1 por día). Responde SÍ para empezar, STOP para cancelar, AYUDA para ayuda. Pueden aplicarse tarifas de mensajes y datos.",
-    sms_confirmed_reply:
-      "My Family Porch: Listo — los recordatorios de historias están activados. Responde STOP para cancelar, AYUDA para ayuda.",
+    // Inbound webhook auto-replies (consent-flow.md response copy)
+    sms_stop_confirmation:
+      "Cancelaste tu suscripción a My Family Porch. No recibirás más mensajes. Responde START para volver a suscribirte.",
+    sms_start_welcome:
+      "Bienvenido de nuevo a My Family Porch. Te has vuelto a suscribir. Responde STOP para cancelar, AYUDA para ayuda.",
     sms_help_reply:
-      "Recordatorios de historias de My Family Porch. Hasta 1 mensaje por día; pueden aplicarse tarifas. Responde STOP para cancelar. Ayuda: support@myfamilyporch.net",
+      "My Family Porch: graba las historias de tu vida por mensaje de texto. Hasta 1 mensaje por día; pueden aplicarse tarifas. Responde STOP para cancelar. Ayuda: support@myfamilyporch.net",
     // Member phone verification (consent-flow.md steps 2-3)
     magic_link_sms:
       "My Family Porch: Toca para verificar tu número y terminar la configuración: {link}\nRecibirás mensajes para ayudarte a configurar a tu narrador.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",

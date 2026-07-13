@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
 import { supabaseService } from "@/lib/supabase/service";
+import { classifyInbound } from "@/lib/sms/keywords";
 import { t, type Lang } from "@/lib/i18n";
 
-// Twilio inbound-SMS webhook (A2P 10DLC double opt-in, TODO 4.3). Set as the
-// phone number's "A message comes in" URL in the Twilio console. Records the
-// storyteller's own consent decision:
-//   YES / START / UNSTOP / SÍ → consent_state = 'opted_in' (reminders may send)
-//   STOP / CANCEL / END / QUIT / UNSUBSCRIBE / STOPALL → 'opted_out'
-//   HELP / AYUDA → program info reply (Twilio only auto-answers HELP on
-//   Messaging Services, so we answer it here)
-// Twilio itself still enforces the carrier-level STOP block and auto-reply; we
-// mirror the state so the nudge path never even tries. SERVER-ONLY (service
-// role — the sender has no session; authenticity comes from the
-// X-Twilio-Signature check, which fails closed).
+// Twilio inbound-SMS webhook (consent-flow.md "Inbound keyword handling"). Set as
+// the phone number's "A message comes in" URL in the Twilio console. This is the
+// half carriers audit hardest, so EVERY inbound is: (1) logged to sms_inbound,
+// (2) classified bilingually (EN+ES exact keywords + natural-language opt-out),
+// (3) acted on before any conversational handling.
+//
+//   opt-out  → global sms_suppressions + every matched party opted_out +
+//              consent_events(opt_out) + one final confirmation.
+//   help     → program-info reply; no state change.
+//   START    → resubscribe ONLY if the number was suppressed by a prior STOP
+//              (clear suppression + restore opted_in + re_opt_in). Never a cold
+//              opt-in — that must go through the /c authorization page.
+//
+// SERVER-ONLY (service role — the sender has no session; authenticity comes from
+// the X-Twilio-Signature check, which fails closed).
 export const dynamic = "force-dynamic";
-
-const CONFIRM_WORDS = new Set(["YES", "Y", "START", "UNSTOP", "SI", "SÍ"]);
-const STOP_WORDS = new Set(["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"]);
-const HELP_WORDS = new Set(["HELP", "AYUDA", "INFO"]);
 
 // Twilio request signature: Base64(HMAC-SHA1(authToken, url + sorted(key+value))).
 // Web-Crypto (Worker-compatible), no Node 'crypto' import.
@@ -52,10 +53,8 @@ function twiml(message?: string): Response {
 
 const digitsOf = (s: string) => s.replace(/\D/g, "");
 
-// Match a stored storyteller phone against Twilio's E.164 From. Stored numbers
-// are normalized loosely ("+" optional, country code optional — see
-// normalizePhone in settings/actions.ts), so compare digits exactly OR by the
-// last 10 digits (US national number).
+// Match a stored number against Twilio's E.164 From. Stored numbers are
+// normalized loosely, so compare digits exactly OR by the last 10 (US national).
 function phoneMatches(stored: string, from: string): boolean {
   const a = digitsOf(stored);
   const b = digitsOf(from);
@@ -84,38 +83,119 @@ export async function POST(req: Request) {
   }
 
   const from = params.get("From") ?? "";
-  const body = (params.get("Body") ?? "").trim().toUpperCase();
-  if (!from || !body) return twiml();
+  const body = params.get("Body") ?? "";
+  if (!from) return twiml();
 
-  const word = body.split(/\s+/)[0];
-  const isConfirm = CONFIRM_WORDS.has(word);
-  const isStop = STOP_WORDS.has(word);
-  const isHelp = HELP_WORDS.has(word);
-  if (!isConfirm && !isStop && !isHelp) return twiml(); // not a keyword — ignore
-
-  // One phone can back storytellers in more than one family (the same elder
-  // added by two branches of the family) — apply the decision to every match.
   const db = supabaseService();
-  const { data: rows } = await db
-    .from("storytellers")
-    .select("id, language, phone")
-    .not("phone", "is", null);
-  const matches = (rows ?? []).filter((r) => r.phone && phoneMatches(r.phone, from));
-  const lang: Lang = matches[0]?.language === "es" ? "es" : "en";
+  const cls = classifyInbound(body);
 
-  if (isHelp) return twiml(t(lang, "sms_help_reply"));
-  if (matches.length === 0) return twiml(); // unknown number — nothing to record
+  // (1) Audit EVERY inbound + queue natural-language opt-outs for review.
+  await db.from("sms_inbound").insert({
+    phone_e164: from,
+    body,
+    matched: cls.matched,
+    needs_review: cls.needsReview,
+  });
 
-  const consent = isStop ? "opted_out" : "opted_in";
-  await db
-    .from("storytellers")
-    .update({ consent_state: consent })
-    .in(
-      "id",
-      matches.map((r) => r.id),
-    );
+  // Resolve every party this number belongs to — storytellers AND members can
+  // both be A2P recipients, and one number can back parties in several families.
+  const [{ data: sts }, { data: mems }] = await Promise.all([
+    db.from("storytellers").select("id, family_id, language, phone").not("phone", "is", null),
+    db.from("memberships").select("id, family_id, language, sms_phone").not("sms_phone", "is", null),
+  ]);
+  const stMatches = (sts ?? []).filter((r) => r.phone && phoneMatches(r.phone, from));
+  const memMatches = (mems ?? []).filter((r) => r.sms_phone && phoneMatches(r.sms_phone, from));
 
-  // STOP: stay silent — Twilio already sends the mandated opt-out auto-reply
-  // (and blocks anything we'd send). YES: confirm, as CTIA requires.
-  return isStop ? twiml() : twiml(t(lang, "sms_confirmed_reply"));
+  // Reply language: a clearly ES/EN keyword wins (a strong preference signal),
+  // else the matched party's stored language, else English.
+  const lang: Lang =
+    cls.langHint ??
+    ((stMatches[0]?.language ?? memMatches[0]?.language) === "es" ? "es" : "en");
+
+  if (cls.intent === "help") {
+    return twiml(t(lang, "sms_help_reply"));
+  }
+
+  if (cls.intent === "opt_out") {
+    const method = cls.matched === "natural_optout" ? "natural_optout" : "sms_stop";
+    // Global, per-number suppression — survives across families and future setups.
+    await db
+      .from("sms_suppressions")
+      .upsert({ phone_e164: from, reason: method, source: "inbound" }, { onConflict: "phone_e164" });
+
+    // Opt out every matched party + record the operative opt-out event (the raw
+    // inbound is the auditable evidence of their request).
+    for (const s of stMatches) {
+      await db.from("storytellers").update({ consent_state: "opted_out" }).eq("id", s.id);
+      await db.from("consent_events").insert({
+        family_id: s.family_id,
+        subject_type: "storyteller",
+        subject_id: s.id,
+        phone_e164: from,
+        event_type: "opt_out",
+        method,
+        disclosure_text: body,
+        language: lang,
+      });
+    }
+    for (const m of memMatches) {
+      await db.from("memberships").update({ consent_state: "opted_out" }).eq("id", m.id);
+      await db.from("consent_events").insert({
+        family_id: m.family_id,
+        subject_type: "member",
+        subject_id: m.id,
+        phone_e164: from,
+        event_type: "opt_out",
+        method,
+        disclosure_text: body,
+        language: lang,
+      });
+    }
+    // One final confirmation (permitted even in quiet hours — it's a reply).
+    return twiml(t(lang, "sms_stop_confirmation"));
+  }
+
+  if (cls.intent === "resubscribe") {
+    // START only means something if a prior STOP suppressed the number. If there
+    // was never any consent, do NOT auto-opt-in — that must go through the /c
+    // authorization page.
+    const { data: supp } = await db
+      .from("sms_suppressions")
+      .select("phone_e164")
+      .eq("phone_e164", from)
+      .maybeSingle();
+    if (!supp) return twiml(); // not suppressed → no cold opt-in, stay silent
+
+    await db.from("sms_suppressions").delete().eq("phone_e164", from);
+    for (const s of stMatches) {
+      await db.from("storytellers").update({ consent_state: "opted_in" }).eq("id", s.id);
+      await db.from("consent_events").insert({
+        family_id: s.family_id,
+        subject_type: "storyteller",
+        subject_id: s.id,
+        phone_e164: from,
+        event_type: "re_opt_in",
+        method: "sms_start",
+        disclosure_text: body,
+        language: lang,
+      });
+    }
+    for (const m of memMatches) {
+      await db.from("memberships").update({ consent_state: "opted_in" }).eq("id", m.id);
+      await db.from("consent_events").insert({
+        family_id: m.family_id,
+        subject_type: "member",
+        subject_id: m.id,
+        phone_e164: from,
+        event_type: "re_opt_in",
+        method: "sms_start",
+        disclosure_text: body,
+        language: lang,
+      });
+    }
+    return twiml(t(lang, "sms_start_welcome"));
+  }
+
+  // No keyword — conversational content isn't handled here yet. Logged above.
+  return twiml();
 }

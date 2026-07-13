@@ -85,7 +85,12 @@ than switching primary auth to phone OTP.
   + verify-phone + dashboard banner wired into it. 8/8 checks, DB clean.
 - **F — Inbound rewrite + universal pre-send gate** (bilingual keywords, NL
   opt-out, suppressions, inbound log, START-after-STOP, provider reconciliation);
-  drop the confirmation branch in `nudge.ts`.
+  drop the confirmation branch in `nudge.ts`. **[DONE — 2026-07-13.]**
+  `lib/sms/keywords.ts` (classifyInbound) + `lib/sms/gate.ts` (preSendGate);
+  `api/sms/inbound` rewritten (matches storytellers + members, opt_out/help/
+  START-after-STOP only, consent_events + suppressions + inbound log); `nudge.ts`
+  dropped the reply-YES branch + gates + 21610 reconciliation. 21/21 live checks,
+  DB clean. Twilio single-responder console step deferred to G.
 - **G — `/sms` rewrite + fresh screenshots + A2P campaign resubmit.**
 
 ## Launch gate (non-code)

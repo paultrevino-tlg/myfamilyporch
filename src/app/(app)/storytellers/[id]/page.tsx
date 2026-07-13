@@ -272,19 +272,16 @@ export default async function StorytellerDetailPage({
         </Banner>
       )}
       {(sp.sent === "nudge" || sp.sent === "asked") && <Banner tone="green">We sent the question. 💬</Banner>}
-      {(sp.sent === "nudge_confirm" || sp.sent === "asked_confirm") && (
-        <Banner tone="green">
-          We texted a one-time confirmation — reminders start once they reply YES. 💬
+      {(sp.sent === "nudge_not-opted-in" || sp.sent === "asked_not-opted-in") && (
+        <Banner tone="amber">
+          No text sent — {st.name} hasn&apos;t opted in yet. Send them their invite link (in Phone
+          above) so they can say yes.
         </Banner>
       )}
-      {(sp.sent === "nudge_awaiting-confirmation" || sp.sent === "asked_awaiting-confirmation") && (
+      {(sp.sent === "nudge_suppressed" || sp.sent === "asked_suppressed") && (
         <Banner tone="amber">
-          Confirmation already sent — waiting for them to reply YES before reminders can go out.
-        </Banner>
-      )}
-      {(sp.sent === "nudge_sms-stopped" || sp.sent === "asked_sms-stopped") && (
-        <Banner tone="amber">
-          No text sent — this person opted out by replying STOP. They can text START to turn reminders back on.
+          No text sent — this number opted out by replying STOP. They can text START to turn
+          reminders back on.
         </Banner>
       )}
       {(sp.sent === "nudge_no-phone" || sp.sent === "asked_no-phone") && (
