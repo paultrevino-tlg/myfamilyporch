@@ -92,6 +92,23 @@ than switching primary auth to phone OTP.
   dropped the reply-YES branch + gates + 21610 reconciliation. 21/21 live checks,
   DB clean. Twilio single-responder console step deferred to G.
 - **G — `/sms` rewrite + fresh screenshots + A2P campaign resubmit.**
+  **[DONE (code/copy) — 2026-07-14.]** `/sms` rewritten to the first-party model
+  (three consent points, exact disclosures, four A2P samples + P2P note,
+  STOP/HELP/START); Terms proxy language fixed; stale `public/sms/*.png` deleted.
+  Remaining is **manual** (tracked in TODO 4.3): recapture the two opt-in
+  screenshots, set Twilio single-responder, resubmit the campaign, live-test.
+
+---
+
+## Status (2026-07-14): the consent-flow redesign is CODE-COMPLETE.
+
+Phases A–G are all shipped to `main`. What remains is **not code**:
+- **Manual (TODO 4.3):** recapture 2 screenshots + wire `<img>` refs; Twilio
+  webhook + single-responder config; resubmit the A2P campaign; live delivery test.
+- **Launch gate:** TCPA attorney sign-off on the flow + EN/ES disclosure wording.
+
+When the campaign is approved and a live SMS is confirmed delivered, this plan's
+work is fully verified — move it to `.done/`.
 
 ## Launch gate (non-code)
 

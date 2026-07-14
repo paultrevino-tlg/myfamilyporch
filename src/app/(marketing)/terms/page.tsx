@@ -62,10 +62,15 @@ export default function Terms() {
         SMS reminder program (&ldquo;My Family Porch reminders&rdquo;)
       </h2>
       <p className="mt-3 text-ink/80">
-        If a mobile number is provided with consent, we send reminder text
-        messages encouraging the next recording session. By providing a mobile
-        number, you confirm you are authorized to receive these messages or that
-        the recipient has agreed to receive them.
+        Text messaging is opt-in and first-party: each person agrees to receive
+        messages at their own number. A family member opts in for their own
+        number when verifying it, and a storyteller opts in for themselves on
+        their own authorization page before any automated message is sent to
+        them. See our{" "}
+        <a className="text-accent underline" href="/sms">
+          SMS program page
+        </a>{" "}
+        for exactly how consent is collected.
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-6 text-ink/80">
         <li>
@@ -100,9 +105,10 @@ export default function Terms() {
 
       <h2 className="mt-8 font-semibold text-xl">Acceptable use</h2>
       <p className="mt-3 text-ink/80">
-        You agree to use the service only for lawful, personal family purposes,
-        to provide accurate information, and only to add a storyteller&apos;s
-        phone number when that person has agreed to receive reminders.
+        You agree to use the service only for lawful, personal family purposes
+        and to provide accurate information. Adding a storyteller&apos;s number
+        only generates an invitation for them; they choose whether to opt in on
+        their own authorization page.
       </p>
 
       <h2 className="mt-8 font-semibold text-xl">Privacy</h2>
