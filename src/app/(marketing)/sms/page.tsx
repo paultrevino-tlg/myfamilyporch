@@ -93,6 +93,45 @@ export default function SmsOptInPage() {
           </div>
         </div>
 
+        {/* Screenshots of the two first-party opt-in surfaces — the public,
+            verifiable record carriers require (recapture if the forms change). */}
+        <div className="mt-12">
+          <h2 className="font-serif text-xl font-semibold text-ink/90">
+            What the opt-in looks like
+          </h2>
+          <p className="mt-4 leading-relaxed text-ink/80">
+            Consent is collected in two places, and each person opts in for their
+            own number. Here is exactly what each of them sees.
+          </p>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            <figure>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sms/member-optin.png"
+                alt="The family member's phone-verification form at myfamilyporch.net: a mobile number field, a language selector, and a checked box reading “Yes, text me at this number. I agree to receive automated, recurring texts from My Family Porch to help set up and record my family's stories. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
+                loading="lazy"
+                className="w-full rounded-2xl border border-line"
+              />
+              <figcaption className="mt-2 text-sm text-ink/60">
+                1 — The family member verifies their own number and opts in.
+              </figcaption>
+            </figure>
+            <figure>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/sms/storyteller-optin.png"
+                alt="The storyteller's own authorization page: their name and masked number, and a checked box reading “Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
+                loading="lazy"
+                className="w-full rounded-2xl border border-line"
+              />
+              <figcaption className="mt-2 text-sm text-ink/60">
+                3 — The storyteller opts in themselves on their own authorization
+                page.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
         {/* Sample A2P messages — must match lib/i18n sms_* copy */}
         <div className="mt-12">
           <h2 className="font-serif text-xl font-semibold text-ink/90">
