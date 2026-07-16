@@ -237,8 +237,9 @@ export default function SmsOptInPage() {
               .
             </li>
             <li>
-              We never sell your information or share mobile numbers with third
-              parties for their own marketing.
+              We do not share, sell, or otherwise provide your mobile phone
+              number or SMS opt-in and consent information to any third parties
+              or affiliates for marketing or promotional purposes.
             </li>
             <li>Carriers are not liable for delayed or undelivered messages.</li>
           </ul>

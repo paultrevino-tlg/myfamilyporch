@@ -15,7 +15,7 @@ export default function Terms() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Terms &amp; Conditions</h1>
-      <p className="mt-2 text-ink/65 text-sm">Last updated: June 5, 2026</p>
+      <p className="mt-2 text-ink/65 text-sm">Last updated: July 16, 2026</p>
 
       <p className="mt-6 text-ink/80">
         These terms govern your use of My Family Porch, a service operated by
@@ -97,6 +97,12 @@ export default function Terms() {
             support@myfamilyporch.net
           </a>
           .
+        </li>
+        <li>
+          <strong>Your mobile data is private:</strong> we do not share, sell,
+          or otherwise provide your mobile phone number or SMS opt-in and consent
+          information to any third parties or affiliates for marketing or
+          promotional purposes.
         </li>
         <li>
           Carriers are not liable for delayed or undelivered messages.

@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
       <h1 className="font-semibold text-3xl">Privacy Policy</h1>
-      <p className="mt-2 text-ink/65 text-sm">Last updated: June 5, 2026</p>
+      <p className="mt-2 text-ink/65 text-sm">Last updated: July 16, 2026</p>
 
       <p className="mt-6 text-ink/80">
         My Family Porch, a service of Technology Leadership Group, LLC
@@ -93,8 +93,12 @@ export default function PrivacyPolicy() {
         fewer. Message and data rates may apply. You can opt out at any time by
         replying <strong>STOP</strong>, and you can reply <strong>HELP</strong>{" "}
         for assistance. Mobile information is used only to deliver these
-        reminders; it is <strong>never sold or shared with third parties</strong>{" "}
-        and is never used for unrelated marketing.
+        reminders. <strong>
+          We do not share, sell, or otherwise provide your mobile phone number
+          or SMS opt-in and consent information to any third parties or
+          affiliates for marketing or promotional purposes.
+        </strong>{" "}
+        No mobile information is used for unrelated marketing.
       </p>
 
       <h2 className="mt-8 font-semibold text-xl">How we store and protect it</h2>
