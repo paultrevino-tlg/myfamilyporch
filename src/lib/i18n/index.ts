@@ -62,7 +62,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     sms_stop_confirmation:
       "You're unsubscribed from My Family Porch. You won't receive further texts. Reply START to resubscribe.",
     sms_start_welcome:
-      "Welcome back to My Family Porch. You're resubscribed. Reply STOP to opt out, HELP for help.",
+      "Welcome back to My Family Porch — you're resubscribed to story setup & reminders, up to 1 msg/day. Msg & data rates may apply. Reply STOP to opt out, HELP for help.",
     sms_help_reply:
       "My Family Porch: record your life stories by text. Up to 1 msg/day; msg & data rates may apply. Reply STOP to opt out. Support: support@myfamilyporch.net",
     // Member phone verification (consent-flow.md steps 2-3). {link} = the signed
@@ -220,7 +220,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     sms_stop_confirmation:
       "Cancelaste tu suscripción a My Family Porch. No recibirás más mensajes. Responde START para volver a suscribirte.",
     sms_start_welcome:
-      "Bienvenido de nuevo a My Family Porch. Te has vuelto a suscribir. Responde STOP para cancelar, AYUDA para ayuda.",
+      "Bienvenido de nuevo a My Family Porch — te has vuelto a suscribir a recordatorios, hasta 1 mensaje por día. Pueden aplicarse tarifas de mensajes y datos. Responde STOP para cancelar, AYUDA para ayuda.",
     sms_help_reply:
       "My Family Porch: graba las historias de tu vida por mensaje de texto. Hasta 1 mensaje por día; pueden aplicarse tarifas. Responde STOP para cancelar. Ayuda: support@myfamilyporch.net",
     // Member phone verification (consent-flow.md steps 2-3)
