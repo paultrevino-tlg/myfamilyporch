@@ -35,6 +35,7 @@ import { setStorytellerPhone } from "../../settings/actions";
 import { saveSchedule, askNow } from "../../schedule/actions";
 import { setTopicPreference } from "../../topics/actions";
 import { buildConsentLink } from "@/lib/consent/storyteller";
+import { consentBadge } from "@/lib/consent/badge";
 import { t, type Lang } from "@/lib/i18n";
 import CopyBlock from "./CopyBlock";
 
@@ -461,6 +462,12 @@ export default async function StorytellerDetailPage({
           label="Phone"
           value={st.phone?.trim() ? st.phone : "Not set"}
           sub="Where the story texts go"
+          badge={consentBadge(
+            st.consent_state === "opted_in" || st.consent_state === "opted_out"
+              ? st.consent_state
+              : "pending",
+            !!st.phone?.trim(),
+          )}
           open={sp.saved === "phone" || sp.error === "phone"}
         >
           {canManage ? (
@@ -695,12 +702,15 @@ function ConfigBox({
   label,
   value,
   sub,
+  badge,
   open,
   children,
 }: {
   label: string;
   value: string;
   sub?: string;
+  // Optional status pill beside the value, so state is legible while collapsed.
+  badge?: { label: string; cls: string };
   // Render expanded on load — used to keep the section the member just saved
   // open, so the next step (the invite) is in front of them instead of behind
   // another click. Still collapsible by hand.
@@ -714,7 +724,12 @@ function ConfigBox({
           <span className="text-sm font-semibold">{label}</span>
           {sub && <span className="block text-xs text-ink/50">{sub}</span>}
         </span>
-        <span className="text-sm font-medium text-ink/70">{value}</span>
+        <span className="flex items-center gap-2">
+          {badge && (
+            <span className={`chip ${badge.cls}`}>{badge.label}</span>
+          )}
+          <span className="text-sm font-medium text-ink/70">{value}</span>
+        </span>
       </summary>
       <div className="mt-4">{children}</div>
     </details>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { StorytellerStat } from "@/lib/overview";
+import { consentBadge } from "@/lib/consent/badge";
 
 // The dashboard's per-storyteller summary cards, extracted so both the
 // Overview and My Settings can render the same grid. RLS-scoped data comes in
@@ -96,6 +97,7 @@ function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
   const quietDays = stat.lastSessionAt ? daysSince(stat.lastSessionAt) : null;
   const onTrack = stat.lastSessionFresh;
   const tone: "ok" | "warn" = onTrack ? "ok" : "warn";
+  const sms = consentBadge(stat.consentState, stat.hasPhone);
 
   return (
     <Link href={`/storytellers/${stat.id}`} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
@@ -122,6 +124,9 @@ function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
             ) : (
               <span className="chip bg-surface2 text-ink/50 ring-1 ring-line">Not started</span>
             )}
+            {/* Texting status. Anything but "Verified" means preSendGate is
+                blocking every message to this storyteller. */}
+            <span className={`chip ${sms.cls}`}>{sms.label}</span>
           </div>
         </div>
         <Ring value={stat.thisWeekCount} total={stat.weeklyTarget} tone={tone} />

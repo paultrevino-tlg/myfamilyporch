@@ -24,6 +24,12 @@ export type StorytellerStat = {
   id: string;
   name: string;
   language: string;
+  // SMS consent lifecycle, surfaced on the cards so an un-opted-in storyteller
+  // is visible at a glance — until they opt in on their own /c/<token> page we
+  // cannot text them at all, which is the single most common reason a setup
+  // looks finished but no reminders ever arrive.
+  hasPhone: boolean; // presence only — the number itself isn't needed to render a card
+  consentState: "pending" | "opted_in" | "opted_out";
   lastSessionAt: string | null;
   lastSessionFresh: boolean;
   thisWeekCount: number;
@@ -77,7 +83,7 @@ export async function loadStorytellerStats(
     await Promise.all([
       sb
         .from("storytellers")
-        .select("id,name,language")
+        .select("id,name,language,phone,consent_state")
         .eq("family_id", familyId)
         .order("created_at", { ascending: true }),
       sb
@@ -142,6 +148,8 @@ export async function loadStorytellerStats(
       id: string;
       name: string;
       language: string;
+      phone: string | null;
+      consent_state: string;
     }[]
   ).map((st) => {
     const completed = (sessionsBy.get(st.id) ?? [])
@@ -152,6 +160,11 @@ export async function loadStorytellerStats(
       id: st.id,
       name: st.name,
       language: st.language,
+      hasPhone: !!st.phone?.trim(),
+      consentState:
+        st.consent_state === "opted_in" || st.consent_state === "opted_out"
+          ? st.consent_state
+          : "pending",
       lastSessionAt,
       lastSessionFresh: !!lastSessionAt && lastSessionAt >= weekAgo,
       thisWeekCount: completed.filter((c) => c >= weekAgo).length,
