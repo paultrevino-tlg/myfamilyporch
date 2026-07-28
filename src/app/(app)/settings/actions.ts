@@ -2,8 +2,8 @@
 
 // Settings actions (TODO 5.5). Admin-only; RLS is the real boundary
 // (st_write = admin for storyteller phones, mem_write = admin for the alert
-// number — and the alert-number write is additionally scoped to the caller's
-// OWN membership row). Family-access invites reuse the 1.3 createInvitation
+// preference — and that write is additionally scoped to the caller's OWN
+// membership row). Family-access invites reuse the 1.3 createInvitation
 // action; cloned-voice setup lives on /storytellers (4.1) and is only surfaced
 // here, so it has no action of its own.
 import { revalidatePath } from "next/cache";
@@ -61,20 +61,18 @@ export async function setStorytellerPhone(formData: FormData) {
 // Set/clear the signed-in admin's OWN alert number (failure alerts). Scoped to
 // user_id = the caller, so an admin can only set their own — never another
 // member's. The mic-failed route reads these to text each admin.
-export async function setAlertPhone(formData: FormData) {
+// Turn session-failure alert texts on/off for the caller's OWN membership.
+//
+// This is only a preference — it carries no consent and names no number. The
+// number and the consent behind it come from /verify-phone (the first-party
+// opt-in surface registered with the A2P campaign), and delivery is still gated
+// at send time by preSendGate. Turning this on can never start texts to someone
+// who has not opted in or who has replied STOP.
+export async function setAlertPreference(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;
 
-  const phone = normalizePhone(String(formData.get("phone") ?? ""));
-  if (!phone.ok) {
-    redirect("/settings?error=alert");
-  }
-
-  // A2P 10DLC consent gate: saving a real alert number requires the admin to
-  // confirm they agree to receive failure-alert texts at it. Clearing is exempt.
-  if (phone.value && formData.get("consent") !== "on") {
-    redirect("/settings?error=alert-consent");
-  }
+  const enabled = formData.get("alert_on_failure") === "on";
 
   const sb = await supabaseServer();
   const {
@@ -84,7 +82,7 @@ export async function setAlertPhone(formData: FormData) {
 
   const { error } = await sb
     .from("memberships")
-    .update({ alert_phone: phone.value })
+    .update({ alert_on_failure: enabled })
     .eq("family_id", active.family_id)
     .eq("user_id", user.id);
   if (error) throw error;

@@ -1,5 +1,5 @@
 // Settings data for the admin dashboard (TODO 5.5). Gathers the Settings panels:
-// the signed-in member's own alert number (failure alerts), THEIR cloned voice
+// the signed-in member's own SMS number + consent state, THEIR cloned voice
 // ("My voice" — voice-per-member), and the family-access roster + invitations.
 //
 // Reads are RLS-scoped via the SSR client. The ONE exception is resolving member
@@ -19,8 +19,18 @@ export type PendingInvite = {
   status: "Accepted" | "Expired" | "Pending";
 };
 
+// The signed-in member's own SMS state: the ONE consented number (migration
+// 0016 merged the old separate alert_phone into it), where it stands in the
+// consent lifecycle, and whether they want session-failure alerts on it.
+export type MySms = {
+  phone: string | null;
+  consentState: "pending" | "opted_in" | "opted_out";
+  language: "en" | "es";
+  alertOnFailure: boolean;
+};
+
 export type FamilySettings = {
-  myAlertPhone: string | null;
+  mySms: MySms;
   myVoice: MyVoice;
   roster: RosterMember[];
   invitations: PendingInvite[];
@@ -35,7 +45,14 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
 
   const [members, memRes, invRes, voiceRes] = await Promise.all([
     loadFamilyMembers(familyId),
-    sb.from("memberships").select("user_id, alert_phone").eq("family_id", familyId),
+    // Only the caller's OWN row — this panel is "my number", and there's no
+    // reason to pull every family member's phone to render it.
+    sb
+      .from("memberships")
+      .select("sms_phone, consent_state, language, alert_on_failure")
+      .eq("family_id", familyId)
+      .eq("user_id", myId)
+      .maybeSingle(),
     sb
       .from("invitations")
       .select("id, email, role, accepted_at, expires_at, created_at")
@@ -50,8 +67,16 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
       .maybeSingle(),
   ]);
 
-  const myAlertPhone =
-    (memRes.data ?? []).find((m) => m.user_id === myId)?.alert_phone ?? null;
+  const myMem = memRes.data;
+  const mySms: MySms = {
+    phone: myMem?.sms_phone ?? null,
+    consentState:
+      myMem?.consent_state === "opted_in" || myMem?.consent_state === "opted_out"
+        ? myMem.consent_state
+        : "pending",
+    language: myMem?.language === "es" ? "es" : "en",
+    alertOnFailure: myMem?.alert_on_failure ?? false,
+  };
 
   const myVoice: MyVoice = voiceRes.data
     ? { id: voiceRes.data.id, label: voiceRes.data.label }
@@ -70,5 +95,5 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
         : "Pending",
   }));
 
-  return { myAlertPhone, myVoice, roster, invitations };
+  return { mySms, myVoice, roster, invitations };
 }

@@ -6,8 +6,10 @@
 // (creds present, Twilio rejects) throws so the caller can log it.
 //
 // Worker-compatible: plain fetch + Basic auth (btoa), no Node-only SDK.
+import { isE164 } from "@/lib/phone";
 
-// Post one SMS. `to` and the From number must be E.164 (e.g. +15551234567).
+// Post one SMS. `to` and the From number must be E.164 (e.g. +15551234567);
+// a non-E.164 destination is refused here rather than sent.
 export async function sendSms(to: string, body: string): Promise<void> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -19,6 +21,13 @@ export async function sendSms(to: string, body: string): Promise<void> {
   }
   if (!to) {
     console.warn("[sms] no destination number — skipping send");
+    return;
+  }
+  // Twilio requires E.164. Callers normalize on the way in (lib/phone), so a
+  // non-E.164 number here means a bad row or a missed code path — skip rather
+  // than burn a request on a send Twilio will reject (21211).
+  if (!isE164(to)) {
+    console.warn("[sms] destination is not E.164 — skipping send");
     return;
   }
 

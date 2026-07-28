@@ -341,7 +341,7 @@ export type Database = {
       }
       memberships: {
         Row: {
-          alert_phone: string | null
+          alert_on_failure: boolean
           consent_state: string
           created_at: string
           family_id: string
@@ -353,7 +353,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          alert_phone?: string | null
+          alert_on_failure?: boolean
           consent_state?: string
           created_at?: string
           family_id: string
@@ -365,7 +365,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          alert_phone?: string | null
+          alert_on_failure?: boolean
           consent_state?: string
           created_at?: string
           family_id?: string
