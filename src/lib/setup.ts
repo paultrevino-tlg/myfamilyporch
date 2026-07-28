@@ -45,28 +45,48 @@ export function deriveSetupStep(input: {
 // opted-in storyteller — every storyteller after that is onboarded through this
 // flow instead. Same philosophy: DERIVED from data, never a stored column, so
 // it's always accurate and a member can walk away and come back.
-export type StorytellerSetupStep = "number" | "invite" | "stopped" | "ready";
+export type StorytellerSetupStep =
+  | "number"
+  | "schedule"
+  | "invite"
+  | "stopped"
+  | "ready";
+
+// The member's own steps, in order. The storyteller's opt-in is deliberately NOT
+// in this list — it's their action, not the member's, and rendering it as a
+// fourth identical dot made the flow look unfinishable.
+export const ST_STEPS: { key: StorytellerSetupStep; label: string }[] = [
+  { key: "number", label: "Number" },
+  { key: "schedule", label: "Schedule" },
+  { key: "invite", label: "Invite" },
+];
 
 export const ST_STEP_NO: Record<StorytellerSetupStep, number> = {
   number: 1,
-  invite: 2,
-  stopped: 2, // an opt-out sits at the invite stop; it isn't progress
-  ready: 3,
+  schedule: 2,
+  invite: 3,
+  stopped: 3, // an opt-out sits at the invite stop; it isn't progress
+  ready: 4, // past the member's last step — the hand-off is done
 };
 
-export const ST_STEP_TOTAL = 3;
-
-// Pure — the whole flow in four lines. "invite" covers both "send it" and
-// "waiting for them", because nothing records whether the member actually sent
-// the text; the panel shows the invite and the waiting state together rather
-// than claiming to know.
+// Pure. "invite" covers both "send it" and "waiting for them", because nothing
+// records whether the member actually sent the text; the panel shows the invite
+// and the waiting state together rather than claiming to know.
+//
+// Schedule comes BEFORE the invite on purpose. runScheduler only iterates rows
+// in the schedules table, so a storyteller with no schedule is never considered
+// and never nudged — while sms_storyteller_welcome has already promised them
+// "we'll text you when it's time to start". Getting consent first and the
+// schedule later is exactly how that promise gets broken.
 export function deriveStorytellerSetupStep(input: {
   hasPhone: boolean;
+  hasSchedule: boolean;
   consentState: string;
 }): StorytellerSetupStep {
   if (input.consentState === "opted_in") return "ready";
   if (!input.hasPhone) return "number";
   if (input.consentState === "opted_out") return "stopped";
+  if (!input.hasSchedule) return "schedule";
   return "invite";
 }
 

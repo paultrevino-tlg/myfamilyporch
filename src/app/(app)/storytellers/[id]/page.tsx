@@ -6,14 +6,7 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import PlayAudioButton from "../../PlayAudioButton";
 import ExportPanel, { type ExportJob } from "./ExportPanel";
-import {
-  loadStorytellerSchedule,
-  DAY_CODES,
-  TIMEZONES,
-  type DayCode,
-  type StorytellerSchedule,
-  type EngagementSensitivity,
-} from "@/lib/schedule";
+import { loadStorytellerSchedule, daysSummary, prettyTime, tzLabel } from "@/lib/schedule";
 import {
   loadStorytellerTopics,
   type StorytellerTopics,
@@ -31,13 +24,14 @@ import {
   translateAllStories,
   deleteStoryteller,
 } from "../actions";
-import { saveSchedule, askNow } from "../../schedule/actions";
+import SaveButton from "./SaveButton";
 import { setTopicPreference } from "../../topics/actions";
 import { buildConsentLink } from "@/lib/consent/storyteller";
 import { consentBadge } from "@/lib/consent/badge";
 import { deriveStorytellerSetupStep } from "@/lib/setup";
 import PhoneForm from "./PhoneForm";
 import InvitePanel from "./InvitePanel";
+import ScheduleEditor from "./ScheduleEditor";
 import { t, type Lang } from "@/lib/i18n";
 
 // Per-storyteller hub. RLS scopes every read to the member's families; we also
@@ -66,20 +60,6 @@ const PREF_LABEL: Record<TopicPreference, string> = {
   focus: "Focus next",
   avoid: "Avoid",
 };
-const SENSITIVITY_LABEL: Record<EngagementSensitivity, string> = {
-  gentle: "Gentle",
-  standard: "Standard",
-  sensitive: "Sensitive",
-};
-const DAY_LABEL: Record<DayCode, string> = {
-  SU: "Su",
-  MO: "Mo",
-  TU: "Tu",
-  WE: "We",
-  TH: "Th",
-  FR: "Fr",
-  SA: "Sa",
-};
 const inputCls = "mt-1 input";
 
 // A calm relative day ("Today", "Fri", "12 days ago") — never a raw timestamp.
@@ -97,27 +77,6 @@ function formatDuration(sec: number | null): string | null {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return m > 0 ? `${m} min ${s} sec` : `${s} sec`;
-}
-
-// "10:00" → "10:00 AM" for the read-only / pill display.
-function prettyTime(hhmm: string): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  if (Number.isNaN(h)) return hhmm;
-  const period = h < 12 ? "AM" : "PM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
-}
-
-function tzLabel(tz: string): string {
-  return TIMEZONES.find((z) => z.value === tz)?.label ?? tz;
-}
-
-function daysSummary(days: DayCode[]): string {
-  if (days.length === 0) return "No days set";
-  if (days.length === 7) return "Every day";
-  return DAY_CODES.filter((d) => days.includes(d))
-    .map((d) => DAY_LABEL[d])
-    .join(" · ");
 }
 
 export default async function StorytellerDetailPage({
@@ -246,6 +205,7 @@ export default async function StorytellerDetailPage({
   // Same derivation the setup wizard uses, so the callout and the flow agree.
   const setupStep = deriveStorytellerSetupStep({
     hasPhone: !!st.phone?.trim(),
+    hasSchedule: !!schedule?.saved,
     consentState: st.consent_state,
   });
 
@@ -283,9 +243,11 @@ export default async function StorytellerDetailPage({
             <strong className="font-semibold text-ink">Finish setting up {st.name}.</strong>{" "}
             {setupStep === "number"
               ? "Add their mobile number."
-              : setupStep === "stopped"
-                ? "They've opted out of texts."
-                : `Send their invite — ${st.name} hasn't opted in yet.`}
+              : setupStep === "schedule"
+                ? "Choose when we reach out — no reminders send without a schedule."
+                : setupStep === "stopped"
+                  ? "They've opted out of texts."
+                  : `Send their invite — ${st.name} hasn't opted in yet.`}
           </span>
           <span aria-hidden className="ml-auto text-brand">
             →
@@ -615,6 +577,7 @@ export default async function StorytellerDetailPage({
               : "—"
           }
           sub="Focus, ease off, or avoid"
+          open={sp.open === "topics"}
         >
           {topics ? (
             <>
@@ -749,14 +712,6 @@ function ViewerNote() {
   return <p className="text-sm text-ink/50">Only owners and admins can change this.</p>;
 }
 
-function SaveButton() {
-  return (
-    <button type="submit" className="btn-ink">
-      Save
-    </button>
-  );
-}
-
 function Banner({ tone, children }: { tone: "green" | "amber" | "red"; children: React.ReactNode }) {
   const cls =
     tone === "green"
@@ -769,206 +724,7 @@ function Banner({ tone, children }: { tone: "green" | "amber" | "red"; children:
 
 // Inline schedule editor (admins) / read-only summary (viewers). Mirrors the
 // old /schedule block; saveSchedule + askNow redirect back to this hub.
-function ScheduleEditor({ st, canManage }: { st: StorytellerSchedule; canManage: boolean }) {
-  const dayset = new Set(st.days);
 
-  if (!canManage) {
-    return (
-      <dl className="space-y-2 text-sm">
-        <ScheduleRow label="Days">{daysSummary(st.days)}</ScheduleRow>
-        <ScheduleRow label="Time">{prettyTime(st.sendTimeLocal)}</ScheduleRow>
-        <ScheduleRow label="Timezone">{tzLabel(st.timezone)}</ScheduleRow>
-        <ScheduleRow label="Questions per session">{st.questionsPer === 1 ? "1" : "1–2"}</ScheduleRow>
-        <ScheduleRow label="Quiet hours">
-          {st.quietAfter ? `After ${prettyTime(st.quietAfter)}` : "Not set"}
-        </ScheduleRow>
-        {st.paused && <ScheduleRow label="Status">Paused</ScheduleRow>}
-        <ScheduleRow label="“Recording less” alert">
-          {st.engagementEnabled ? `On · ${SENSITIVITY_LABEL[st.engagementSensitivity]}` : "Off"}
-        </ScheduleRow>
-        <ScheduleRow label="Better-time suggestion">
-          {st.scheduleSuggestionEnabled ? "On" : "Off"}
-        </ScheduleRow>
-      </dl>
-    );
-  }
-
-  return (
-    <>
-      <form action={saveSchedule} className="space-y-5">
-        <input type="hidden" name="storyteller_id" value={st.id} />
-
-        <div>
-          <div className="font-medium text-sm">Days</div>
-          <p className="text-xs text-ink/50">The text arrives these mornings.</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {DAY_CODES.map((d) => {
-              const on = dayset.has(d);
-              return (
-                <label
-                  key={d}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
-                    on ? "border-ink bg-ink text-white" : "text-ink/60 hover:bg-ink/5"
-                  }`}
-                >
-                  <input type="checkbox" name="days" value={d} defaultChecked={on} className="sr-only" />
-                  {DAY_LABEL[d]}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-6">
-          <label className="flex flex-col text-sm">
-            <span className="font-medium">Time</span>
-            <span className="text-xs text-ink/50">In their local time.</span>
-            <input
-              type="time"
-              name="send_time_local"
-              defaultValue={st.sendTimeLocal}
-              className="mt-1 input"
-            />
-          </label>
-
-          <label className="flex flex-col text-sm">
-            <span className="font-medium">Timezone</span>
-            <span className="text-xs text-ink/50">Where they are.</span>
-            <select
-              name="timezone"
-              defaultValue={st.timezone}
-              className="mt-1 input"
-            >
-              {!TIMEZONES.some((z) => z.value === st.timezone) && (
-                <option value={st.timezone}>{st.timezone}</option>
-              )}
-              {TIMEZONES.map((z) => (
-                <option key={z.value} value={z.value}>
-                  {z.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col text-sm">
-            <span className="font-medium">Questions per session</span>
-            <span className="text-xs text-ink/50">Kept short on purpose.</span>
-            <select
-              name="questions_per"
-              defaultValue={String(st.questionsPer)}
-              className="mt-1 input"
-            >
-              <option value="1">1</option>
-              <option value="2">1–2</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col text-sm">
-            <span className="font-medium">Quiet hours</span>
-            <span className="text-xs text-ink/50">Never ring after this.</span>
-            <input
-              type="time"
-              name="quiet_after"
-              defaultValue={st.quietAfter ?? ""}
-              className="mt-1 input"
-            />
-          </label>
-        </div>
-
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="paused" defaultChecked={st.paused} className="h-4 w-4 rounded border" />
-          <span>
-            <span className="font-medium">Pause everything</span>
-            <span className="text-ink/50"> — if they&apos;re traveling or unwell.</span>
-          </span>
-        </label>
-
-        {/* Check-in alerts (TODO 6.5) — the adaptive signals are opt-out/tunable;
-            mic-failed always surfaces (it's an acute technical fault). */}
-        <div className="border-t border-line pt-4">
-          <div className="text-sm font-medium">Check-in alerts</div>
-          <p className="text-xs text-ink/50">
-            Quiet, optional heads-ups about how {st.name} is doing. Paused storytellers are
-            never flagged.
-          </p>
-
-          <div className="mt-3 space-y-3">
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="signal_engagement_enabled"
-                defaultChecked={st.engagementEnabled}
-                className="mt-0.5 h-4 w-4 rounded border"
-              />
-              <span>
-                <span className="font-medium">Tell me if they&apos;re recording less than usual</span>
-                <span className="block text-ink/50">
-                  A gentle nudge to reach out — compared only to their own pace, never a diagnosis.
-                </span>
-              </span>
-            </label>
-
-            <label className="ml-6 flex flex-col text-sm">
-              <span className="font-medium">How sensitive</span>
-              <span className="text-xs text-ink/50">
-                Gentle flags only a big drop; sensitive flags a smaller one.
-              </span>
-              <select
-                name="signal_engagement_sensitivity"
-                defaultValue={st.engagementSensitivity}
-                className="mt-1 input w-44"
-              >
-                <option value="gentle">Gentle</option>
-                <option value="standard">Standard</option>
-                <option value="sensitive">Sensitive</option>
-              </select>
-            </label>
-
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="signal_schedule_suggestion_enabled"
-                defaultChecked={st.scheduleSuggestionEnabled}
-                className="mt-0.5 h-4 w-4 rounded border"
-              />
-              <span>
-                <span className="font-medium">Suggest a better time</span>
-                <span className="block text-ink/50">
-                  If {st.name} tends to record at a different hour than we reach out.
-                </span>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <SaveButton />
-      </form>
-
-      {/* "Ask now" posts on its own, outside the Save form. */}
-      <form action={askNow} className="mt-4 border-t border-line pt-4">
-        <input type="hidden" name="storyteller_id" value={st.id} />
-        <button
-          type="submit"
-          className="rounded-full border border-ink px-4 py-1.5 text-sm font-semibold hover:bg-ink/5"
-        >
-          Ask now
-        </button>
-        <span className="ml-3 text-xs text-ink/50">
-          Send a question right away, outside the schedule.
-        </span>
-      </form>
-    </>
-  );
-}
-
-function ScheduleRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-ink/50">{label}</dt>
-      <dd className="text-right">{children}</dd>
-    </div>
-  );
-}
 
 // Inline topics steering (admins) / read-only coverage (viewers). setTopicPreference
 // revalidates this hub.

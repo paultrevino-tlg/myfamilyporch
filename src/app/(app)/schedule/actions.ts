@@ -103,7 +103,15 @@ export async function saveSchedule(formData: FormData) {
   );
 
   revalidatePath(`/storytellers/${storytellerId}`);
-  redirect(`/storytellers/${storytellerId}?saved=schedule`);
+  revalidatePath(`/storytellers/${storytellerId}/setup`);
+  // Saved from inside the setup wizard → continue the flow there (next stop is
+  // the invite) rather than ejecting the member onto the hub. Matched against a
+  // literal, never a caller-supplied path.
+  redirect(
+    formData.get("from") === "setup"
+      ? `/storytellers/${storytellerId}/setup?saved=schedule`
+      : `/storytellers/${storytellerId}?saved=schedule`,
+  );
 }
 
 // "Ask now" — send a story nudge immediately, reusing the 4.3 unit. Same

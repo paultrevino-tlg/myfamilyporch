@@ -10,6 +10,35 @@ import { supabaseServer } from "@/lib/supabase/server";
 export const DAY_CODES = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 export type DayCode = (typeof DAY_CODES)[number];
 
+export const DAY_LABEL: Record<DayCode, string> = {
+  SU: "Su",
+  MO: "Mo",
+  TU: "Tu",
+  WE: "We",
+  TH: "Th",
+  FR: "Fr",
+  SA: "Sa",
+};
+
+// Display helpers live here rather than on a page, because the storyteller hub
+// and the setup wizard both render schedules and must phrase them identically.
+// "10:00" → "10:00 AM".
+export function prettyTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h)) return hhmm;
+  const period = h < 12 ? "AM" : "PM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+export function daysSummary(days: DayCode[]): string {
+  if (days.length === 0) return "No days set";
+  if (days.length === 7) return "Every day";
+  return DAY_CODES.filter((d) => days.includes(d))
+    .map((d) => DAY_LABEL[d])
+    .join(" · ");
+}
+
 // Fallback IANA zone when a schedule has no timezone yet. The cron interprets
 // send_time_local / quiet_after in the storyteller's own zone (TODO 6.1); rows
 // predating that column resolve here.
@@ -31,14 +60,29 @@ export const TIMEZONES: { value: string; label: string }[] = [
   { value: "UTC", label: "UTC" },
 ];
 
+export function tzLabel(tz: string): string {
+  return TIMEZONES.find((z) => z.value === tz)?.label ?? tz;
+}
+
 // Per-storyteller adaptive-signal sensitivity (TODO 6.5). Mirrors the
 // schedules.signal_engagement_sensitivity enum.
 export type EngagementSensitivity = "gentle" | "standard" | "sensitive";
+
+export const SENSITIVITY_LABEL: Record<EngagementSensitivity, string> = {
+  gentle: "Gentle",
+  standard: "Standard",
+  sensitive: "Sensitive",
+};
 
 export type StorytellerSchedule = {
   id: string;
   name: string;
   language: string;
+  // Whether a schedules ROW actually exists. The fields below fall back to table
+  // defaults so the editor always renders, which means they can't answer this —
+  // and it matters: runScheduler only iterates real rows, so `false` means this
+  // storyteller is never considered and never nudged.
+  saved: boolean;
   days: DayCode[]; // mornings the nudge goes out
   sendTimeLocal: string; // "HH:MM" in the storyteller's local time
   questionsPer: number; // 1–2, kept short on purpose
@@ -106,6 +150,7 @@ export async function loadStorytellerSchedule(
     id: st.id,
     name: st.name,
     language: st.language,
+    saved: !!row,
     days: (row?.days_of_week as DayCode[] | null) ?? DEFAULTS.days,
     sendTimeLocal: toHHMM(row?.send_time_local ?? null) ?? DEFAULTS.sendTimeLocal,
     questionsPer: row?.questions_per ?? DEFAULTS.questionsPer,
@@ -143,6 +188,7 @@ export async function loadSchedules(familyId: string): Promise<StorytellerSchedu
     .map((st) => {
       const row = byStoryteller.get(st.id);
       return {
+        saved: !!row,
         id: st.id,
         name: st.name,
         language: st.language,
