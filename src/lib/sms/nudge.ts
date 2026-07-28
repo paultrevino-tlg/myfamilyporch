@@ -15,13 +15,20 @@ import { decryptToken } from "@/lib/storyteller/crypto";
 import { mintStorytellerToken } from "@/lib/storyteller/token";
 import { sendSms } from "@/lib/sms/twilio";
 import { preSendGate } from "@/lib/sms/gate";
+import { claimManualNudge, releaseManualNudge } from "@/lib/sms/nudge-quota";
 import { t, type Lang } from "@/lib/i18n";
 
 export type NudgeResult =
   | { status: "sent"; kind: "nudge" }
   | {
       status: "skipped";
-      reason: "no-phone" | "no-link" | "not-opted-in" | "suppressed";
+      reason:
+        | "no-phone"
+        | "no-link"
+        | "not-opted-in"
+        | "suppressed"
+        // Manual sends only — the cron is bounded by days_of_week instead.
+        | "rate-limited";
     };
 
 // Build the SMS body: the localized line + the deep link on its own line + the
@@ -171,4 +178,32 @@ export async function sendStorytellerNudge(
     throw e;
   }
   return { status: "sent", kind: "nudge" };
+}
+
+// The MANUAL send path — the admin-triggered "Ask now" (Schedule) and "Send a
+// nudge" (storyteller hub) buttons. Identical to sendStorytellerNudge except it
+// is capped per storyteller per local day; the cron calls the uncapped function
+// directly, because days_of_week already bounds it.
+//
+// The quota is claimed BEFORE sending so concurrent clicks can't both slip
+// through, and refunded when the send didn't actually go out — a storyteller who
+// never opted in shouldn't burn their admin's daily allowance on a no-op.
+export async function sendManualNudge(
+  storytellerId: string,
+  familyId: string,
+): Promise<NudgeResult> {
+  const claim = await claimManualNudge(storytellerId);
+  if (!claim.ok) return { status: "skipped", reason: "rate-limited" };
+
+  let result: NudgeResult;
+  try {
+    result = await sendStorytellerNudge(storytellerId, familyId);
+  } catch (e) {
+    await releaseManualNudge(storytellerId, claim.day);
+    throw e;
+  }
+  if (result.status !== "sent") {
+    await releaseManualNudge(storytellerId, claim.day);
+  }
+  return result;
 }

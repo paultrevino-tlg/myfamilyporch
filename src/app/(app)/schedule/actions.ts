@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
-import { sendStorytellerNudge } from "@/lib/sms/nudge";
+import { sendManualNudge } from "@/lib/sms/nudge";
 import {
   DAY_CODES,
   DEFAULT_TIMEZONE,
@@ -115,7 +115,9 @@ export async function saveSchedule(formData: FormData) {
 }
 
 // "Ask now" — send a story nudge immediately, reusing the 4.3 unit. Same
-// authorize-then-send pattern as the Storytellers "Send a nudge" button.
+// authorize-then-send pattern as the Storytellers "Send a nudge" button, and the
+// same shared daily cap (sendManualNudge): both buttons hit one storyteller, so
+// capping only one of them would leave the other unbounded.
 export async function askNow(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;
@@ -134,7 +136,7 @@ export async function askNow(formData: FormData) {
 
   let flag = "asked";
   try {
-    const result = await sendStorytellerNudge(storytellerId, active.family_id);
+    const result = await sendManualNudge(storytellerId, active.family_id);
     flag = result.status === "sent" ? "asked" : `asked_${result.reason}`;
   } catch (e) {
     console.error("[schedule/askNow] send failed", e);

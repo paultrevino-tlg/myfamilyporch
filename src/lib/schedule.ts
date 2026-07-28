@@ -44,6 +44,39 @@ export function daysSummary(days: DayCode[]): string {
 // predating that column resolve here.
 export const DEFAULT_TIMEZONE = "America/New_York";
 
+// Manual nudges allowed per storyteller per LOCAL day — the cap enforced by
+// lib/sms/nudge-quota.ts on the "Ask now" / "Send a nudge" buttons. Generous
+// enough for the real use case (an admin is with their elder and wants to prompt
+// now) while still bounding the only unbounded outbound path (PRICING §6.3).
+//
+// It lives HERE rather than in nudge-quota.ts so the storyteller hub can render
+// the number in its "that's enough for today" banner without importing the
+// service-role client into a page's module graph.
+export const MANUAL_NUDGE_DAILY_CAP = 3;
+
+// The calendar day ("YYYY-MM-DD") at `at` in `timeZone`, falling back to the
+// default zone if the zone string is unusable — never throws, because callers
+// are on send paths that must not break on bad data.
+//
+// Used by the manual-nudge daily cap (lib/sms/nudge-quota.ts) so "3 a day" means
+// the storyteller's day, not UTC's. The cron has its own richer `inZone` in
+// lib/scheduler/run.ts that also needs weekday + wall time; this is the
+// day-only slice, kept here next to DEFAULT_TIMEZONE.
+export function localDayIn(timeZone: string, at: Date = new Date()): string {
+  const fmt = (tz: string) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(at); // en-CA yields YYYY-MM-DD, which is also Postgres `date` input
+  try {
+    return fmt(timeZone);
+  } catch {
+    return fmt(DEFAULT_TIMEZONE);
+  }
+}
+
 // Curated IANA zones for the Schedule picker — the US zones (incl. the no-DST
 // ones) plus a few for ES families. saveSchedule validates anything submitted
 // against Intl regardless, so this list is for friendliness, not security.

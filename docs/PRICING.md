@@ -222,7 +222,7 @@ invoices** — revisit after the first month of real traffic.
 
 | Line | Est. / yr | Driver |
 |---|---:|---|
-| ElevenLabs TTS (`eleven_multilingual_v2`, 1 credit/char) | **$19** | ~94k chars/yr — the largest variable cost |
+| ElevenLabs TTS (~94k chars/yr — the largest variable cost) | **$19** | at 1 credit/char; **~$9 since 2026-07-28**, when the default became `eleven_turbo_v2_5` at 0.5 credits/char (§6.3). Table left at the higher figure so the margins below stay conservative |
 | STT (~624 min/yr) | $3.75 | elder speech volume |
 | Anthropic Sonnet (~3 calls/session, 200 max_tokens) | $3.75 | follow-up generation |
 | Twilio SMS (~150 msgs: nudges, alerts, opt-in) | $1.65 | |
@@ -248,17 +248,26 @@ price moves ±$15 with it.
 | Family (3 storytellers, yr 1) | $299 | ~$129 | $170 | 57% |
 | The Gift | $199 | ~$70 | $129 | 65% |
 
-### 6.3 Cost controls still open
+### 6.3 Cost controls
 
-- **Cheaper TTS.** Switching question playback to a Flash/Turbo-class model
-  (0.5 credits/char) roughly halves the single largest variable cost — ~$19/yr →
-  ~$9/yr per storyteller — while keeping the cloned voice. Worth an A/B on
-  perceived warmth before committing (SPEC § Voice pins `eleven_multilingual_v2`,
-  so this is a spec change, not just a config flip).
-- **`askNow` has no throttle** (`src/app/(app)/schedule/actions.ts`). The weekly
-  scheduler naturally bounds cost to the family's chosen days, but the manual
-  "Ask now" button is the one unbounded send path. Add a per-storyteller daily
-  cap.
+- ~~**Cheaper TTS.**~~ **Done 2026-07-28.** Synthesis defaults to
+  `eleven_turbo_v2_5` (0.5 credits/char) instead of `eleven_multilingual_v2`
+  (1 credit/char), halving the largest variable line: **~$19/yr → ~$9/yr** per
+  storyteller, taking the modelled total from ~$28 to **~$18/yr**. Turbo rather
+  than flash: same price, but flash trades prosody for latency we don't need.
+  Revertible via `ELEVENLABS_TTS_MODEL` without a deploy. The margin tables in
+  §6.2 are NOT restated for this — they stay on the conservative ~$28 figure.
+- ~~**`askNow` has no throttle.**~~ **Done 2026-07-28.** Both manual send paths
+  ("Ask now" on Schedule and "Send a nudge" on the storyteller hub) now share a
+  cap of `MANUAL_NUDGE_DAILY_CAP` = 3 per storyteller per **local** day, claimed
+  atomically in Postgres (migration 0018). The cron path stays uncapped — it is
+  already bounded by `days_of_week`.
+- **Audio caching — the bigger remaining win.** `api/storyteller/voice` sets
+  `Cache-Control: no-store` and nothing caches synthesized speech, so every
+  replay of the same question re-bills. That makes the ~$9/yr TTS figure a
+  **floor**, not a ceiling. The fixed-copy screens (welcome, "your turn", done,
+  consent read-aloud) are identical text per language+voice across every family
+  and are the obvious first cache. `TODO: cache fixed-copy TTS.`
 - **Export / retention cost.** Audio is kept in durable storage
   **indefinitely**, including for **cancelled** accounts that generate no
   recurring revenue, plus ZIP-generation compute and egress on each export.

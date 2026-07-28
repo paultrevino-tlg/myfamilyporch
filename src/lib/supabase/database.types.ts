@@ -339,6 +339,35 @@ export type Database = {
           },
         ]
       }
+      manual_nudge_quota: {
+        Row: {
+          count: number
+          day: string
+          storyteller_id: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          day: string
+          storyteller_id: string
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          storyteller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_nudge_quota_storyteller_id_fkey"
+            columns: ["storyteller_id"]
+            isOneToOne: true
+            referencedRelation: "storytellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           alert_on_failure: boolean
@@ -890,6 +919,10 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      claim_manual_nudge: {
+        Args: { p_cap: number; p_day: string; p_storyteller: string }
+        Returns: number
+      }
       create_family: { Args: { p_name: string }; Returns: string }
       has_family_role: {
         Args: {
@@ -899,6 +932,10 @@ export type Database = {
         Returns: boolean
       }
       is_member_of: { Args: { p_family: string }; Returns: boolean }
+      release_manual_nudge: {
+        Args: { p_day: string; p_storyteller: string }
+        Returns: undefined
+      }
     }
     Enums: {
       emo_weight: "light" | "medium" | "heavy"

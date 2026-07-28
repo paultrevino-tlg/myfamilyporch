@@ -12,7 +12,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { mintStorytellerToken, revokeStorytellerTokens } from "@/lib/storyteller/token";
-import { sendStorytellerNudge } from "@/lib/sms/nudge";
+import { sendManualNudge } from "@/lib/sms/nudge";
 import { translateToEnglish, translateToSpanish } from "@/lib/ai/translate";
 import { deleteVoice } from "@/lib/voice/elevenlabs";
 import {
@@ -230,8 +230,9 @@ export async function revokeRecordingLinks(formData: FormData) {
 }
 
 // Send a localized story nudge now (TODO 4.3). Manual "ask now" hook so the SMS
-// path is exercisable today; the weekly cron (6.1) and full Schedule surface
-// (5.4) reuse sendStorytellerNudge. Authorize via the RLS-scoped client (the
+// path is exercisable today; the weekly cron (6.1) uses the uncapped
+// sendStorytellerNudge, while this and the Schedule surface (5.4) go through
+// sendManualNudge so they share one daily cap. Authorize via the RLS-scoped client (the
 // storyteller must be visible to this admin in the active family), then send
 // with the service role. Fail-soft outcomes (no phone / no link) surface as a
 // query flag rather than an error.
@@ -253,7 +254,7 @@ export async function sendNudge(formData: FormData) {
 
   let flag = "nudge";
   try {
-    const result = await sendStorytellerNudge(storytellerId, active.family_id);
+    const result = await sendManualNudge(storytellerId, active.family_id);
     flag = result.status === "sent" ? "nudge" : `nudge_${result.reason}`;
   } catch (e) {
     console.error("[storytellers/sendNudge] send failed", e);

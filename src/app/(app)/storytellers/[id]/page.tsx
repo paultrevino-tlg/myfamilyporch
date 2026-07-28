@@ -6,7 +6,13 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import PlayAudioButton from "../../PlayAudioButton";
 import ExportPanel, { type ExportJob } from "./ExportPanel";
-import { loadStorytellerSchedule, daysSummary, prettyTime, tzLabel } from "@/lib/schedule";
+import {
+  loadStorytellerSchedule,
+  daysSummary,
+  prettyTime,
+  tzLabel,
+  MANUAL_NUDGE_DAILY_CAP,
+} from "@/lib/schedule";
 import {
   loadStorytellerTopics,
   type StorytellerTopics,
@@ -291,6 +297,12 @@ export default async function StorytellerDetailPage({
       {(sp.sent === "nudge_no-link" || sp.sent === "asked_no-link") && (
         <Banner tone="amber">
           No nudge sent — couldn&apos;t build a recording link. The storyteller-token secret may not be configured.
+        </Banner>
+      )}
+      {(sp.sent === "nudge_rate-limited" || sp.sent === "asked_rate-limited") && (
+        <Banner tone="amber">
+          That&apos;s {MANUAL_NUDGE_DAILY_CAP} questions sent to {st.name} today — enough for one
+          day. You can send more tomorrow, and their scheduled questions still go out as normal.
         </Banner>
       )}
       {(sp.sent === "nudge_failed" || sp.sent === "asked_failed") && (

@@ -45,6 +45,13 @@ family: record native-language samples for a clean clone, or generate the
 storyteller's language through an English-trained voice (may be lightly accented).
 Questions play in that voice; STT transcribes the elder's answers.
 
+Synthesis model defaults to **`eleven_turbo_v2_5`** (0.5 credits/char), not
+`eleven_multilingual_v2` (1 credit/char): TTS is the single largest variable cost
+per storyteller (docs/PRICING.md §6.1) and turbo halves it while staying
+multilingual and instant-clone compatible. Turbo rather than flash — same price,
+but flash trades prosody for latency we don't need, and warmth is the point.
+Override with `ELEVENLABS_TTS_MODEL` to revert without a code deploy.
+
 ## Localization
 Language is **per-storyteller** (en/es today). It drives UI strings, prompt set,
 voice, STT, and SMS. Prompt tokens resolve from data, so gendered family terms

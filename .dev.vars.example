@@ -18,6 +18,11 @@ TWILIO_FROM_NUMBER=+1XXXXXXXXXX
 
 # ---- ElevenLabs (cloned-voice TTS) ----
 ELEVENLABS_API_KEY=sk_...
+# Optional. Defaults to eleven_turbo_v2_5 (0.5 credits/char). Set to
+# eleven_multilingual_v2 (1 credit/char) to revert if the cloned voice suffers.
+# ELEVENLABS_TTS_MODEL=eleven_turbo_v2_5
+# Optional. Premade voice used before a family clones one (default: Rachel).
+# ELEVENLABS_DEFAULT_VOICE_ID=21m00Tcm4TlvDq8ikWAM
 
 # ---- App ----
 APP_BASE_URL=http://localhost:3000

@@ -12,7 +12,19 @@
 const API = "https://api.elevenlabs.io/v1";
 
 // The multilingual model that lets one cloned voice speak en + es.
-export const ELEVENLABS_MODEL = "eleven_multilingual_v2";
+//
+// Defaults to turbo v2.5 (0.5 credits/char) rather than multilingual_v2
+// (1 credit/char): TTS is the single largest variable cost per storyteller
+// (~$19/yr of a ~$28/yr total — docs/PRICING.md §6.1), and this halves it while
+// staying multilingual and instant-clone compatible. Turbo, not flash: both cost
+// the same, but flash trades prosody for ~75ms latency we don't need — we fetch a
+// whole mp3, we never stream conversationally — and warmth is the entire point of
+// a cloned family voice.
+//
+// Overridable so a quality regression can be reverted from the Cloudflare
+// dashboard without a code deploy: set ELEVENLABS_TTS_MODEL=eleven_multilingual_v2.
+export const ELEVENLABS_MODEL =
+  process.env.ELEVENLABS_TTS_MODEL || "eleven_turbo_v2_5";
 
 // Neutral stock voice used when an interviewer hasn't linked a cloned voice yet,
 // so the storyteller surface ALWAYS has a voice to read instructions/questions
