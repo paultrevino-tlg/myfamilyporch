@@ -22,9 +22,16 @@ export async function setStorytellerPhone(formData: FormData) {
   const storytellerId = String(formData.get("storyteller_id") ?? "");
   if (!UUID_RE.test(storytellerId)) return;
 
+  // Saved from inside the per-storyteller setup wizard → return there rather
+  // than ejecting the member onto the hub mid-flow.
+  const base =
+    formData.get("from") === "setup"
+      ? `/storytellers/${storytellerId}/setup`
+      : `/storytellers/${storytellerId}`;
+
   const phone = normalizePhone(String(formData.get("phone") ?? ""));
   if (!phone.ok) {
-    redirect(`/storytellers/${storytellerId}?error=phone`);
+    redirect(`${base}?error=phone`);
   }
 
   // No family-member attestation here (consent-flow.md): the storyteller's own
@@ -55,7 +62,8 @@ export async function setStorytellerPhone(formData: FormData) {
   if (error) throw error;
 
   revalidatePath(`/storytellers/${storytellerId}`);
-  redirect(`/storytellers/${storytellerId}?saved=phone`);
+  revalidatePath(`/storytellers/${storytellerId}/setup`);
+  redirect(`${base}?saved=phone`);
 }
 
 // Turn session-failure alert texts on/off for the caller's OWN membership.

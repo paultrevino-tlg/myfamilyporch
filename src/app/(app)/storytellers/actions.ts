@@ -93,7 +93,9 @@ export async function createStoryteller(formData: FormData) {
   if (relError) throw relError;
 
   revalidatePath("/dashboard");
-  redirect(`/storytellers/${storyteller.id}`);
+  // Straight into the guided setup rather than the hub's wall of accordions —
+  // a brand-new storyteller has no number and can't be texted yet.
+  redirect(`/storytellers/${storyteller.id}/setup`);
 }
 
 // Update a storyteller's shared facts. Scoped to the active family so a stray id

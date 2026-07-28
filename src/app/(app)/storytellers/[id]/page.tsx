@@ -31,13 +31,14 @@ import {
   translateAllStories,
   deleteStoryteller,
 } from "../actions";
-import { setStorytellerPhone } from "../../settings/actions";
 import { saveSchedule, askNow } from "../../schedule/actions";
 import { setTopicPreference } from "../../topics/actions";
 import { buildConsentLink } from "@/lib/consent/storyteller";
 import { consentBadge } from "@/lib/consent/badge";
+import { deriveStorytellerSetupStep } from "@/lib/setup";
+import PhoneForm from "./PhoneForm";
+import InvitePanel from "./InvitePanel";
 import { t, type Lang } from "@/lib/i18n";
-import CopyBlock from "./CopyBlock";
 
 // Per-storyteller hub. RLS scopes every read to the member's families; we also
 // pin to the active family + this storyteller id. This is the single place to
@@ -124,7 +125,14 @@ export default async function StorytellerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; sent?: string; export?: string; translated?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    saved?: string;
+    sent?: string;
+    export?: string;
+    translated?: string;
+    open?: string; // deep-link a section open (e.g. the setup wizard's "set their schedule")
+  }>;
 }) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
@@ -235,6 +243,12 @@ export default async function StorytellerDetailPage({
       })
     : null;
 
+  // Same derivation the setup wizard uses, so the callout and the flow agree.
+  const setupStep = deriveStorytellerSetupStep({
+    hasPhone: !!st.phone?.trim(),
+    consentState: st.consent_state,
+  });
+
   return (
     <main className="mx-auto max-w-3xl px-5 py-8 sm:px-7">
       <Link href="/dashboard" className="text-sm font-semibold text-ink/50 hover:text-ink">
@@ -254,6 +268,30 @@ export default async function StorytellerDetailPage({
           </p>
         </div>
       </div>
+
+      {/* Until they've opted in, the hub's seven accordions bury the one thing
+          that actually matters — so point at the guided flow instead. */}
+      {canManage && setupStep !== "ready" && (
+        <Link
+          href={`/storytellers/${st.id}/setup`}
+          className="mt-5 flex items-center gap-3 rounded-2xl border border-brand/20 bg-brand/5 px-4 py-3.5 text-sm transition hover:bg-brand/10"
+        >
+          <span aria-hidden className="text-xl">
+            {setupStep === "stopped" ? "🚫" : "📋"}
+          </span>
+          <span className="text-ink/80">
+            <strong className="font-semibold text-ink">Finish setting up {st.name}.</strong>{" "}
+            {setupStep === "number"
+              ? "Add their mobile number."
+              : setupStep === "stopped"
+                ? "They've opted out of texts."
+                : `Send their invite — ${st.name} hasn't opted in yet.`}
+          </span>
+          <span aria-hidden className="ml-auto text-brand">
+            →
+          </span>
+        </Link>
+      )}
 
       {/* Banners surfaced by the inline editors' redirects. */}
       {sp.saved === "phone" && <Banner tone="green">Phone number saved. 📱</Banner>}
@@ -471,57 +509,27 @@ export default async function StorytellerDetailPage({
           open={sp.saved === "phone" || sp.error === "phone"}
         >
           {canManage ? (
-            <form action={setStorytellerPhone} className="space-y-3">
-              <input type="hidden" name="storyteller_id" value={st.id} />
-              <div className="flex items-end gap-2">
-                <label className="flex flex-col text-sm">
-                  <span className="text-ink/60">Phone</span>
-                  <input
-                    type="tel"
-                    name="phone"
-                    defaultValue={st.phone ?? ""}
-                    placeholder="+1 602 555 4471"
-                    className={inputCls}
-                  />
-                </label>
-                <SaveButton />
-              </div>
-              <p className="max-w-prose text-xs leading-relaxed text-ink/55">
-                No consent is recorded here. {st.name} confirms it themselves by
-                tapping the invite link below — that first-person opt-in is what
-                lets us text them.
-              </p>
-            </form>
+            <PhoneForm
+              storytellerId={st.id}
+              storytellerName={st.name}
+              phone={st.phone}
+            />
           ) : (
             <ViewerNote />
           )}
 
           {/* Copy-paste invite (consent-flow.md steps 5-6): the family member
-              sends this from their OWN phone (P2P). Shown until the storyteller
-              opts in on their /c/<token> page; then a calm confirmed status. */}
+              sends this from their OWN phone (P2P). Same component the setup
+              wizard uses, so the two surfaces can't drift. */}
           {canManage && st.phone?.trim() && (
-            st.consent_state === "opted_in" ? (
-              <p className="mt-3 rounded-xl bg-green-50 px-3 py-2.5 text-sm text-green-800">
-                ✓ {st.name} opted in — story texts are on.
-              </p>
-            ) : consentMessage ? (
-              <div className="mt-3">
-                <p className="text-sm font-semibold text-ink/80">
-                  Send {st.name} their invite
-                </p>
-                <p className="mt-1 max-w-prose text-xs leading-relaxed text-ink/55">
-                  Copy this and text it to {st.name} from your own phone. When they
-                  tap the link and say yes, they&apos;re set up — and we&apos;ll let
-                  you know.
-                </p>
-                <CopyBlock message={consentMessage} storytellerId={st.id} />
-              </div>
-            ) : (
-              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-                Couldn&apos;t build the invite link — the storyteller-token secret
-                may not be configured.
-              </p>
-            )
+            <div className="mt-3">
+              <InvitePanel
+                storytellerId={st.id}
+                storytellerName={st.name}
+                consentState={st.consent_state}
+                message={consentMessage}
+              />
+            </div>
           )}
         </ConfigBox>
 
@@ -589,6 +597,7 @@ export default async function StorytellerDetailPage({
           label="Schedule"
           value={schedule ? (schedule.paused ? "Paused" : daysSummary(schedule.days)) : "Not scheduled yet"}
           sub={schedule && !schedule.paused ? `${prettyTime(schedule.sendTimeLocal)} · ${tzLabel(schedule.timezone)}` : "When we reach out"}
+          open={sp.saved === "schedule" || sp.open === "schedule"}
         >
           {schedule ? (
             <ScheduleEditor st={schedule} canManage={canManage} />

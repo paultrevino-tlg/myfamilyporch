@@ -38,6 +38,38 @@ export function deriveSetupStep(input: {
   return "send_link";
 }
 
+// ---------------------------------------------------------------------------
+// Per-storyteller setup (/storytellers/[id]/setup)
+//
+// The family wizard above deliberately stops at "ready" once the family has one
+// opted-in storyteller — every storyteller after that is onboarded through this
+// flow instead. Same philosophy: DERIVED from data, never a stored column, so
+// it's always accurate and a member can walk away and come back.
+export type StorytellerSetupStep = "number" | "invite" | "stopped" | "ready";
+
+export const ST_STEP_NO: Record<StorytellerSetupStep, number> = {
+  number: 1,
+  invite: 2,
+  stopped: 2, // an opt-out sits at the invite stop; it isn't progress
+  ready: 3,
+};
+
+export const ST_STEP_TOTAL = 3;
+
+// Pure — the whole flow in four lines. "invite" covers both "send it" and
+// "waiting for them", because nothing records whether the member actually sent
+// the text; the panel shows the invite and the waiting state together rather
+// than claiming to know.
+export function deriveStorytellerSetupStep(input: {
+  hasPhone: boolean;
+  consentState: string;
+}): StorytellerSetupStep {
+  if (input.consentState === "opted_in") return "ready";
+  if (!input.hasPhone) return "number";
+  if (input.consentState === "opted_out") return "stopped";
+  return "invite";
+}
+
 export type PendingStoryteller = {
   id: string;
   name: string;
