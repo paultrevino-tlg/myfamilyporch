@@ -58,10 +58,9 @@ export async function setStorytellerPhone(formData: FormData) {
   redirect(`/storytellers/${storytellerId}?saved=phone`);
 }
 
-// Set/clear the signed-in admin's OWN alert number (failure alerts). Scoped to
-// user_id = the caller, so an admin can only set their own — never another
-// member's. The mic-failed route reads these to text each admin.
 // Turn session-failure alert texts on/off for the caller's OWN membership.
+// Scoped to user_id = the caller, so an admin can only set their own — never
+// another member's. The mic-failed route reads these to text each admin.
 //
 // This is only a preference — it carries no consent and names no number. The
 // number and the consent behind it come from /verify-phone (the first-party

@@ -455,7 +455,14 @@ export default async function StorytellerDetailPage({
         </ConfigBox>
 
         {/* Phone ------------------------------------------------------------ */}
-        <ConfigBox label="Phone" value={st.phone?.trim() ? st.phone : "Not set"} sub="Where the story texts go">
+        {/* Expanded straight after a phone save so the invite — copy it, or have
+            it texted to your own phone — is right there, not one click away. */}
+        <ConfigBox
+          label="Phone"
+          value={st.phone?.trim() ? st.phone : "Not set"}
+          sub="Where the story texts go"
+          open={sp.saved === "phone" || sp.error === "phone"}
+        >
           {canManage ? (
             <form action={setStorytellerPhone} className="space-y-3">
               <input type="hidden" name="storyteller_id" value={st.id} />
@@ -500,7 +507,7 @@ export default async function StorytellerDetailPage({
                   tap the link and say yes, they&apos;re set up — and we&apos;ll let
                   you know.
                 </p>
-                <CopyBlock message={consentMessage} />
+                <CopyBlock message={consentMessage} storytellerId={st.id} />
               </div>
             ) : (
               <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
@@ -688,15 +695,20 @@ function ConfigBox({
   label,
   value,
   sub,
+  open,
   children,
 }: {
   label: string;
   value: string;
   sub?: string;
+  // Render expanded on load — used to keep the section the member just saved
+  // open, so the next step (the invite) is in front of them instead of behind
+  // another click. Still collapsible by hand.
+  open?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <details className="card px-4 py-3.5">
+    <details className="card px-4 py-3.5" open={open}>
       <summary className="flex cursor-pointer items-center justify-between gap-4">
         <span>
           <span className="text-sm font-semibold">{label}</span>

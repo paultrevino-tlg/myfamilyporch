@@ -111,8 +111,20 @@ export const ui: Record<Lang, Record<string, string>> = {
     // member from their OWN phone (person-to-person, not A2P). {link} = the
     // storyteller's /c/<token> authorization link. Rendered in the storyteller's
     // language — short, warm, link near the top.
+    // Plain hyphen, not an em-dash, and no other non-GSM-7 characters: when this
+    // is quoted inside sms_invite_copy a single em-dash forces the whole message
+    // to UCS-2 (67 chars/segment), taking it from 4 segments to 9. The Spanish
+    // copy keeps its em-dash — "aquí" already forces UCS-2 there, so there is
+    // nothing to win.
     copy_paste_block:
-      "Hi {name}, I set up something so you can record your life stories just by talking — no app to install. Tap here to start: {link}",
+      "Hi {name}, I set up something so you can record your life stories just by talking - no app to install. Tap here to start: {link}",
+    // On-demand A2P message to the MEMBER's own opted-in number, sent only when
+    // they tap "Send this to my phone" so the invite is easy to forward from
+    // their handset. Never sent to the storyteller — their copy stays P2P.
+    // Rendered in the MEMBER's language; {invite} is copy_paste_block in the
+    // STORYTELLER's language, quoted verbatim so it can be forwarded as-is.
+    sms_invite_copy:
+      "My Family Porch: Here's the invitation for {name}. Forward the message below to them from your phone.\n\n{invite}\n\nMsg & data rates may apply. Reply STOP to opt out, HELP for help.",
     // Step 9 — storyteller confirmation (first A2P message under valid consent).
     sms_storyteller_welcome:
       "My Family Porch: Thanks {name}! You're all set to record your stories — we'll text you when it's time to start.\nMsg & data rates may apply. Reply STOP to stop, HELP for help.",
@@ -259,6 +271,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     // Copy-paste P2P block (consent-flow.md steps 5-6)
     copy_paste_block:
       "Hola {name}, configuré algo para que puedas grabar las historias de tu vida solo con hablar — sin instalar ninguna aplicación. Toca aquí para empezar: {link}",
+    sms_invite_copy:
+      "My Family Porch: Aquí está la invitación para {name}. Reenvíale el mensaje de abajo desde tu teléfono.\n\n{invite}\n\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
     sms_storyteller_welcome:
       "My Family Porch: ¡Gracias {name}! Ya puedes grabar tus historias — te avisaremos por mensaje cuando sea momento de empezar.\nPueden aplicar tarifas de mensajes y datos. Responde STOP para cancelar, HELP para ayuda.",
     sms_family_ready:

@@ -66,8 +66,13 @@ export default function SmsOptInPage() {
               <strong>2 — The family member invites their storyteller.</strong>{" "}
               They add the storyteller and copy a short invitation, which they
               send <strong>from their own phone</strong> as an ordinary personal
-              text message. That message is person-to-person — it is not sent by
-              our system and is not part of this automated program.
+              text message. That message reaches the storyteller person-to-person
+              — <strong>we never text the invitation to the storyteller</strong>,
+              and no automated message reaches them before they opt in. If the
+              family member asks us to, we&apos;ll text a copy of that invitation
+              to <strong>their own verified number</strong> so it&apos;s easy to
+              forward from their phone; that copy goes only to them, only when
+              they request it.
             </p>
             <p>
               <strong>
@@ -173,14 +178,33 @@ export default function SmsOptInPage() {
               <br />
               Msg &amp; data rates may apply. Reply STOP to stop, HELP for help.
             </p>
+            <p className="rounded-2xl border border-line bg-surface2/50 p-4 text-ink/85">
+              My Family Porch: Here&apos;s the invitation for [Name]. Forward the
+              message below to them from your phone.
+              <br />
+              <br />
+              &ldquo;Hi [Name], I set up something so you can record your life
+              stories just by talking - no app to install. Tap here to start:
+              myfamilyporch.net/c/[unique-code]&rdquo;
+              <br />
+              <br />
+              Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help.
+            </p>
           </div>
+          <p className="mt-3 text-sm text-ink/60">
+            The last message is sent only when a family member asks for it, and
+            only to their own verified number.
+          </p>
           <p className="mt-4 rounded-2xl border border-dashed border-line p-4 text-sm text-ink/60">
             <strong>Not part of this program:</strong> the storyteller invitation
             (&ldquo;Hi [Name], I set up something so you can record your life
             stories just by talking… Tap here to start:
-            myfamilyporch.net/c/[unique-code]&rdquo;) is a personal text the family
-            member sends from their own phone — person-to-person, not an automated
-            message from us.
+            myfamilyporch.net/c/[unique-code]&rdquo;) reaches the storyteller as a
+            personal text the family member sends from their own phone —
+            person-to-person, not an automated message from us. We never send it
+            to the storyteller. The family member can ask us to text a copy to
+            their own verified number so they can forward it; that on-request copy
+            is the last sample shown above.
           </p>
         </div>
 
