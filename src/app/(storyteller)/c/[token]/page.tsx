@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { loadConsentContext } from "@/lib/consent/storyteller";
-import { consentSpokenText } from "@/lib/consent/spoken";
+import { consentSpokenText, successSpokenText } from "@/lib/consent/spoken";
 import { t, type Lang } from "@/lib/i18n";
 import { submitConsent } from "./actions";
 import HearThis from "./HearThis";
@@ -24,7 +24,12 @@ function DeadLink({ lang }: { lang: Lang }) {
   );
 }
 
-function Success({ lang }: { lang: Lang }) {
+// The confirmation screen reads itself aloud in the interviewer's cloned voice —
+// the familiar voice closing the loop right after they've agreed. Autoplay is
+// attempted but browsers commonly refuse it without a gesture (and the tap that
+// submitted the form doesn't survive the redirect), so the button below is the
+// dependable path, not a fallback bolted on.
+function Success({ lang, token }: { lang: Lang; token: string }) {
   return (
     <main lang={lang} className="flex min-h-screen items-center justify-center p-6 text-center">
       <div className="max-w-md">
@@ -37,6 +42,18 @@ function Success({ lang }: { lang: Lang }) {
         <p className="mt-4 text-2xl leading-relaxed text-ink/70">
           {t(lang, "consent_success_sub")}
         </p>
+        <div className="mt-7 flex justify-center">
+          <HearThis
+            token={token}
+            text={successSpokenText(lang)}
+            lang={lang}
+            variant="success"
+            autoPlay
+            label={t(lang, "consent_hear")}
+            loadingLabel={t(lang, "consent_hear_loading")}
+            stopLabel={`⏹ ${t(lang, "consent_stop")}`}
+          />
+        </div>
       </div>
     </main>
   );
@@ -54,7 +71,9 @@ export default async function ConsentPage({
   const override: Lang | null = sp.lang === "es" ? "es" : sp.lang === "en" ? "en" : null;
 
   // Success screen renders straight from the query (no re-confirm).
-  if (sp.done === "1") return <Success lang={override ?? "en"} />;
+  // The token stays in the path and is stateless, so it still verifies here —
+  // that's what lets the confirmation screen resolve their interviewer's voice.
+  if (sp.done === "1") return <Success lang={override ?? "en"} token={token} />;
 
   const ctx = await loadConsentContext(token);
   if (!ctx) return <DeadLink lang={override ?? "en"} />;

@@ -113,6 +113,12 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_success_title: "You're all set. ✓",
     consent_success_sub:
       "We'll text you when it's time to record your first story. You can close this now.",
+    // Spoken on the confirmation screen, in the interviewer's cloned voice. A
+    // separate key from the display copy above because that carries a "✓" under
+    // a 🎉 — symbols synthesize badly. Warm and final: they've just agreed, so
+    // this reassures rather than instructs.
+    consent_success_spoken:
+      "You're all set. Thank you. We'll text you when it's time to record your first story — there's nothing else you need to do. You can close this page now.",
     consent_dead_title: "This link isn't active",
     consent_dead_sub:
       "No worries at all. Ask the family member who sent it to share a fresh link.",
@@ -279,6 +285,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_success_title: "¡Todo listo! ✓",
     consent_success_sub:
       "Te enviaremos un mensaje cuando sea momento de grabar tu primera historia. Puedes cerrar esto.",
+    consent_success_spoken:
+      "¡Todo listo! Gracias. Te enviaremos un mensaje cuando sea momento de grabar tu primera historia — no tienes que hacer nada más. Puedes cerrar esta página.",
     consent_dead_title: "Este enlace no está activo",
     consent_dead_sub:
       "No te preocupes. Pídele a la persona de tu familia que te envió el enlace que te comparta uno nuevo.",

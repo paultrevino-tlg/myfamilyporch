@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyConsentToken } from "@/lib/consent/token";
 import { supabaseService } from "@/lib/supabase/service";
 import { synthesize, ELEVENLABS_DEFAULT_VOICE } from "@/lib/voice/elevenlabs";
-import { consentSpokenText } from "@/lib/consent/spoken";
+import { spokenText, type SpokenVariant } from "@/lib/consent/spoken";
 import type { Lang } from "@/lib/i18n";
 
 // Read-aloud for the storyteller authorization page, in the interviewer's cloned
@@ -28,10 +28,12 @@ import type { Lang } from "@/lib/i18n";
 export async function POST(req: NextRequest) {
   let token = "";
   let langRaw = "";
+  let variantRaw = "";
   try {
     const body = await req.json();
     token = String(body?.token ?? "");
     langRaw = String(body?.lang ?? "");
+    variantRaw = String(body?.variant ?? "");
   } catch {
     // malformed body — token validation fails closed below
   }
@@ -44,7 +46,11 @@ export async function POST(req: NextRequest) {
   // The storyteller may switch the page language before opting in, so honor the
   // requested language, falling back to the one baked into the token.
   const lang: Lang = (langRaw || payload.language) === "es" ? "es" : "en";
-  const text = consentSpokenText(lang);
+  // Which script to read — the page before they decide, or the confirmation
+  // after. Constrained to the two known variants; the client still supplies no
+  // text of its own.
+  const variant: SpokenVariant = variantRaw === "success" ? "success" : "consent";
+  const text = spokenText(lang, variant);
 
   const db = supabaseService();
 

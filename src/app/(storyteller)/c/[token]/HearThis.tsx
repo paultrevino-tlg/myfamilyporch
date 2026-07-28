@@ -19,6 +19,8 @@ export default function HearThis({
   label,
   loadingLabel,
   stopLabel,
+  variant = "consent",
+  autoPlay = false,
 }: {
   token: string;
   text: string;
@@ -26,6 +28,12 @@ export default function HearThis({
   label: string;
   loadingLabel: string;
   stopLabel: string;
+  variant?: "consent" | "success";
+  // Try to speak on arrival (the confirmation screen). Browsers block audio
+  // without a user gesture, and the tap that submitted the form does NOT carry
+  // across the redirect — so on iOS this will usually be refused and the button
+  // below is what actually plays it. Treated as a bonus, never a guarantee.
+  autoPlay?: boolean;
 }) {
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const [canSpeak, setCanSpeak] = useState(true);
@@ -71,7 +79,10 @@ export default function HearThis({
     return true;
   }
 
-  async function play() {
+  // `gestured` = the user tapped. An autoplay refusal is an expected outcome,
+  // not a failure of the feature — the button IS the fallback, so it must stay
+  // visible and we must not chase it with the browser voice (also gesture-gated).
+  async function play(gestured: boolean) {
     if (state !== "idle") {
       stopAll();
       return;
@@ -82,7 +93,7 @@ export default function HearThis({
       const res = await fetch("/api/consent/voice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, lang }),
+        body: JSON.stringify({ token, lang, variant }),
       });
       if (!res.ok) throw new Error(String(res.status));
 
@@ -98,14 +109,19 @@ export default function HearThis({
       audio.onended = () => setState("idle");
       audio.onerror = () => {
         // Decode/playback failure — fall through to the browser voice.
-        if (!speakLocally()) setState("idle");
+        if (!gestured || !speakLocally()) setState("idle");
       };
       await audio.play();
       setState("playing");
     } catch {
       if (genRef.current !== gen) return; // stopped while we were loading
-      // Network, 401/502, or autoplay refusal — the browser voice still works,
-      // and this call is inside a tap handler so it's user-gestured either way.
+      if (!gestured) {
+        // Almost certainly an autoplay block. Go quiet and leave the button.
+        setState("idle");
+        return;
+      }
+      // Network, 401/502 — the browser voice may still work, and we're inside a
+      // tap handler so it's user-gestured.
       if (!speakLocally()) {
         setCanSpeak(false);
         setState("idle");
@@ -113,12 +129,22 @@ export default function HearThis({
     }
   }
 
+  // Speak on arrival where the browser allows it. Runs once; if it's refused,
+  // nothing is shown to the user beyond the button that was already there.
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (!autoPlay || autoTried.current) return;
+    autoTried.current = true;
+    void play(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay]);
+
   if (!canSpeak) return null;
 
   return (
     <button
       type="button"
-      onClick={play}
+      onClick={() => play(true)}
       aria-live="polite"
       aria-busy={state === "loading"}
       className="inline-flex min-h-[72px] w-full max-w-md items-center justify-center gap-3 rounded-2xl bg-emerald-600 px-8 text-[24px] font-bold text-white shadow-md transition active:translate-y-px hover:bg-emerald-700"
