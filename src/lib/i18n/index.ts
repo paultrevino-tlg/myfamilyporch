@@ -96,7 +96,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_optin_control:
       "Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.",
     consent_agree_btn: "Yes, text me",
-    consent_hear: "🔊 Hear this",
+    consent_hear: "🔊 Read this to me",
+    consent_hear_loading: "🔊 Starting…",
     consent_stop: "Stop",
     consent_optin_required: "Please check the box above so we can text you.",
     consent_success_title: "You're all set. ✓",
@@ -257,7 +258,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_optin_control:
       "Sí, envíenme mensajes de texto a este número para poder grabar mis historias. Acepto recibir mensajes de texto automáticos y recurrentes de My Family Porch. Pueden aplicar tarifas de mensajes y datos. Responde STOP en cualquier momento para cancelar, HELP para ayuda.",
     consent_agree_btn: "Sí, envíenme mensajes",
-    consent_hear: "🔊 Escuchar",
+    consent_hear: "🔊 Léeme esto",
+    consent_hear_loading: "🔊 Comenzando…",
     consent_stop: "Detener",
     consent_optin_required: "Marca la casilla de arriba para que podamos enviarte mensajes.",
     consent_success_title: "¡Todo listo! ✓",

@@ -1,61 +1,129 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// "Hear this" read-aloud for the authorization page (Elder-facing UX: every
-// storyteller page reads its instructions aloud, tap-to-play). Uses the browser
-// SpeechSynthesis API — no server, no cost, works without a cloned voice (which
-// may not exist at consent time). Hides itself if the browser has no TTS.
+// "Read this to me" for the authorization page (Elder-facing UX: every
+// storyteller page reads its instructions aloud, tap-to-play).
+//
+// Speaks in the INTERVIEWER'S CLONED VOICE via api/consent/voice — the same
+// familiar voice that will ask the questions later, heard at the moment the
+// elder is deciding. Three layers so it never dead-ends:
+//   1. cloned voice (or a neutral ElevenLabs voice if none is recorded yet)
+//   2. the browser's own SpeechSynthesis, if that request fails
+//   3. the large on-screen text, which is always the real backup channel
+// The button only hides when there is nothing at all it could do.
 export default function HearThis({
+  token,
   text,
   lang,
   label,
+  loadingLabel,
   stopLabel,
 }: {
+  token: string;
   text: string;
   lang: "en" | "es";
   label: string;
+  loadingLabel: string;
   stopLabel: string;
 }) {
-  const [supported, setSupported] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
+  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
+  const [canSpeak, setCanSpeak] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+  // Bumped on every play/stop. A fetch that resolves after its generation is
+  // stale must not start playing — otherwise tapping "stop" while it's still
+  // loading looks like it worked, then the audio starts anyway.
+  const genRef = useRef(0);
 
+  // Release the object URL and stop any audio/speech when the page goes away.
   useEffect(() => {
-    setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
-    // Stop any speech if the page unmounts.
     return () => {
+      audioRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
 
-  if (!supported) return null;
-
-  function toggle() {
-    const synth = window.speechSynthesis;
-    if (synth.speaking) {
-      synth.cancel();
-      setSpeaking(false);
-      return;
+  function stopAll() {
+    genRef.current += 1; // abandon any in-flight synthesis
+    audioRef.current?.pause();
+    audioRef.current = null;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
+    setState("idle");
+  }
+
+  // Last resort: the browser's built-in voice. Returns false when unavailable,
+  // so the caller can hide a button that could never do anything.
+  function speakLocally(): boolean {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang === "es" ? "es-ES" : "en-US";
     u.rate = 0.95; // a touch slower for clarity
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
-    synth.speak(u);
-    setSpeaking(true);
+    u.onend = () => setState("idle");
+    u.onerror = () => setState("idle");
+    window.speechSynthesis.speak(u);
+    setState("playing");
+    return true;
   }
+
+  async function play() {
+    if (state !== "idle") {
+      stopAll();
+      return;
+    }
+    const gen = ++genRef.current;
+    setState("loading");
+    try {
+      const res = await fetch("/api/consent/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, lang }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+
+      const blob = await res.blob();
+      if (genRef.current !== gen) return; // stopped while we were loading
+
+      const url = URL.createObjectURL(blob);
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = url;
+
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setState("idle");
+      audio.onerror = () => {
+        // Decode/playback failure — fall through to the browser voice.
+        if (!speakLocally()) setState("idle");
+      };
+      await audio.play();
+      setState("playing");
+    } catch {
+      if (genRef.current !== gen) return; // stopped while we were loading
+      // Network, 401/502, or autoplay refusal — the browser voice still works,
+      // and this call is inside a tap handler so it's user-gestured either way.
+      if (!speakLocally()) {
+        setCanSpeak(false);
+        setState("idle");
+      }
+    }
+  }
+
+  if (!canSpeak) return null;
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={play}
       aria-live="polite"
-      className="inline-flex min-h-[60px] items-center gap-2 rounded-2xl border-2 border-line bg-paper px-6 text-[22px] font-bold text-ink shadow-sm active:translate-y-px"
+      aria-busy={state === "loading"}
+      className="inline-flex min-h-[72px] w-full max-w-md items-center justify-center gap-3 rounded-2xl bg-emerald-600 px-8 text-[24px] font-bold text-white shadow-md transition active:translate-y-px hover:bg-emerald-700"
     >
-      {speaking ? stopLabel : label}
+      {state === "playing" ? stopLabel : state === "loading" ? loadingLabel : label}
     </button>
   );
 }

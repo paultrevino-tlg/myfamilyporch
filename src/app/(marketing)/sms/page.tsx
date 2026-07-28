@@ -113,7 +113,7 @@ export default function SmsOptInPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/sms/member-optin.png"
-                alt="The family member's phone-verification form at myfamilyporch.net: a mobile number field, a language selector, and a checked box reading “Yes, text me at this number. I agree to receive automated, recurring texts from My Family Porch to help set up and record my family's stories. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
+                alt="The family member's phone-verification form at myfamilyporch.net: a mobile number field, a language selector, and a consent box — unchecked by default, shown unchecked here — reading “Yes, text me at this number. I agree to receive automated, recurring texts from My Family Porch to help set up and record my family's stories. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
                 loading="lazy"
                 className="w-full rounded-2xl border border-line"
               />
@@ -125,7 +125,7 @@ export default function SmsOptInPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/sms/storyteller-optin.png"
-                alt="The storyteller's own authorization page: their name and masked number, and a checked box reading “Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
+                alt="The storyteller's own authorization page: their name and masked number, and a consent box — unchecked by default, shown unchecked here — reading “Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.”"
                 loading="lazy"
                 className="w-full rounded-2xl border border-line"
               />

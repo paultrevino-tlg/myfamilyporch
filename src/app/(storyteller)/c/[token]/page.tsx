@@ -83,11 +83,15 @@ export default async function ConsentPage({
       <p className="mt-5 text-2xl leading-relaxed text-ink/80">{t(lang, "consent_what_it_is")}</p>
       <p className="mt-4 text-2xl leading-relaxed text-ink/80">{t(lang, "consent_whats_next")}</p>
 
-      <div className="mt-6">
+      {/* Centered and large: this is the first thing an elder who'd rather listen
+          than read should be able to find. */}
+      <div className="mt-7 flex justify-center">
         <HearThis
+          token={token}
           text={hearText}
           lang={lang}
           label={t(lang, "consent_hear")}
+          loadingLabel={t(lang, "consent_hear_loading")}
           stopLabel={`⏹ ${t(lang, "consent_stop")}`}
         />
       </div>
