@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   TIERS,
-  LIFETIME,
+  GIFT,
   ADD_ONS,
   FEATURE_MATRIX,
   FAQ,
@@ -23,7 +23,7 @@ import { JsonLd } from "../_components/JsonLd";
 export const metadata = pageMeta({
   title: "Pricing",
   description:
-    "Capture an elder's life stories in their own voice. Simple yearly plans, a one-time Lifetime option, and a printed book with voice QR codes. Cancel anytime and keep everything, forever.",
+    "Capture an elder's life stories in their own voice. Simple yearly plans, a one-time prepaid gift, and a printed book with voice QR codes. Cancel anytime and keep everything, forever.",
   path: "/pricing",
 });
 
@@ -120,52 +120,46 @@ export default function PricingPage() {
         ))}
       </section>
 
-      {/* Lifetime — separate band, not a 4th card */}
-      <section className="card mt-10 flex flex-col items-start gap-5 p-7 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h3 className="font-serif text-2xl font-semibold">{LIFETIME.name}</h3>
-            <span className="font-serif text-2xl font-semibold tracking-tight text-brand">
-              {formatPrice(LIFETIME.price)}
-            </span>
-            <span className="text-sm font-medium text-ink/65">one-time</span>
-          </div>
-          <p className="mt-1 text-sm text-ink/65">{LIFETIME.tagline}</p>
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink/75">
-            {LIFETIME.features.map((f) => (
-              <li key={f} className="flex gap-2">
-                <span aria-hidden className="text-brand">
-                  ✓
-                </span>
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Link href={CTA_HREF} className="btn-ink shrink-0 px-6 py-3 text-base">
-          {LIFETIME.cta}
-        </Link>
-      </section>
-
-      {/* Gift band — gifting is a primary use case (brief §4.7) */}
+      {/* Gift — the one-time path (replaced Lifetime). A separate band, not a
+          4th card, so it doesn't muddy the annual comparison. Gifting is also a
+          primary use case (brief §4.7), so the band carries both the price and
+          the emotional pitch. */}
       <section className="card mt-10 flex flex-col items-start gap-5 bg-surface2 p-7 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="text-3xl" aria-hidden>
             🎁
           </div>
           <div>
-            <h2 className="font-serif text-2xl font-semibold">
-              {PRICING_COPY.giftCallout.h2}
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-serif text-2xl font-semibold">
+                {PRICING_COPY.giftCallout.h2}
+              </h2>
+              <span className="font-serif text-2xl font-semibold tracking-tight text-brand">
+                {formatPrice(GIFT.price)}
+              </span>
+              <span className="text-sm font-medium text-ink/65">
+                one-time · nothing to renew
+              </span>
+            </div>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink/70">
               {PRICING_COPY.giftCallout.body}
             </p>
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink/75">
+              {GIFT.features.map((f) => (
+                <li key={f} className="flex gap-2">
+                  <span aria-hidden className="text-brand">
+                    ✓
+                  </span>
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
         {/* Routes to the dedicated /gift landing page (8.7); the gift checkout
             itself is wired in 9.7. */}
         <Link href={GIFT_HREF} className="btn-primary shrink-0 px-6 py-3 text-base">
-          {PRICING_COPY.giftCallout.cta}
+          {GIFT.cta}
         </Link>
       </section>
 
@@ -222,6 +216,9 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink/65">
+          {PRICING_COPY.bookGateNote}
+        </p>
       </section>
 
       {/* Feature comparison matrix */}

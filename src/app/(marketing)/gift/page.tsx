@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Container } from "../_components/Container";
 import { Section } from "../_components/Section";
 import { pageMeta } from "@/lib/seo";
+import { GIFT, formatPrice } from "@/lib/pricing";
 
 export const metadata = pageMeta({
   title: "Give the gift of their stories",
@@ -250,11 +251,25 @@ function WhatTheyReceive() {
           </div>
         ))}
       </div>
-      <p className="mt-10 text-center">
-        <Link href="/pricing" className="link text-base">
-          See gift pricing →
-        </Link>
-      </p>
+      {/* Price stated here, not only on /pricing — a gift buyer arriving from a
+          search or a shared link shouldn't have to leave to learn the number.
+          Rendered from lib/pricing so it can't drift from the pricing page. */}
+      <div className="mt-12 text-center">
+        <p className="font-serif text-3xl font-semibold tracking-tight">
+          {formatPrice(GIFT.price)}
+          <span className="ml-2 align-middle text-base font-medium text-ink/65">
+            one-time · {GIFT.months} months + the printed book
+          </span>
+        </p>
+        <p className="mt-2 text-ink/65">
+          It never auto-renews, so you&apos;re not signing them up for anything.
+        </p>
+        <p className="mt-6">
+          <Link href="/pricing" className="link text-base">
+            Compare all plans →
+          </Link>
+        </p>
+      </div>
     </Section>
   );
 }

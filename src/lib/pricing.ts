@@ -6,11 +6,31 @@
 // re-declaring numbers — when Stripe is wired, attach the price IDs to the
 // `stripePriceId` fields here instead of hardcoding prices a second time.
 //
-// !!! PRICES ARE UNCONFIRMED RECOMMENDATIONS (from docs/PRICING.md §2/§3). !!!
-// They must be validated against loaded COGS (book POD quote, per-storyteller
-// software cost, Lifetime guardrail — docs/PRICING.md §6) before charging real
-// money. Nothing here charges yet: CTAs route to /login, Stripe is Phase 9.
-// Revise these values (and the `unconfirmed` flag) once COGS is known.
+// v2 (2026-07-28) — repriced against a modelled per-storyteller COGS of ~$28/yr
+// and a ~$36 landed hardcover (docs/PRICING.md §6). What changed and why:
+//   - Book tier $149 → $189: the old +$50 upgrade bought a ~$36 book (28%
+//     incremental margin) and undercut our own $79 à-la-carte hardcover.
+//   - Book is included in the FIRST YEAR, not every year — a year-2 book costs
+//     the same to print but carries one year of new stories. Reprints are an
+//     add-on.
+//   - Family $199 → $299, extra storyteller $89 → $79/yr: Family used to hand
+//     over two storytellers for $50 that cost $178 à la carte and ~$56/yr to
+//     serve. The ladder is now consistent ($189+$79+$79=$347 vs $299).
+//   - Lifetime ($199 one-time) REMOVED. It broke even only after ~5.6 years of
+//     an active storyteller, undercut two years of the book tier, and sold a
+//     benefit we already give away free (forever access on cancel). The
+//     one-time-purchase slot is now the prepaid GIFT below, which carries no
+//     perpetual serving cost.
+//   - Reprint $39 → $89 new-edition hardcover: $39 did not clear print COGS.
+//   - Monthly $11 → $14, and printed books are gated behind annual or
+//     PRINTED_BOOK_ELIGIBILITY paid months so one $14 charge can't extract a
+//     $36 book. Exporting your own audio stays free and ungated — that promise
+//     is untouched (docs/EXPORT_FEATURE.md).
+//
+// !!! STILL UNCONFIRMED: the print-on-demand quote. !!! Every book-bearing
+// price above assumes ~$36 landed for a ~100pp color hardcover + shipping. Get a
+// real POD quote before creating Stripe prices (docs/PRICING.md §6). Nothing
+// here charges yet: CTAs route to /signup → /login, Stripe is Phase 9.
 
 export const PRICING_UNCONFIRMED = true;
 
@@ -18,6 +38,15 @@ export const PRICING_UNCONFIRMED = true;
 export type StripePriceId = string | null;
 
 export type BillingPeriod = "year" | "one-time";
+
+/**
+ * Printed books ship on annual plans immediately; on the monthly plan only after
+ * this many paid months. Guards the one real leak in "cancel anytime, keep
+ * everything": a single $14 charge should not fund a ~$36 hardcover. Applies to
+ * the à-la-carte copies too, not just a bundled book. Enforced at order time in
+ * Phase 9.5 (entitlement gating) — this constant is the shared number.
+ */
+export const PRINTED_BOOK_ELIGIBILITY = { minPaidMonths: 6 } as const;
 
 export interface PricingTier {
   id: "keepsake" | "keepsake_book" | "family";
@@ -38,12 +67,19 @@ export interface PricingTier {
   stripeMonthlyPriceId?: StripePriceId;
 }
 
-export interface LifetimeOffer {
-  id: "lifetime";
+/**
+ * The one-time-purchase path. Prepaid and finite (12 months + a book) rather
+ * than perpetual, so it carries no open-ended serving cost — see the v2 note at
+ * the top for why Lifetime was retired in its place.
+ */
+export interface GiftOffer {
+  id: "gift";
   name: string;
   tagline: string;
   price: number;
   period: BillingPeriod;
+  /** Months of recording the prepaid price covers. */
+  months: number;
   features: string[];
   cta: string;
   stripePriceId: StripePriceId;
@@ -89,14 +125,14 @@ export const TIERS: PricingTier[] = [
     tagline: "Everything, kept forever.",
     price: 99,
     period: "year",
-    monthly: 11, // TODO: confirm monthly maps to ~$99/yr intent (PRICING §2)
+    monthly: 14,
     features: [
       "One storyteller",
       "Unlimited stories and recordings",
       "Full voice-nudge & scheduling experience",
       "Digital book (PDF) with bundled audio + voice QR codes",
       "Forever access on cancellation",
-      "Physical book available as an add-on",
+      "Printed book available as an add-on",
     ],
     cta: "Start recording",
     stripePriceId: null,
@@ -106,13 +142,14 @@ export const TIERS: PricingTier[] = [
     id: "keepsake_book",
     name: "Keepsake + Book",
     tagline: "The book with their voice in it.",
-    price: 149,
+    price: 189,
     period: "year",
     recommended: true,
     features: [
       "Everything in Keepsake, plus:",
-      "One printed hardcover color book shipped per year",
+      "One printed hardcover color book, included in your first year",
       "Voice QR codes printed in the book",
+      "New editions and extra copies any time at add-on prices",
     ],
     cta: "Get the book",
     stripePriceId: null,
@@ -121,11 +158,11 @@ export const TIERS: PricingTier[] = [
     id: "family",
     name: "Family",
     tagline: "For the whole family.",
-    price: 199,
+    price: 299,
     period: "year",
     features: [
       "Everything in Keepsake + Book, plus:",
-      "Up to 3 storytellers", // TODO: confirm storyteller cap (PRICING §2)
+      "Up to 3 storytellers", // cap is the margin guardrail, not a soft limit
       "Priority support",
     ],
     cta: "Set up the family",
@@ -133,27 +170,34 @@ export const TIERS: PricingTier[] = [
   },
 ];
 
-// --- Lifetime (docs/PRICING.md §2) ----------------------------------------
-// Separate path, NOT a 4th tier column. TODO: define the ongoing-cost guardrail
-// (prompting cap / low-cost "keep recording" renewal) before launch (PRICING §6).
+// --- Gift (docs/PRICING.md §2) --------------------------------------------
+// The one-time path, replacing Lifetime. Separate band, NOT a 4th tier column.
+// Prepaid and finite: it never auto-renews, so a gift-giver is never signing
+// their recipient up for a recurring charge — which is also what bounds our
+// cost. Checkout + redeemable code is Phase 9.7.
 
-export const LIFETIME: LifetimeOffer = {
-  id: "lifetime",
-  name: "Lifetime",
-  tagline: "Own it outright. No subscription.",
+const GIFT_MONTHS = 12;
+
+export const GIFT: GiftOffer = {
+  id: "gift",
+  name: "The Gift",
+  tagline: "One price, prepaid. Nothing to renew.",
   price: 199,
   period: "one-time",
+  months: GIFT_MONTHS,
   features: [
-    "One storyteller, lifetime access",
-    "One printed book included",
-    "Forever access — nothing to renew",
+    `${GIFT_MONTHS} months of recording, prepaid`,
+    "One printed hardcover color book included",
+    "Never auto-renews — no card left on file",
+    "They keep every story, always",
   ],
-  cta: "Buy it once",
+  cta: "Give it as a gift",
   stripePriceId: null,
 };
 
 // --- À la carte add-ons (docs/PRICING.md §3) ------------------------------
-// TODO: confirm each price clears COGS before launch (PRICING §3/§6).
+// Every printed item here must clear the ~$36 landed hardcover assumption;
+// re-check once the POD quote lands (PRICING §6).
 
 export const ADD_ONS: AddOn[] = [
   {
@@ -175,17 +219,19 @@ export const ADD_ONS: AddOn[] = [
   {
     id: "extra_storyteller",
     name: "Additional storyteller",
-    price: 89,
+    price: 79,
     unit: "/yr",
     note: "Add another elder to any annual plan.",
     stripePriceId: null,
   },
   {
-    id: "reprint",
-    name: "New edition / reprint",
-    price: 39,
-    unit: "one-time",
-    note: "Add a year of new stories and reprint the book.",
+    // Was a $39 "reprint fee" that read as a whole printed book below cost.
+    // Now priced as what it ships: another hardcover, re-laid out.
+    id: "new_edition",
+    name: "New edition — hardcover",
+    price: 89,
+    unit: "each",
+    note: "A fresh hardcover with another year of stories in it.",
     stripePriceId: null,
   },
 ];
@@ -224,8 +270,12 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
     highlight: true,
   },
   {
-    feature: "Printed hardcover color book / yr",
+    feature: "Printed hardcover color book (first year)",
     values: { keepsake: false, keepsake_book: "1", family: "1" },
+  },
+  {
+    feature: "Extra copies & new editions",
+    values: { keepsake: "add-on", keepsake_book: "add-on", family: "add-on" },
   },
   {
     feature: "Priority support",
@@ -253,6 +303,10 @@ export const PRICING_COPY = {
     body: "My Family Porch is one of the most meaningful gifts you can give — for a birthday, Mother's or Father's Day, a holiday, or a milestone anniversary. Set it up for someone you love and we'll help their stories find their way home.",
     cta: "Give it as a gift",
   },
+  // Footnote under the add-on table. States the one gate on the "keep
+  // everything" promise: it limits printed books, never a family's own audio.
+  bookGateNote:
+    "Printed books ship right away on any yearly plan. On the monthly plan, they can be ordered after six months. Downloading your own recordings is always free, on every plan, from day one.",
 } as const;
 
 // Full FAQ, grouped by category — the single source of truth for the dedicated
@@ -329,12 +383,32 @@ export const FAQ_GROUPS: FaqGroup[] = [
         featured: true,
       },
       {
+        q: "Do I get a new printed book every year?",
+        a: `Your first printed book is included with the Keepsake + Book and Family plans. After that you order a new edition whenever it's worth printing again — ${addOnPrice("new_edition")} for a fresh hardcover with another year of stories in it. Most families print one beautiful book, not one a year.`,
+      },
+      {
+        q: "Is there a lifetime plan?",
+        a: "You already have the part that matters. Every plan keeps your stories, recordings, and digital book forever — even after you cancel — so there's nothing to buy to make them permanent. If you'd rather pay once, The Gift is prepaid for a year and never auto-renews.",
+      },
+      {
+        q: "Yearly or monthly?",
+        a: `Yearly is the better value and the printed book ships right away. Monthly is ${formatPrice(TIERS[0].monthly ?? 0)} and works the same, except printed books can be ordered after six months. Downloading your own recordings is free from day one either way.`,
+      },
+      {
         q: "Can I delete everything?",
         a: "Yes. You can download all your stories at any time, and you can ask us to permanently delete a single recording or your entire account by contacting us.",
       },
     ],
   },
 ];
+
+// Prices quoted inside FAQ answers are interpolated from the tables above so the
+// copy can never drift from the cards. (Function declarations hoist, so this is
+// callable from the FAQ initializer even though `formatPrice` is defined below.)
+function addOnPrice(id: string): string {
+  const a = ADD_ONS.find((x) => x.id === id);
+  return a ? formatPrice(a.price) : "";
+}
 
 // Short teaser for the homepage — the items marked `featured` above, in source
 // order. The full, grouped list lives on /faq.

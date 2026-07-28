@@ -5,7 +5,7 @@
 // component (_components/JsonLd.tsx) renders these into a <script> tag.
 
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, DEFAULT_OG_IMAGE } from "@/lib/seo";
-import { TIERS, LIFETIME, FAQ_GROUPS } from "@/lib/pricing";
+import { TIERS, GIFT, FAQ_GROUPS } from "@/lib/pricing";
 
 // A loose JSON-LD object type. schema.org graphs are deeply nested and untyped;
 // `unknown` values keep the builders honest without fighting the structure.
@@ -64,10 +64,10 @@ export function faqPageLd(): JsonLdObject {
 }
 
 /**
- * Product + Offers for /pricing, built from the tier table + the Lifetime offer.
+ * Product + Offers for /pricing, built from the tier table + the gift offer.
  * Prices come straight from lib/pricing (whole-dollar USD), so the structured
  * offers stay in lockstep with the cards. Annual tiers are yearly subscriptions;
- * Lifetime is a one-time purchase.
+ * the gift is a one-time prepaid purchase.
  */
 export function pricingProductLd(): JsonLdObject {
   const offers = [
@@ -82,11 +82,11 @@ export function pricingProductLd(): JsonLdObject {
     })),
     {
       "@type": "Offer",
-      name: LIFETIME.name,
-      description: LIFETIME.tagline,
-      price: LIFETIME.price.toString(),
+      name: GIFT.name,
+      description: GIFT.tagline,
+      price: GIFT.price.toString(),
       priceCurrency: "USD",
-      url: `${SITE_URL}/pricing`,
+      url: `${SITE_URL}/gift`,
     },
   ];
 

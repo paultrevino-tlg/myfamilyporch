@@ -432,7 +432,7 @@ function PricingPreview() {
       </div>
       <div className="mt-8 text-center">
         <Link href="/pricing" className="link text-base">
-          See full pricing, the Lifetime option &amp; add-ons →
+          See full pricing, the gift option &amp; add-ons →
         </Link>
       </div>
     </Section>

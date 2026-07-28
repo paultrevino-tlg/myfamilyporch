@@ -5,6 +5,13 @@
 > page structure, and a feature matrix. Items marked `TODO:` must be confirmed
 > against real cost/margin data before going live — do not ship placeholder
 > prices as final.
+>
+> **v2 — revised 2026-07-28.** Prices were re-derived against modelled unit
+> economics (§6). The v1 numbers had three structural faults: the Family tier
+> undercut its own à-la-carte storyteller price, Lifetime broke even only after
+> ~5.6 years, and the book tier's upgrade margin was ~28%. See §8 for the full
+> before/after and the reasoning. The implementation lives in
+> `src/lib/pricing.ts` — change prices there and here together.
 
 ---
 
@@ -30,10 +37,11 @@ physical book.
 
 ## 2. Tiers (subscription-led)
 
-Three subscription tiers + a one-time lifetime alternative. All prices in USD.
-Billed annually; show an optional monthly equivalent where noted.
+Three subscription tiers + a one-time prepaid **gift**. All prices in USD.
+Billed annually; monthly is offered on Tier 1 only.
 
-> `TODO: Confirm all prices against loaded COGS before launch.` See §6.
+> Remaining open input: the **print-on-demand quote** (§6). Every book-bearing
+> price assumes ~$36 landed for a ~100pp color hardcover incl. shipping.
 
 ### Tier 1 — Keepsake — $99 / year
 - **Tagline:** Everything, kept forever.
@@ -42,45 +50,88 @@ Billed annually; show an optional monthly equivalent where noted.
 - Full voice-nudge / scheduling experience.
 - **Digital book** (PDF) with bundled audio + voice QR codes.
 - Forever access on cancellation.
-- **Physical book NOT included** — available as an add-on (see §3).
-- Monthly option: `$11/mo` `TODO: confirm monthly maps to ~$99/yr intent`.
+- **Printed book NOT included** — available as an add-on (see §3).
+- Monthly option: **$14/mo** (≈41% over annual — deliberate; it also has to
+  absorb the higher churn and per-charge fees of monthly billing).
+- Held at $99 on purpose: it is the acquisition/anchor tier against StoryWorth
+  and Remento at the same price, and still clears ~69% gross margin (§6).
 
-### Tier 2 — Keepsake + Book — $149 / year  ⭐ Most popular
+### Tier 2 — Keepsake + Book — $189 / year  ⭐ Most popular
 - **Tagline:** The book with their voice in it.
 - Everything in Keepsake, plus:
-- **One printed hardcover color book** shipped per year.
+- **One printed hardcover color book, included in the first year.**
 - Voice QR codes printed in the book.
+- New editions and extra copies at à-la-carte prices thereafter.
 - Mark this tier as the highlighted / recommended card.
+- **Why $189, not $149:** the upgrade over Tier 1 is now $90 against a ~$36
+  book (~60% incremental margin) and it no longer sells the same hardcover for
+  $50 inside the tier that we sell for $79 outside it.
+- **Why first-year only:** a year-2 book costs the same to print but carries one
+  year of new stories. Families want one beautiful book, not one per year;
+  shipping one annually was pure margin leakage against a weaker product.
 
-### Tier 3 — Family — $199 / year
+### Tier 3 — Family — $299 / year
 - **Tagline:** For the whole family.
 - Everything in Keepsake + Book, plus:
-- Up to **3 storytellers** `TODO: confirm storyteller cap`.
+- Up to **3 storytellers**.
 - Priority support.
-- `TODO: decide whether Family includes >1 printed copy or just multi-storyteller.`
+- One printed book included (first year) — **not one per storyteller**. Extra
+  copies are à la carte.
+- **Why $299, not $199:** at $199 this tier handed over two extra storytellers
+  for $50 that cost $158 à la carte and ~$56/yr to actually serve — a 37% gross
+  margin, worse than the tiers beneath it, and an arbitrage every multi-elder
+  family would take. The ladder is now internally consistent: buying up from
+  Tier 2 à la carte is $189 + $79 + $79 = $347 vs $299, a sane ~14% multi-seat
+  discount.
 
-### Lifetime — $199 one-time (alternative path)
-- **Tagline:** Own it outright. No subscription.
-- One storyteller, lifetime access, one printed book included.
-- Present as a separate option (toggle or secondary section), NOT a 4th column,
-  so it doesn't muddy the annual comparison.
-- `TODO: define ongoing-cost guardrail — cap on active prompting and/or a
-  low-cost "keep recording" renewal. Lifetime must cover indefinite marginal
-  costs (SMS, transcription, storage).`
+### The Gift — $199 one-time (the one-time path)
+- **Tagline:** One price, prepaid. Nothing to renew.
+- 12 months of recording + **one printed hardcover included**, for one
+  storyteller. Never auto-renews; no card left on file.
+- Present as a separate band, NOT a 4th column.
+- Gifting is a primary purchase motion (birthdays, Mother's/Father's Day,
+  holidays). Gift buyers convert on a fixed price and won't sign a recipient up
+  for a recurring charge.
+- Checkout + redeemable code is Phase 9.7; the landing page is `/gift`.
+
+### Lifetime — REMOVED (was $199 one-time)
+Retired in v2. Reasons, kept here so it isn't re-proposed:
+1. **Break-even ~5.6 years.** $199 − ~$36 book − ~$6 fees = $157 contribution
+   against ~$28/yr of marginal cost, forever, plus a permanent storage and
+   export obligation we promise in writing.
+2. **Adverse selection.** It beat the $189/yr book tier for anyone staying past
+   ~13 months — i.e. precisely the high-LTV customers, and only them.
+3. **It sold a benefit we already give away.** "Cancel anytime and keep
+   everything, forever" already means a cancelled family keeps every recording,
+   transcript, and the digital book. Charging $199 for permanence contradicted
+   the page's own headline promise.
+
+If it is ever revived, the only defensible shape is **$599 = lifetime access,
+playback and export + 24 months of active interviewing, then ~$49/yr to keep
+recording** — because "lifetime" must bound the *active* cost, not just the
+storage cost.
 
 ---
 
 ## 3. À la carte add-ons (display below the tier cards)
 
-| Item | Price | Notes |
-|---|---|---|
-| Extra printed copy — softcover | `$59` | `TODO: confirm > COGS` |
-| Extra printed copy — hardcover | `$79` | `TODO: confirm > COGS` |
-| Additional storyteller (annual plans) | `+$89 / yr` | `TODO: confirm` |
-| New edition / reprint (a year of new stories) | `$39` | One-time reprint fee `TODO: confirm` |
+| Item | Price | COGS assumption | Notes |
+|---|---|---|---|
+| Extra printed copy — softcover | `$59` | ~$20 landed | ~66% margin |
+| Extra printed copy — hardcover | `$79` | ~$36 landed | ~54% margin |
+| Additional storyteller (annual plans) | `+$79 / yr` | ~$28/yr serving cost | ~65% margin; aligned with the Family tier |
+| New edition — hardcover | `$89` | ~$36 landed + layout | Replaces the v1 `$39 reprint`, which did not clear print COGS and read to buyers as a whole printed book for $39 |
 
 Frame extra copies around the real use case: *"Each adult child can have their
 own copy."*
+
+**Printed-book eligibility gate.** Printed books (bundled or à la carte) ship
+immediately on any annual plan; on the monthly plan they can be ordered after
+**6 paid months** (`PRINTED_BOOK_ELIGIBILITY` in `src/lib/pricing.ts`, enforced
+at order time in Phase 9.5). Without this, one $14 charge extracts a ~$36
+hardcover. This gate covers **printed books only** — downloading one's own
+audio, transcripts and digital book stays free and ungated from day one on
+every plan, because that is the brand promise (`docs/EXPORT_FEATURE.md`).
 
 ---
 
@@ -88,7 +139,7 @@ own copy."*
 
 Render as a comparison table beneath the cards. ● = included.
 
-| Feature | Keepsake $99 | Keepsake + Book $149 | Family $199 |
+| Feature | Keepsake $99 | Keepsake + Book $189 | Family $299 |
 |---|:---:|:---:|:---:|
 | Storytellers | 1 | 1 | up to 3 |
 | Unlimited stories & recordings | ● | ● | ● |
@@ -97,7 +148,8 @@ Render as a comparison table beneath the cards. ● = included.
 | Voice QR codes | ● | ● | ● |
 | **Download everything** (audio + transcripts + book, one click) | ● | ● | ● |
 | **Forever access on cancel** | ● | ● | ● |
-| Printed hardcover color book / yr | — | 1 | 1 |
+| Printed hardcover color book (first year) | — | 1 | 1 |
+| Extra copies & new editions | add-on | add-on | add-on |
 | Priority support | — | — | ● |
 
 ---
@@ -125,11 +177,27 @@ Render as a comparison table beneath the cards. ● = included.
 - Keepsake: `Start recording`
 - Keepsake + Book: `Get the book` (primary/highlighted button)
 - Family: `Set up the family`
-- Lifetime: `Buy it once`
+- The Gift: `Give it as a gift` → `/gift`
+
+**Add-on footnote** (under the à-la-carte table — states the one gate honestly)
+- `Printed books ship right away on any yearly plan. On the monthly plan, they
+  can be ordered after six months. Downloading your own recordings is always
+  free, on every plan, from day one.`
 
 **FAQ** (include these Q&As)
 - *What happens if I cancel?* — You keep all stories, audio, and your digital
   book. Nothing is deleted or locked.
+- *Do I get a new printed book every year?* — The first printed book is included
+  on Keepsake + Book and Family. After that, order a new edition whenever it's
+  worth printing again ($89). Most families print one beautiful book, not one a
+  year.
+- *Is there a lifetime plan?* — You already have the part that matters: every
+  plan keeps everything forever, even after cancelling. If you'd rather pay
+  once, The Gift is prepaid for a year and never auto-renews. (This answer turns
+  the retired SKU into a restatement of the #1 differentiator — keep it.)
+- *Yearly or monthly?* — Yearly is better value and the printed book ships right
+  away; monthly is $14 and books can be ordered after six months. Downloads are
+  free from day one either way.
 - *Can more than one person record?* — Yes, on the Family plan, or add a
   storyteller to any annual plan.
 - *Can I download all the recordings?* — Yes — any time, on every plan. One
@@ -143,29 +211,75 @@ Render as a comparison table beneath the cards. ● = included.
 
 ---
 
-## 6. Margin guardrails (BUILD-TIME NOTES — not for the public page)
+## 6. Unit economics (BUILD-TIME NOTES — not for the public page)
 
-These are assumptions, **not confirmed facts**. Validate before launch.
+### 6.1 Modelled cost per active storyteller / year
 
-- Hardcover color book (~100pp) + shipping ≈ `$25–45` `TODO: get real quote
-  from chosen POD provider (Lulu / Blurb / Peecho)`.
-- Per-storyteller software cost/yr (Twilio SMS + transcription + any voice
-  generation + storage) ≈ `$30–80`, scales with how much the elder records.
-  `TODO: confirm actual cost per active storyteller.`
-- **Decision this affects:** whether a printed book can live in the $99 tier or
-  must stay an add-on. As specced, book is add-on at $99 and included at $149.
-  If loaded book COGS + software cost exceeds ~$50, the $149 tier margin is thin
-  — revisit the $50 gap.
-- Lifetime $199 must cover indefinite marginal cost. Do not launch Lifetime
-  without the prompting cap / renewal guardrail defined.
-- **Export / retention cost (from the "Download everything" feature):** audio is
-  kept in durable storage **indefinitely**, including for **cancelled** and
-  **Lifetime** accounts that generate no recurring revenue, plus ZIP-generation
-  compute and egress bandwidth on each export. Per-account this is small (audio
-  storage is cheap) but it is permanent and grows with the install base. It
-  belongs in COGS and sets a floor under the Lifetime price. `TODO: estimate
-  per-account lifetime storage + egress; add export rate limiting.` See
-  `EXPORT_FEATURE.md`.
+Basis: the shipped default schedule (`TU,FR` → 104 sessions/yr, 2 questions
+each — `src/lib/schedule.ts` `DEFAULTS`), ~6 min of elder speech per session,
+~900 spoken characters per session. **These are list-price estimates, not vendor
+invoices** — revisit after the first month of real traffic.
+
+| Line | Est. / yr | Driver |
+|---|---:|---|
+| ElevenLabs TTS (`eleven_multilingual_v2`, 1 credit/char) | **$19** | ~94k chars/yr — the largest variable cost |
+| STT (~624 min/yr) | $3.75 | elder speech volume |
+| Anthropic Sonnet (~3 calls/session, 200 max_tokens) | $3.75 | follow-up generation |
+| Twilio SMS (~150 msgs: nudges, alerts, opt-in) | $1.65 | |
+| Storage + export egress | ~$0.10 yr 1, **cumulative forever** | ~250 MB/yr audio |
+| **Total variable** | **≈ $28** (range $20–60) | |
+
+Plus a fixed platform floor of roughly **$130/mo** (Supabase Pro, ElevenLabs,
+Cloudflare, Twilio number + A2P fees) — about **35–40 paying families** just to
+cover fixed costs before any contribution.
+
+**Book COGS:** ~100pp color hardcover + shipping assumed at **$36 landed**
+(range $28–45). `TODO: get a real quote from the chosen POD provider (Lulu /
+Blurb / Peecho).` **This is the last unconfirmed input** and every book-bearing
+price moves ±$15 with it.
+
+### 6.2 Resulting margins (at $36 book, $28 serving, Stripe 2.9%+30¢)
+
+| SKU | Price | COGS | Gross | Margin |
+|---|---:|---:|---:|---:|
+| Keepsake | $99 | ~$31 | $68 | 69% |
+| Keepsake + Book (yr 1) | $189 | ~$70 | $119 | 63% |
+| Keepsake + Book (yr 2+, no book) | $189 | ~$34 | $155 | 82% |
+| Family (3 storytellers, yr 1) | $299 | ~$129 | $170 | 57% |
+| The Gift | $199 | ~$70 | $129 | 65% |
+
+### 6.3 Cost controls still open
+
+- **Cheaper TTS.** Switching question playback to a Flash/Turbo-class model
+  (0.5 credits/char) roughly halves the single largest variable cost — ~$19/yr →
+  ~$9/yr per storyteller — while keeping the cloned voice. Worth an A/B on
+  perceived warmth before committing (SPEC § Voice pins `eleven_multilingual_v2`,
+  so this is a spec change, not just a config flip).
+- **`askNow` has no throttle** (`src/app/(app)/schedule/actions.ts`). The weekly
+  scheduler naturally bounds cost to the family's chosen days, but the manual
+  "Ask now" button is the one unbounded send path. Add a per-storyteller daily
+  cap.
+- **Export / retention cost.** Audio is kept in durable storage
+  **indefinitely**, including for **cancelled** accounts that generate no
+  recurring revenue, plus ZIP-generation compute and egress on each export.
+  Per-account it is small but permanent and grows with the install base. It
+  belongs in COGS and is a standing argument against any perpetual-license SKU.
+  `TODO: add export rate limiting.` See `EXPORT_FEATURE.md`.
+- **"Unlimited stories"** is honest today because the scheduler caps outreach at
+  the family's chosen days. If a self-serve "record as much as you like" path is
+  ever added, this pricing needs a fair-use ceiling.
+
+### 6.4 Open decisions (not implemented — need an owner call)
+
+1. **Front-loaded renewal pricing.** Because we deliberately gave up lock-in
+   (forever access), revenue can only come from year 1 and the book. A
+   first-year/renewal split — e.g. $189 year 1 with book → ~$89/yr to keep
+   recording — would match where value is actually delivered and blunt the
+   year-2 churn that hits every memoir subscription once the book is done. Not
+   implemented: it needs a second price per tier and complicates the cards.
+2. **Tier naming.** "Keepsake" ($99) does not include the keepsake. Renaming is
+   free right now (no Stripe products exist yet) and expensive later. Suggested:
+   Keepsake → **Voices** or **Porch**, with the book tier keeping "Keepsake".
 
 ---
 
@@ -173,8 +287,10 @@ These are assumptions, **not confirmed facts**. Validate before launch.
 
 - 3 tier cards in a row (stack on mobile); highlight **Keepsake + Book** as the
   recommended card (badge: "Most popular").
-- Lifetime as a separate toggle or band, not a 4th card.
-- À-la-carte add-ons in a simple table or list below the cards.
+- **The Gift** as a separate band, not a 4th card. It carries both the price and
+  the emotional gifting pitch, and its CTA goes to `/gift`.
+- À-la-carte add-ons in a simple table or list below the cards, with the
+  printed-book eligibility footnote (§3) directly underneath.
 - Feature matrix below that.
 - Forever-access and voice-QR callouts as visually distinct bands — these are
   the conversion levers, give them room.
@@ -184,5 +300,29 @@ These are assumptions, **not confirmed facts**. Validate before launch.
 
 ---
 
+## 8. Change log
+
+### v2 — 2026-07-28 (repriced against §6 unit economics)
+
+| Item | v1 | v2 | Why |
+|---|---|---|---|
+| Keepsake | $99/yr | **$99/yr** (unchanged) | 69% margin; it's the anchor against $99 competitors |
+| Keepsake monthly | $11/mo | **$14/mo** | $11 + a free full export + an orderable book was an escape hatch |
+| Keepsake + Book | $149/yr | **$189/yr** | +$50 bought a ~$36 book (28% incremental) and undercut our own $79 hardcover |
+| Book cadence | one per year | **first year only** | year-2 book: same cost, less new content; reprints are an add-on |
+| Family | $199/yr | **$299/yr** | $199 gave away $158 of à-la-carte storytellers for $50 at 37% margin |
+| Additional storyteller | $89/yr | **$79/yr** | makes the Family discount coherent ($347 à la carte vs $299) |
+| Reprint | $39 | **$89 new-edition hardcover** | $39 did not clear print COGS |
+| Lifetime | $199 one-time | **removed** | ~5.6yr break-even, adverse selection, and it sold a benefit we give away free |
+| — | — | **The Gift $199 one-time** | fills the one-time slot with a prepaid, finite SKU that carries no perpetual cost |
+| — | — | **Printed-book eligibility gate** | 6 paid months on monthly; downloads stay free from day one |
+
+Not changed, deliberately: the forever-access promise, free unlimited export,
+and the voice-QR book — those are the differentiators the pricing exists to
+monetize, not levers to tighten.
+
+---
+
 *Prices and inclusions are recommendations and must be confirmed against actual
-costs. This is a product/marketing spec, not financial advice.*
+costs. The print-on-demand quote (§6.1) is the one input still outstanding.
+This is a product/marketing spec, not financial advice.*

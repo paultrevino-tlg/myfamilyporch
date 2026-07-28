@@ -14,10 +14,13 @@ real if there's a button that actually hands the family their files. This
 feature is that button. It is the demonstrable proof of the differentiator,
 not a nice-to-have.
 
-**Hard rule:** This feature is **universal across every tier**, including the
-$99 Keepsake tier and the Lifetime plan. Never gate a family's ability to
-download their own recordings behind a paywall or an upsell. Printed books and
-extra copies are the upsell — ownership of their own content is not.
+**Hard rule:** This feature is **universal across every tier and every billing
+period**, including the $99 Keepsake tier, the monthly plan from its first day,
+and gift accounts. Never gate a family's ability to download their own
+recordings behind a paywall, an upsell, or a tenure requirement. Printed books
+and extra copies are the upsell — ownership of their own content is not.
+(`PRINTED_BOOK_ELIGIBILITY` in `src/lib/pricing.ts` gates *printed books* on
+monthly plans; it must never be applied to this export.)
 
 ---
 
