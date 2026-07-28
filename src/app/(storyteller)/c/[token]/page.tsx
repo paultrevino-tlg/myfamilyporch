@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { loadConsentContext } from "@/lib/consent/storyteller";
+import { consentSpokenText } from "@/lib/consent/spoken";
 import { t, type Lang } from "@/lib/i18n";
 import { submitConsent } from "./actions";
 import HearThis from "./HearThis";
@@ -63,7 +64,9 @@ export default async function ConsentPage({
   const lang: Lang = override ?? ctx.language;
   const other: Lang = lang === "es" ? "en" : "es";
   const maskedNumber = `(•••) •••-${ctx.last4}`;
-  const hearText = `${t(lang, "consent_what_it_is")} ${t(lang, "consent_whats_next")} ${t(lang, "consent_optin_control")}`;
+  // Only the browser-TTS fallback uses this; the cloned voice builds the same
+  // text server-side from the same helper, so the two can't say different things.
+  const hearText = consentSpokenText(lang);
 
   return (
     <main lang={lang} className="mx-auto min-h-screen max-w-xl px-5 py-10 sm:px-7">

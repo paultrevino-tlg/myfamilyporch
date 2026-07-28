@@ -96,6 +96,16 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_optin_control:
       "Yes, text me at this number so I can record my stories. I agree to receive automated, recurring texts from My Family Porch. Msg & data rates may apply. Reply STOP anytime to opt out, HELP for help.",
     consent_agree_btn: "Yes, text me",
+    // Spoken ONLY (never rendered) — the read-aloud wraps consent_optin_control
+    // so a listener knows what's coming and what to do at the end. Deliberately
+    // conditional, never a command, and it names the decline path out loud:
+    // audio that instructs an elder to consent is the kind of pressure a carrier
+    // audit exists to catch. Quotes consent_agree_btn verbatim; no color
+    // reference, so it can't go stale if the brand changes.
+    consent_spoken_bridge:
+      "Now I need your permission before we can text you. Here is exactly what you would be agreeing to.",
+    consent_spoken_finish:
+      "If that sounds alright, tap the checkbox on the screen, then tap the big button at the bottom that says: Yes, text me. If you'd rather not, just close this page — we won't send you anything.",
     consent_hear: "🔊 Read this to me",
     consent_hear_loading: "🔊 Starting…",
     consent_stop: "Stop",
@@ -258,6 +268,10 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_optin_control:
       "Sí, envíenme mensajes de texto a este número para poder grabar mis historias. Acepto recibir mensajes de texto automáticos y recurrentes de My Family Porch. Pueden aplicar tarifas de mensajes y datos. Responde STOP en cualquier momento para cancelar, HELP para ayuda.",
     consent_agree_btn: "Sí, envíenme mensajes",
+    consent_spoken_bridge:
+      "Ahora necesito tu permiso antes de poder enviarte mensajes. Esto es exactamente lo que estarías aceptando.",
+    consent_spoken_finish:
+      "Si te parece bien, marca la casilla en la pantalla y luego toca el botón grande que dice: Sí, envíenme mensajes. Si prefieres que no, simplemente cierra esta página — no te enviaremos nada.",
     consent_hear: "🔊 Léeme esto",
     consent_hear_loading: "🔊 Comenzando…",
     consent_stop: "Detener",

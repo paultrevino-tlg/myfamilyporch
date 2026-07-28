@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyConsentToken } from "@/lib/consent/token";
 import { supabaseService } from "@/lib/supabase/service";
 import { synthesize, ELEVENLABS_DEFAULT_VOICE } from "@/lib/voice/elevenlabs";
-import { t, type Lang } from "@/lib/i18n";
+import { consentSpokenText } from "@/lib/consent/spoken";
+import type { Lang } from "@/lib/i18n";
 
 // Read-aloud for the storyteller authorization page, in the interviewer's cloned
 // voice (the same voice that will ask the questions later, so the elder hears a
@@ -43,11 +44,7 @@ export async function POST(req: NextRequest) {
   // The storyteller may switch the page language before opting in, so honor the
   // requested language, falling back to the one baked into the token.
   const lang: Lang = (langRaw || payload.language) === "es" ? "es" : "en";
-  const text = [
-    t(lang, "consent_what_it_is"),
-    t(lang, "consent_whats_next"),
-    t(lang, "consent_optin_control"),
-  ].join(" ");
+  const text = consentSpokenText(lang);
 
   const db = supabaseService();
 
