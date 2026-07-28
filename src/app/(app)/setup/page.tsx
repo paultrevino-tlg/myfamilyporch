@@ -7,6 +7,7 @@ import { buildConsentLink } from "@/lib/consent/storyteller";
 import { t } from "@/lib/i18n";
 import SetupOverview from "./SetupOverview";
 import CopyBlock from "../storytellers/[id]/CopyBlock";
+import VoiceSetup from "../storytellers/VoiceSetup";
 
 // Guided family-member setup (consent-flow.md). The overview graphic is always
 // on top; below it, a single step card derived from the member's real state
@@ -85,6 +86,22 @@ export default async function SetupPage() {
                 <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
                   {t(lang, "setup_send_waiting", { name: state.pending.name })}
                 </p>
+
+                {/* The wait is dead time, and it's the last moment the member is
+                    reliably still here. Without this, the elder's first question
+                    is read by the neutral fallback voice and nobody notices. */}
+                {!state.hasVoice && (
+                  <div className="mt-5 border-t border-line pt-5">
+                    <h3 className="font-serif text-lg font-semibold">
+                      {t(lang, "setup_voice_title")}
+                    </h3>
+                    <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink/60">
+                      {t(lang, "setup_voice_sub")}
+                    </p>
+                    <VoiceSetup linked={null} />
+                  </div>
+                )}
+
                 <Link href="/dashboard" className="btn-ghost mt-4 inline-block">
                   {t(lang, "setup_dashboard_cta")}
                 </Link>
@@ -109,6 +126,21 @@ export default async function SetupPage() {
               {t(lang, "setup_ready_title")}
             </h2>
             <p className="mt-2 text-ink/65">{t(lang, "setup_ready_sub")}</p>
+
+            {/* Caught here too, for anyone who skipped it during the wait — the
+                storyteller is about to start hearing questions. */}
+            {!state.hasVoice && (
+              <div className="mt-6 border-t border-line pt-6 text-left">
+                <h3 className="font-serif text-lg font-semibold">
+                  {t(lang, "setup_voice_title_ready")}
+                </h3>
+                <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink/60">
+                  {t(lang, "setup_voice_sub_ready")}
+                </p>
+                <VoiceSetup linked={null} />
+              </div>
+            )}
+
             <Link href="/dashboard" className="btn-primary mt-6 inline-block">
               {t(lang, "setup_dashboard_cta")}
             </Link>

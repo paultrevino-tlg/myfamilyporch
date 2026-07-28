@@ -160,6 +160,15 @@ export const ui: Record<Lang, Record<string, string>> = {
       "We text you the moment your storyteller is set up and recording begins.",
     setup_ov_aria:
       "How setup works: you sign up, verify your number, add your storyteller, and send them a link. They tap to approve, then they're ready to record. We text you when they're all set.",
+    // "While you wait" voice offer on the send-link + ready screens. Not a
+    // numbered stop on the overview: recording is optional (the questions fall
+    // back to a neutral voice), so it must never look like it blocks the invite.
+    setup_voice_title: "While you wait — record your voice",
+    setup_voice_sub:
+      "Record yourself once and they'll hear the questions in your voice instead of a stranger's. Takes about a minute, and you can always do it later in Settings.",
+    setup_voice_title_ready: "Record your voice",
+    setup_voice_sub_ready:
+      "They'll hear the questions in your voice instead of a stranger's. Takes about a minute — or do it later in Settings.",
     setup_ov_1: "Sign up",
     setup_ov_1_sub: "Create your account",
     setup_ov_2: "Verify your number",
@@ -311,6 +320,12 @@ export const ui: Record<Lang, Record<string, string>> = {
       "Te enviamos un mensaje en cuanto tu narrador esté listo y comience a grabar.",
     setup_ov_aria:
       "Cómo funciona la configuración: te registras, verificas tu número, agregas a tu narrador y le envías un enlace. Ellos tocan para aprobar y quedan listos para grabar. Te avisamos cuando todo esté listo.",
+    setup_voice_title: "Mientras esperas — graba tu voz",
+    setup_voice_sub:
+      "Grábate una vez y escucharán las preguntas con tu voz en lugar de la de un desconocido. Toma alrededor de un minuto, y siempre puedes hacerlo después en Ajustes.",
+    setup_voice_title_ready: "Graba tu voz",
+    setup_voice_sub_ready:
+      "Escucharán las preguntas con tu voz en lugar de la de un desconocido. Toma alrededor de un minuto — o hazlo después en Ajustes.",
     setup_ov_1: "Regístrate",
     setup_ov_1_sub: "Crea tu cuenta",
     setup_ov_2: "Verifica tu número",

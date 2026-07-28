@@ -102,13 +102,18 @@ export type SetupState = {
   currentStepNo: number;
   lang: Lang; // the member's language — drives the localized overview + copy
   pending: PendingStoryteller | null; // set only for the send_link step
+  // Has this member recorded their own voice yet? Not a wizard STEP — voice is
+  // optional (api/storyteller/voice falls back to a neutral voice), so it never
+  // blocks inviting a storyteller. But onboarding has to OFFER it, or the elder
+  // silently hears a stranger reading their questions.
+  hasVoice: boolean;
 };
 
 // Gather the facts (RLS-scoped) and resolve the step. Assumes a family exists
 // (the page redirects no-family members to create one first).
 export async function loadSetupState(familyId: string, userId: string): Promise<SetupState> {
   const sb = await supabaseServer();
-  const [{ data: mem }, { data: sts }] = await Promise.all([
+  const [{ data: mem }, { data: sts }, { data: voice }] = await Promise.all([
     sb
       .from("memberships")
       .select("consent_state, language")
@@ -120,6 +125,13 @@ export async function loadSetupState(familyId: string, userId: string): Promise<
       .select("id, name, phone, language, consent_state")
       .eq("family_id", familyId)
       .order("created_at", { ascending: false }),
+    // The caller's OWN clone (voice_profiles.owner_user_id = them).
+    sb
+      .from("voice_profiles")
+      .select("id, label")
+      .eq("family_id", familyId)
+      .eq("owner_user_id", userId)
+      .maybeSingle(),
   ]);
 
   const storytellers = sts ?? [];
@@ -150,5 +162,6 @@ export async function loadSetupState(familyId: string, userId: string): Promise<
     currentStepNo: STEP_NO[step],
     lang: mem?.language === "es" ? "es" : "en",
     pending,
+    hasVoice: !!voice,
   };
 }
