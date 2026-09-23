@@ -28,11 +28,13 @@ ELEVENLABS_API_KEY=sk_...
 APP_BASE_URL=http://localhost:3000
 STORYTELLER_TOKEN_SECRET=generate-a-long-random-hex-string
 
-# ---- EmailJS (transactional auth email via api/auth/email-hook) ----
-EMAILJS_SERVICE_ID=service_xxxxxxx
-EMAILJS_TEMPLATE_ID=template_xxxxxxx
-EMAILJS_PUBLIC_KEY=your-public-key
-EMAILJS_PRIVATE_KEY=your-private-key
+# ---- Resend (ALL transactional email: auth hook, invites, export-ready, leads)
+# One key covers the HTTP API and Resend's SMTP surface (smtp.resend.com:465,
+# user `resend`, password = this key) used by the Supabase custom-SMTP setting.
+RESEND_API_KEY=re_...
+# Optional. Visible sender; must be on the Resend-verified domain.
+# Defaults to: My Family Porch <info@myfamilyporch.net>
+# EMAIL_FROM=My Family Porch <info@myfamilyporch.net>
 
 # ---- Supabase Auth "Send Email" hook (Standard Webhooks signing secret) ----
 SUPABASE_AUTH_HOOK_SECRET=v1,whsec_...

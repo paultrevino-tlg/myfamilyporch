@@ -17,7 +17,8 @@
 // (EXPORT_FEATURE.md §7).
 import { zipSync, strToU8 } from "fflate";
 import { supabaseService } from "@/lib/supabase/service";
-import { sendEmail } from "@/lib/email/emailjs";
+import { sendEmail } from "@/lib/email/send";
+import { escapeHtml } from "@/lib/email/render";
 import { renderBookPdf } from "@/lib/book/pdf";
 import {
   planStoryFiles,
@@ -307,7 +308,8 @@ export async function processExport(jobId: string): Promise<void> {
           to_email: job.requested_email,
           subject: `${storytellerName}'s recordings are ready to download`,
           headline: "Your download is ready",
-          message_html: `<p>We’ve packaged up everything you’ve recorded with <strong>${storytellerName}</strong> — audio, transcripts, and your keepsake book — into a single download. It’s yours to keep, forever.</p><p>The link below works for the next ${RETENTION_DAYS} days; you can always request a fresh one any time.</p>`,
+          // Raw-HTML field: escape the storyteller name (user-supplied) here.
+          message_html: `<p>We’ve packaged up everything you’ve recorded with <strong>${escapeHtml(storytellerName)}</strong> — audio, transcripts, and your keepsake book — into a single download. It’s yours to keep, forever.</p><p>The link below works for the next ${RETENTION_DAYS} days; you can always request a fresh one any time.</p>`,
           button_label: "Download everything",
           button_url: base ? `${base}/api/export/download?job=${job.id}` : "",
           footnote: "My Family Porch — your stories are always yours.",

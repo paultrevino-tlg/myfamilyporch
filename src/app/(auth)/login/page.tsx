@@ -4,7 +4,7 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 // Passwordless sign-in for family members. signInWithOtp triggers Supabase's
-// "Send Email" hook, which routes through our EmailJS sender (api/auth/email-hook).
+// "Send Email" hook, which routes through our Resend sender (api/auth/email-hook).
 // The emailed link round-trips through Supabase /auth/v1/verify back to
 // /auth/callback. Storytellers never use this surface.
 export default function LoginPage() {

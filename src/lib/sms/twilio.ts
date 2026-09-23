@@ -2,7 +2,7 @@
 // SERVER-ONLY. Per the master-architecture "multi-channel messaging" pattern,
 // SMS is a channel that self-gates: FAILS SOFT when the TWILIO_* env vars are
 // unset (warn + return, never throw) so a misconfigured environment never
-// crashes a request flow — mirroring lib/email/emailjs.ts. A real API failure
+// crashes a request flow — mirroring lib/email/send.ts. A real API failure
 // (creds present, Twilio rejects) throws so the caller can log it.
 //
 // Worker-compatible: plain fetch + Basic auth (btoa), no Node-only SDK.

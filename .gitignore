@@ -12,3 +12,6 @@ next-env.d.ts
 coverage/
 tsconfig.tsbuildinfo
 supabase/.temp/
+
+# Local transactional-email previews (scripts/preview-email.ts)
+.email-preview/

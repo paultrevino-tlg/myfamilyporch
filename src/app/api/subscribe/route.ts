@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { sendEmail } from "@/lib/email/emailjs";
+import { sendEmail } from "@/lib/email/send";
+import { escapeHtml } from "@/lib/email/render";
 
 // Email capture for not-ready visitors (Phase 8.8, brief §7). The marketing
 // EmailCapture island POSTs here. We validate server-side (the client's HTML5
 // checks are a courtesy, not the boundary), drop honeypot hits silently, log the
 // lead so it's captured in Worker logs regardless of email config, and send a
-// best-effort notification to the team via the existing EmailJS helper
-// (fail-soft: a misconfigured/unset EmailJS env warns and returns, so the
+// best-effort notification to the team via the shared Resend helper
+// (fail-soft: an unset RESEND_API_KEY warns and returns, so the
 // visitor still sees success). No DB row — a lead is pre-account and carries no
 // family_id, so it does not belong in the RLS-scoped schema.
 //
@@ -21,14 +22,6 @@ const LeadSchema = z.object({
   // Honeypot — must be absent/empty for a real human.
   website: z.string().optional(),
 });
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 export async function POST(req: NextRequest) {
   let raw: unknown;

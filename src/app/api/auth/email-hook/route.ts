@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyStandardWebhook } from "@/lib/webhooks/standard-webhooks";
-import { sendEmail } from "@/lib/email/emailjs";
+import { sendEmail } from "@/lib/email/send";
 
 // Supabase Auth "Send Email" hook. Supabase itself sends NO mail — it POSTs a
-// signed Standard Webhooks payload here, and we render + send via EmailJS so
+// signed Standard Webhooks payload here, and we render + send via Resend so
 // branding/copy live in one place. We verify the signature first, then build
 // the provider's /auth/v1/verify confirmation URL and email it.
 
@@ -18,7 +18,7 @@ type EmailHookPayload = {
   };
 };
 
-// General copy per action type; the EmailJS template stays generic.
+// General copy per action type; the shared email layout stays generic.
 const COPY: Record<string, { subject: string; headline: string; button: string }> = {
   magiclink:    { subject: "Sign in to My Family Porch",        headline: "Your sign-in link",        button: "Sign in" },
   signup:       { subject: "Confirm your email",                headline: "Confirm your email",        button: "Confirm email" },

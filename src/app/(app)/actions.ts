@@ -11,7 +11,8 @@ import {
   getFamilies,
   roleAtLeast,
 } from "@/lib/auth";
-import { sendEmail } from "@/lib/email/emailjs";
+import { sendEmail } from "@/lib/email/send";
+import { escapeHtml } from "@/lib/email/render";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -56,7 +57,9 @@ export async function createInvitation(formData: FormData) {
     to_email: email,
     subject: `You're invited to ${active.name} on My Family Porch`,
     headline: `Join ${active.name}`,
-    message_html: `You've been invited to help with <strong>${active.name}</strong> on My Family Porch as a ${role}. Open the link below to accept — sign in with this email address (${email}).`,
+    // message_html is raw HTML by design, so the family name (user-supplied)
+    // has to be escaped here — the renderer won't do it for this field.
+    message_html: `You've been invited to help with <strong>${escapeHtml(active.name)}</strong> on My Family Porch as a ${escapeHtml(role)}. Open the link below to accept — sign in with this email address (${escapeHtml(email)}).`,
     button_label: "Accept invitation",
     button_url: url,
     footnote: "This invitation expires in 7 days. If you weren't expecting it, you can ignore this email.",
