@@ -21,6 +21,7 @@ import { t, type Lang } from "@/lib/i18n";
 // LIVE as of 3.2: after the opening answer saves, we fetch one follow-up from
 // api/ai/interview (AI once a transcript exists — 3.4 — else a pre-authored
 // follow-up). Falls back to the gentle generic placeholder if nothing returns.
+// LIVE as of 3.5: that slot is sometimes the open-floor question, relabeled.
 
 type Step =
   | "welcome"
@@ -61,6 +62,8 @@ export default function SessionFlow({
   // the follow-up screen then keeps a gentle generic placeholder.
   const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
   const followUpText = followUpQuestion || tr("follow_placeholder");
+  // The open-floor question (3.5) isn't about what they just said — relabel it.
+  const [openFloor, setOpenFloor] = useState(false);
 
   // The captured answers ground in a session and thread together. The first
   // answer's POST returns these; later answers send them back so the follow-up
@@ -148,8 +151,11 @@ export default function SessionFlow({
         body: JSON.stringify({ token, answer_id: answerId }),
       });
       if (res.ok) {
-        const data = (await res.json()) as { question?: string | null };
-        if (data.question) setFollowUpQuestion(data.question);
+        const data = (await res.json()) as { question?: string | null; source?: string };
+        if (data.question) {
+          setFollowUpQuestion(data.question);
+          setOpenFloor(data.source === "open_floor");
+        }
       }
     } catch (e) {
       console.error("[storyteller] follow-up fetch failed", e);
@@ -272,7 +278,7 @@ export default function SessionFlow({
         {step === "followup" && (
           <Screen>
             <SpeakingAvatar />
-            <FollowTag>{tr("follow_tag")}</FollowTag>
+            <FollowTag>{tr(openFloor ? "open_tag" : "follow_tag")}</FollowTag>
             <DisplayText>{followUpText}</DisplayText>
             <QuestionVoice
               token={token}

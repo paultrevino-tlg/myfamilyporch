@@ -40,6 +40,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     skip: "Skip this one",
     // AI follow-up
     follow_tag: "↳ a question about what you just said",
+    open_tag: "↳ one more thing",
     follow_placeholder: "Where's the farthest you ever drove it?",
     // Your turn, again
     your_turn_again: "Go ahead.",
@@ -241,6 +242,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     skip: "Saltar esta",
     // AI follow-up
     follow_tag: "↳ una pregunta sobre lo que acabas de decir",
+    open_tag: "↳ una cosa más",
     follow_placeholder: "¿Cuál es el lugar más lejano al que llegaste con él?",
     // Your turn, again
     your_turn_again: "Adelante.",

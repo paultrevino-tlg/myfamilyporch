@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateStorytellerToken } from "@/lib/storyteller/token";
 import { supabaseService } from "@/lib/supabase/service";
 import { buildRelationshipContext } from "@/lib/ai/assembly";
-import { generateFollowUp, resolveTokens } from "@/lib/ai/interviewer";
+import {
+  OPEN_FLOOR_QUESTION,
+  generateFollowUp,
+  isOpenFloorQuestion,
+  resolveTokens,
+  shouldAskOpenFloor,
+} from "@/lib/ai/interviewer";
 
 // The interview brain (TODO 3.2). All Anthropic calls happen here, server-side —
 // never in the client. The storyteller surface (token-scoped, the second auth
@@ -14,6 +20,7 @@ import { generateFollowUp, resolveTokens } from "@/lib/ai/interviewer";
 // read the asked question + transcript from the saved answer row.
 //
 // Graceful degradation (never strand the elder):
+//   - occasionally (3.5)   -> the open-floor question instead of a follow-up.
 //   - transcript present  -> AI follow-up (generateFollowUp).
 //   - no transcript yet (STT is TODO 3.4) or AI fails -> first unused pre-authored
 //     follow-up from the opening prompt's `follow_ups`, token-resolved.
@@ -53,6 +60,25 @@ export async function POST(req: NextRequest) {
   const ctx = await buildRelationshipContext(session.storyteller_id);
   if (!ctx) {
     return NextResponse.json({ question: null });
+  }
+
+  // --- Open-floor path (3.5): now and then, hand the floor back to the elder.
+  // If we can't read the last follow-up, skip it rather than risk a repeat.
+  const { data: lastFollowUp, error: lastErr } = await db
+    .from("answers")
+    .select("question_text")
+    .eq("storyteller_id", session.storyteller_id)
+    .eq("is_followup", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (
+    !lastErr &&
+    shouldAskOpenFloor({
+      lastFollowUpWasOpenFloor: isOpenFloorQuestion(lastFollowUp?.question_text),
+    })
+  ) {
+    return NextResponse.json({ question: OPEN_FLOOR_QUESTION[ctx.lang], source: "open_floor" });
   }
 
   const transcript = (answer.transcript ?? "").trim();

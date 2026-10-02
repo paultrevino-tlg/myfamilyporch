@@ -29,6 +29,32 @@ export function resolveTokens(text: string, ctx: RelationshipContext): string {
     .replaceAll("{they}", pr.they).replaceAll("{them}", pr.them).replaceAll("{their}", pr.their);
 }
 
+// --- Open-floor question (TODO 3.5) ------------------------------------------
+// Now and then the follow-up slot hands the floor back to the elder instead of
+// chasing the thread. It only ever fills the follow-up slot (each session opens
+// with a library prompt), so it can never be the opening question or come twice
+// in a row; skipping it right after a session that already asked it keeps it
+// occasional rather than every other session.
+export const OPEN_FLOOR_QUESTION: Record<RelationshipContext["lang"], string> = {
+  en: "Are there any other stories coming to mind that we should hear?",
+  es: "¿Hay alguna otra historia que te venga a la mente y que debamos escuchar?",
+};
+
+const OPEN_FLOOR_CHANCE = 1 / 3;
+
+export function isOpenFloorQuestion(text: string | null | undefined): boolean {
+  const q = (text ?? "").trim();
+  return Object.values(OPEN_FLOOR_QUESTION).includes(q);
+}
+
+export function shouldAskOpenFloor(args: {
+  lastFollowUpWasOpenFloor: boolean;
+  roll?: number; // [0,1); injectable for tests
+}): boolean {
+  if (args.lastFollowUpWasOpenFloor) return false;
+  return (args.roll ?? Math.random()) < OPEN_FLOOR_CHANCE;
+}
+
 // --- Follow-up generation (TODO 3.2) -----------------------------------------
 // SERVER-ONLY. One Anthropic call that chases the thread the elder just opened
 // and returns a single natural follow-up in their language. ANTHROPIC_API_KEY
