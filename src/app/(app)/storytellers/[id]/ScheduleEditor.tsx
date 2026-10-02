@@ -61,16 +61,16 @@ export default function ScheduleEditor({
 
         <div>
           <div className="font-medium text-sm">Days</div>
-          <p className="text-xs text-ink/50">The text arrives these mornings.</p>
+          <p className="text-xs text-ink/50">The text arrives on these days.</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* Styled from the live checkbox (has-[:checked]), not the saved
+                days, so a tap shows immediately — before Save. */}
             {DAY_CODES.map((d) => {
               const on = dayset.has(d);
               return (
                 <label
                   key={d}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
-                    on ? "border-ink bg-ink text-white" : "text-ink/60 hover:bg-ink/5"
-                  }`}
+                  className="cursor-pointer rounded-full border px-3 py-1 text-xs text-ink/60 hover:bg-ink/5 has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:hover:bg-ink has-[:checked]:text-white has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-1"
                 >
                   <input type="checkbox" name="days" value={d} defaultChecked={on} className="sr-only" />
                   {DAY_LABEL[d]}
