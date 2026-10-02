@@ -213,7 +213,7 @@ export default function ScheduleEditor({
           type="submit"
           className="rounded-full border border-ink px-4 py-1.5 text-sm font-semibold hover:bg-ink/5"
         >
-          Ask now
+          Send a request now
         </button>
         <span className="ml-3 text-xs text-ink/50">
           Send a question right away, outside the schedule.

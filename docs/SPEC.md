@@ -26,6 +26,15 @@ start talking; the rest is voice. Question spoken in the interviewer's cloned
 voice with large text as a backup channel. One or two questions per session, by
 design. Identical answer screens for consistency. Warm close; confirm saved;
 reinforce "that's plenty."
+- **Pause and continue** on every answer screen — one recording, resumed, not
+  restarted; no timeout while paused.
+- **Hear it back:** after each answer, "Want to hear it back?" (Yes / No,
+  thanks). Playback is from the phone; then Keep it / Record again. Only the
+  kept take is saved, so the follow-up is generated after "Keep it". Adds one
+  tap per answer — a deliberate trade of a little friction for confidence.
+- **"Maybe later" on the follow-up** and its answer screen: the opening answer is
+  already saved, so the session closes and lands on the warm Done screen.
+- The HTML prototype predates these three and is not redrawn.
 
 ## The AI interview loop
 - The prompt library is a **coverage backbone**, not a script. The AI follows the

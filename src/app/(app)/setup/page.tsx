@@ -4,7 +4,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership } from "@/lib/auth";
 import { loadSetupState } from "@/lib/setup";
 import { buildConsentLink, inviteGreetingName } from "@/lib/consent/storyteller";
-import { t } from "@/lib/i18n";
+import { t, type Lang } from "@/lib/i18n";
+import { formatPhone } from "@/lib/phone";
 import SetupOverview from "./SetupOverview";
 import CopyBlock from "../storytellers/[id]/CopyBlock";
 import VoiceSetup from "../storytellers/VoiceSetup";
@@ -25,6 +26,9 @@ export default async function SetupPage() {
 
   const state = await loadSetupState(active.family_id, user.id);
   const lang = state.lang;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER
+    ? formatPhone(process.env.TWILIO_FROM_NUMBER)
+    : null;
 
   // Build the inline copy-paste block for the send_link step.
   let consentMessage: string | null = null;
@@ -79,27 +83,32 @@ export default async function SetupPage() {
             </h2>
             {consentMessage ? (
               <>
-                <p className="mt-1.5 text-sm text-ink/60">
-                  {t(lang, "setup_send_help", { name: state.pending.name })}
-                </p>
-                <CopyBlock message={consentMessage} storytellerId={state.pending.id} />
-                <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-                  {t(lang, "setup_send_waiting", { name: state.pending.name })}
-                </p>
-
-                {/* The wait is dead time, and it's the last moment the member is
-                    reliably still here. Without this, the elder's first question
-                    is read by the neutral fallback voice and nobody notices. */}
-                {!state.hasVoice && (
-                  <div className="mt-5 border-t border-line pt-5">
-                    <h3 className="font-serif text-lg font-semibold">
-                      {t(lang, "setup_voice_title")}
-                    </h3>
-                    <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink/60">
-                      {t(lang, "setup_voice_sub")}
-                    </p>
-                    <VoiceSetup linked={null} />
-                  </div>
+                {/* 4C.H: voice BEFORE the invite. The first thing the storyteller
+                    hears is the "Read this to me" on their invite page — in the
+                    member's voice only if it exists by then. The invite stays one
+                    tap away ("skip"), so voice is encouraged, never required.
+                    VoiceSetup refreshes the page once cloned, and the invite
+                    then shows directly. */}
+                {state.hasVoice ? (
+                  <InviteSend lang={lang} name={state.pending.name} storytellerId={state.pending.id} message={consentMessage} />
+                ) : (
+                  <>
+                    <div className="mt-3 rounded-xl border border-line p-4">
+                      <h3 className="font-serif text-lg font-semibold">
+                        {t(lang, "setup_voice_first_title")}
+                      </h3>
+                      <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink/60">
+                        {t(lang, "setup_voice_first_sub", { name: state.pending.name })}
+                      </p>
+                      <VoiceSetup linked={null} />
+                    </div>
+                    <details className="mt-4">
+                      <summary className="cursor-pointer text-sm font-medium text-ink/60">
+                        {t(lang, "setup_voice_skip")}
+                      </summary>
+                      <InviteSend lang={lang} name={state.pending.name} storytellerId={state.pending.id} message={consentMessage} />
+                    </details>
+                  </>
                 )}
 
                 <Link href="/dashboard" className="btn-ghost mt-4 inline-block">
@@ -126,6 +135,11 @@ export default async function SetupPage() {
               {t(lang, "setup_ready_title")}
             </h2>
             <p className="mt-2 text-ink/65">{t(lang, "setup_ready_sub")}</p>
+            {fromNumber && (
+              <p className="mx-auto mt-3 max-w-prose rounded-xl bg-surface2 px-3 py-2 text-sm text-ink/70">
+                {t(lang, "setup_save_contact", { number: fromNumber })}
+              </p>
+            )}
 
             {/* Caught here too, for anyone who skipped it during the wait — the
                 storyteller is about to start hearing questions. */}
@@ -148,6 +162,29 @@ export default async function SetupPage() {
         )}
       </div>
     </main>
+  );
+}
+
+// The copy-paste invite + "waiting for them" note (consent-flow.md steps 5-6).
+function InviteSend({
+  lang,
+  name,
+  storytellerId,
+  message,
+}: {
+  lang: Lang;
+  name: string;
+  storytellerId: string;
+  message: string;
+}) {
+  return (
+    <>
+      <p className="mt-1.5 text-sm text-ink/60">{t(lang, "setup_send_help", { name })}</p>
+      <CopyBlock message={message} storytellerId={storytellerId} />
+      <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        {t(lang, "setup_send_waiting", { name })}
+      </p>
+    </>
   );
 }
 

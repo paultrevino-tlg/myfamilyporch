@@ -127,6 +127,11 @@ function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
             {/* Texting status. Anything but "Verified" means preSendGate is
                 blocking every message to this storyteller. */}
             <span className={`chip ${sms.cls}`}>{sms.label}</span>
+            {/* 4C.H: never a silent fallback — say when the elder is hearing a
+                stranger's voice instead of family. */}
+            {stat.standardVoice && (
+              <span className="chip bg-amber-100 text-amber-700">Standard voice</span>
+            )}
           </div>
         </div>
         <Ring value={stat.thisWeekCount} total={stat.weeklyTarget} tone={tone} />

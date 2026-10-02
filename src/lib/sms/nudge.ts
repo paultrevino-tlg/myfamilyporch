@@ -16,6 +16,8 @@ import { mintStorytellerToken } from "@/lib/storyteller/token";
 import { sendSms } from "@/lib/sms/twilio";
 import { preSendGate } from "@/lib/sms/gate";
 import { claimManualNudge, releaseManualNudge } from "@/lib/sms/nudge-quota";
+import { recordNudge, type OutboundSource } from "@/lib/sms/outbound";
+import { webhookUrl } from "@/lib/sms/signature";
 import { t, type Lang } from "@/lib/i18n";
 
 export type NudgeResult =
@@ -125,6 +127,7 @@ async function reconcileCarrierStop(
 export async function sendStorytellerNudge(
   storytellerId: string,
   familyId: string,
+  source: OutboundSource = "schedule",
 ): Promise<NudgeResult> {
   const db = supabaseService();
 
@@ -166,8 +169,10 @@ export async function sendStorytellerNudge(
   if (!url) return { status: "skipped", reason: "no-link" };
 
   const body = buildNudge(lang, { address, interviewer, url });
+  let sid: string | null;
   try {
-    await sendSms(phone, body);
+    // Tracked send (4.5): Twilio reports delivery to api/sms/status.
+    sid = await sendSms(phone, body, { statusCallback: webhookUrl("/api/sms/status") });
   } catch (e) {
     const msg = String((e as Error)?.message ?? "");
     if (msg.includes("21610")) {
@@ -176,6 +181,7 @@ export async function sendStorytellerNudge(
     }
     throw e;
   }
+  await recordNudge({ familyId, storytellerId, source, sid });
   return { status: "sent", kind: "nudge" };
 }
 
@@ -196,7 +202,7 @@ export async function sendManualNudge(
 
   let result: NudgeResult;
   try {
-    result = await sendStorytellerNudge(storytellerId, familyId);
+    result = await sendStorytellerNudge(storytellerId, familyId, "manual");
   } catch (e) {
     await releaseManualNudge(storytellerId, claim.day);
     throw e;

@@ -13,6 +13,7 @@ import { loadStorytellerSchedule } from "@/lib/schedule";
 import { t, type Lang } from "@/lib/i18n";
 import PhoneForm from "../PhoneForm";
 import InvitePanel from "../InvitePanel";
+import VoiceSetup from "../../VoiceSetup";
 import ScheduleEditor from "../ScheduleEditor";
 
 // Per-storyteller onboarding (Option B). One thing per screen, so adding the
@@ -92,6 +93,29 @@ export default async function StorytellerSetupPage({
           link,
         })
       : null;
+
+  // 4C.H: whose voice reads the invite page aloud — the interviewer's clone.
+  // Ask for a recording first only when that's this member (or no interviewer
+  // is set yet, in which case they're the one setting it up).
+  let askForVoice = false;
+  if (step === "invite" && user) {
+    const [{ data: rel }, { data: myVoice }] = await Promise.all([
+      sb
+        .from("storyteller_relationships")
+        .select("user_id")
+        .eq("storyteller_id", st.id)
+        .eq("family_id", active.family_id)
+        .eq("is_interviewer", true)
+        .maybeSingle(),
+      sb
+        .from("voice_profiles")
+        .select("id")
+        .eq("family_id", active.family_id)
+        .eq("owner_user_id", user.id)
+        .maybeSingle(),
+    ]);
+    askForVoice = !myVoice && (!rel || rel.user_id === user.id);
+  }
 
   const stepNo = ST_STEP_NO[step];
 
@@ -190,12 +214,38 @@ export default async function StorytellerSetupPage({
 
         {(step === "invite" || step === "stopped") && (
           <>
-            <InvitePanel
-              storytellerId={st.id}
-              storytellerName={st.name}
-              consentState={st.consent_state}
-              message={inviteMessage}
-            />
+            {askForVoice ? (
+              <>
+                <div className="rounded-xl border border-line p-4">
+                  <h3 className="font-serif text-lg font-semibold">First, record your voice</h3>
+                  <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink/60">
+                    When {st.name} opens your invite, they can have it read aloud — in your
+                    voice, if you record it now. Takes about a minute.
+                  </p>
+                  <VoiceSetup linked={null} />
+                </div>
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-ink/60">
+                    Skip for now — send the invite without my voice
+                  </summary>
+                  <div className="mt-3">
+                    <InvitePanel
+                      storytellerId={st.id}
+                      storytellerName={st.name}
+                      consentState={st.consent_state}
+                      message={inviteMessage}
+                    />
+                  </div>
+                </details>
+              </>
+            ) : (
+              <InvitePanel
+                storytellerId={st.id}
+                storytellerName={st.name}
+                consentState={st.consent_state}
+                message={inviteMessage}
+              />
+            )}
             {/* The last step is the storyteller's own tap, which the member can't
                 perform — so this is where THEIR part of the flow ends. Without an
                 explicit finish, the invite screen is a dead end. */}

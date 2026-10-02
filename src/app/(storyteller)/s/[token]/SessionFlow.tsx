@@ -22,6 +22,11 @@ import { t, type Lang } from "@/lib/i18n";
 // api/ai/interview (AI once a transcript exists — 3.4 — else a pre-authored
 // follow-up). Falls back to the gentle generic placeholder if nothing returns.
 // LIVE as of 3.5: that slot is sometimes the open-floor question, relabeled.
+// LIVE as of 2.9: the follow-up and its answer screen offer "Maybe later" —
+// the opener is already saved, so the session closes and lands on Done.
+// LIVE as of 2.8: each answer can be paused and continued (one clip).
+// LIVE as of 2.7: after each answer, "Want to hear it back?" — the take plays
+// from memory and only the one they keep is uploaded.
 
 type Step =
   | "welcome"
@@ -29,8 +34,10 @@ type Step =
   | "denied"
   | "question"
   | "answer1"
+  | "review1"
   | "followup"
   | "answer2"
+  | "review2"
   | "done"
   | "closed";
 
@@ -137,6 +144,81 @@ export default function SessionFlow({
       console.error("[storyteller] answer upload failed", e);
     }
     return null;
+  }
+
+  // Hear it back (2.7): a finished take waits here, un-uploaded, until the elder
+  // keeps it. A missing/empty clip (capture never started) skips straight to keep
+  // — the same fail-soft path as before, so nothing new can strand them.
+  const [clip, setClip] = useState<{ blob: Blob; durationSec: number } | null>(null);
+
+  function reviewOrKeep(
+    blob: Blob | null,
+    durationSec: number,
+    reviewStep: "review1" | "review2",
+    keep: (blob: Blob | null, durationSec: number) => Promise<void>,
+  ): Promise<void> | void {
+    if (!blob || blob.size === 0) return keep(blob, durationSec);
+    setClip({ blob, durationSec });
+    setStep(reviewStep);
+  }
+
+  async function keepOpening(blob: Blob | null, durationSec: number) {
+    const answerId = await uploadAnswer(blob, durationSec, {
+      isFollowup: false,
+      isFinal: false,
+    });
+    setClip(null);
+    // Generate the follow-up while the "saving" screen is still up, so it's
+    // ready when the follow-up screen appears (no placeholder flash).
+    await fetchFollowUp(answerId);
+    setStep("followup");
+  }
+
+  async function keepFollowUp(blob: Blob | null, durationSec: number) {
+    await uploadAnswer(blob, durationSec, { isFollowup: true, isFinal: true });
+    setClip(null);
+    setStep("done");
+  }
+
+  const answerLabels = {
+    listening: tr("listening"),
+    finishedLabel: tr("finished"),
+    savingLabel: tr("saving"),
+    pauseLabel: tr("pause"),
+    pausedTitle: tr("paused_title"),
+    pausedHint: tr("paused_hint"),
+    keepGoingLabel: tr("keep_going"),
+  };
+
+  const reviewLabels = {
+    title: tr("hear_back_title"),
+    yes: tr("hear_back_yes"),
+    no: tr("hear_back_no"),
+    playing: tr("hear_back_playing"),
+    decide: tr("hear_back_decide"),
+    keep: tr("keep_it"),
+    again: tr("record_again"),
+    playAgain: tr("play_again"),
+    saving: tr("saving"),
+  };
+
+  // "Maybe later" after the opening answer (2.9): the opener is already saved,
+  // so close the session and land on the warm Done screen. Fire-and-forget —
+  // the elder never waits on it.
+  function finishEarly() {
+    if (sessionId) {
+      try {
+        void fetch("/api/storyteller/session/finish", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token, session_id: sessionId }),
+          keepalive: true,
+        });
+      } catch {
+        // ignore — best effort
+      }
+    }
+    setStep("done");
   }
 
   // Ask the interview brain (3.2) for one natural follow-up to the opening answer.
@@ -254,24 +336,22 @@ export default function SessionFlow({
 
         {step === "answer1" && (
           <AnswerScreen
-            listening={tr("listening")}
+            {...answerLabels}
             title={tr("your_turn")}
             hint={tr("take_time")}
-            finishedLabel={tr("finished")}
-            savingLabel={tr("saving")}
             onMicFail={beaconMicFailed}
-            onFinished={async (blob, dur) => {
-              const answerId = await uploadAnswer(blob, dur, {
-                isFollowup: false,
-                isFinal: false,
-              });
-              // Generate the follow-up while the "saving" screen is still up, so
-              // it's ready when the follow-up screen appears (no placeholder flash).
-              await fetchFollowUp(answerId);
-              setStep("followup");
-            }}
+            onFinished={(blob, dur) => reviewOrKeep(blob, dur, "review1", keepOpening)}
             skipLabel={tr("skip")}
             onSkip={() => setStep("done")}
+          />
+        )}
+
+        {step === "review1" && clip && (
+          <ReviewScreen
+            blob={clip.blob}
+            labels={reviewLabels}
+            onKeep={() => keepOpening(clip.blob, clip.durationSec)}
+            onAgain={() => setStep("answer1")}
           />
         )}
 
@@ -292,21 +372,28 @@ export default function SessionFlow({
             <BigButton onClick={() => setStep("answer2")}>
               {tr("ready_to_answer")}
             </BigButton>
+            <QuietButton onClick={finishEarly}>{tr("maybe_later")}</QuietButton>
           </Screen>
         )}
 
         {step === "answer2" && (
           <AnswerScreen
-            listening={tr("listening")}
+            {...answerLabels}
             title={tr("your_turn_again")}
             hint={tr("no_rush")}
-            finishedLabel={tr("finished")}
-            savingLabel={tr("saving")}
             onMicFail={beaconMicFailed}
-            onFinished={async (blob, dur) => {
-              await uploadAnswer(blob, dur, { isFollowup: true, isFinal: true });
-              setStep("done");
-            }}
+            onFinished={(blob, dur) => reviewOrKeep(blob, dur, "review2", keepFollowUp)}
+            skipLabel={tr("maybe_later")}
+            onSkip={finishEarly}
+          />
+        )}
+
+        {step === "review2" && clip && (
+          <ReviewScreen
+            blob={clip.blob}
+            labels={reviewLabels}
+            onKeep={() => keepFollowUp(clip.blob, clip.durationSec)}
+            onAgain={() => setStep("answer2")}
           />
         )}
 
@@ -476,6 +563,10 @@ function AnswerScreen({
   hint,
   finishedLabel,
   savingLabel,
+  pauseLabel,
+  pausedTitle,
+  pausedHint,
+  keepGoingLabel,
   onFinished,
   onMicFail,
   skipLabel,
@@ -486,16 +577,27 @@ function AnswerScreen({
   hint: string;
   finishedLabel: string;
   savingLabel: string;
+  pauseLabel: string;
+  pausedTitle: string;
+  pausedHint: string;
+  keepGoingLabel: string;
   onFinished: (blob: Blob | null, durationSec: number) => void | Promise<void>;
   onMicFail: () => void;
   skipLabel?: string;
   onSkip?: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  // Pause/continue (2.8): one recording throughout — MediaRecorder pause()/
+  // resume() — so a paused answer is still one clip and one upload. Hidden where
+  // the browser can't pause, rather than offering a button that does nothing.
+  const [paused, setPaused] = useState(false);
+  const [canPause, setCanPause] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const startedAtRef = useRef<number>(0);
+  // Recorded length excludes paused time: banked active ms + the live segment.
+  const activeMsRef = useRef<number>(0);
+  const segmentStartRef = useRef<number>(0);
 
   function stopTracks() {
     streamRef.current?.getTracks().forEach((tk) => tk.stop());
@@ -520,8 +622,10 @@ function AnswerScreen({
           if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
         };
         rec.start();
-        startedAtRef.current = Date.now();
+        activeMsRef.current = 0;
+        segmentStartRef.current = Date.now();
         recorderRef.current = rec;
+        setCanPause(typeof rec.pause === "function" && typeof rec.resume === "function");
       } catch {
         // Mic was granted at priming but is unavailable now — fall to recovery.
         if (!cancelled) onMicFail();
@@ -542,13 +646,43 @@ function AnswerScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Stop the recorder and resolve with the assembled clip + its length.
+  function activeSeconds(): number {
+    const rec = recorderRef.current;
+    const live = rec && rec.state === "recording" ? Date.now() - segmentStartRef.current : 0;
+    return Math.round((activeMsRef.current + live) / 1000);
+  }
+
+  function handlePause() {
+    const rec = recorderRef.current;
+    if (!rec || rec.state !== "recording") return;
+    try {
+      rec.pause();
+      activeMsRef.current += Date.now() - segmentStartRef.current;
+      setPaused(true);
+    } catch {
+      // Couldn't pause — keep recording; nothing the elder needs to know.
+    }
+  }
+
+  function handleResume() {
+    const rec = recorderRef.current;
+    if (rec && rec.state === "paused") {
+      try {
+        rec.resume();
+        segmentStartRef.current = Date.now();
+      } catch {
+        // ignore — the recording is still there; "I'm finished" still works.
+      }
+    }
+    setPaused(false);
+  }
+
+  // Stop the recorder and resolve with the assembled clip + its length. Works
+  // from paused too: stop() flushes the final chunk either way.
   function stopRecording(): Promise<{ blob: Blob | null; durationSec: number }> {
     return new Promise((resolve) => {
       const rec = recorderRef.current;
-      const durationSec = startedAtRef.current
-        ? Math.round((Date.now() - startedAtRef.current) / 1000)
-        : 0;
+      const durationSec = activeSeconds();
       if (!rec || rec.state === "inactive") {
         resolve({ blob: null, durationSec });
         return;
@@ -593,6 +727,19 @@ function AnswerScreen({
     );
   }
 
+  if (paused) {
+    return (
+      <Screen>
+        <Mic paused />
+        <DisplayText>{pausedTitle}</DisplayText>
+        <Hint>{pausedHint}</Hint>
+        <Spacer />
+        <BigButton onClick={handleResume}>{keepGoingLabel}</BigButton>
+        <SoftButton onClick={handleFinished}>{finishedLabel}</SoftButton>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Mic />
@@ -601,9 +748,120 @@ function AnswerScreen({
       <Hint>{hint}</Hint>
       <Spacer />
       <BigButton onClick={handleFinished}>{finishedLabel}</BigButton>
+      {canPause && <SoftButton onClick={handlePause}>{pauseLabel}</SoftButton>}
       {skipLabel && onSkip && (
         <QuietButton onClick={handleSkip}>{skipLabel}</QuietButton>
       )}
+    </Screen>
+  );
+}
+
+// Hear it back (2.7). Shown after "I'm finished", before anything is uploaded:
+// the clip plays from the in-memory blob, so there's no round-trip and the elder
+// can re-record freely. Only the take they keep is ever saved. Text-only prompts
+// (no cloned-voice TTS) — they're short, and it keeps the voice bill flat.
+type ReviewLabels = {
+  title: string;
+  yes: string;
+  no: string;
+  playing: string;
+  decide: string;
+  keep: string;
+  again: string;
+  playAgain: string;
+  saving: string;
+};
+
+function ReviewScreen({
+  blob,
+  labels,
+  onKeep,
+  onAgain,
+}: {
+  blob: Blob;
+  labels: ReviewLabels;
+  onKeep: () => Promise<void>;
+  onAgain: () => void;
+}) {
+  const [phase, setPhase] = useState<"ask" | "playing" | "decide" | "saving">("ask");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    };
+  }, []);
+
+  async function play() {
+    try {
+      if (!urlRef.current) urlRef.current = URL.createObjectURL(blob);
+      const audio = audioRef.current ?? new Audio(urlRef.current);
+      audioRef.current = audio;
+      audio.currentTime = 0;
+      audio.onended = () => setPhase("decide");
+      audio.onerror = () => setPhase("decide");
+      setPhase("playing");
+      await audio.play();
+    } catch {
+      // Playback blocked or unsupported — never strand them; offer the choice.
+      setPhase("decide");
+    }
+  }
+
+  async function keep() {
+    audioRef.current?.pause();
+    setPhase("saving");
+    await onKeep();
+  }
+
+  function again() {
+    audioRef.current?.pause();
+    onAgain();
+  }
+
+  if (phase === "saving") {
+    return (
+      <Screen>
+        <Mic />
+        <DisplayText>{labels.saving}</DisplayText>
+      </Screen>
+    );
+  }
+
+  if (phase === "playing") {
+    return (
+      <Screen>
+        <SpeakingAvatar />
+        <VoiceChip>{labels.playing}</VoiceChip>
+        <Spacer />
+        <BigButton onClick={keep}>{labels.keep}</BigButton>
+        <SoftButton onClick={again}>{labels.again}</SoftButton>
+      </Screen>
+    );
+  }
+
+  if (phase === "decide") {
+    return (
+      <Screen>
+        <Check />
+        <DisplayText>{labels.decide}</DisplayText>
+        <Spacer />
+        <BigButton onClick={keep}>{labels.keep}</BigButton>
+        <SoftButton onClick={again}>{labels.again}</SoftButton>
+        <SoftButton onClick={play}>{labels.playAgain}</SoftButton>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <Check />
+      <DisplayText>{labels.title}</DisplayText>
+      <Spacer />
+      <BigButton onClick={play}>{labels.yes}</BigButton>
+      <SoftButton onClick={keep}>{labels.no}</SoftButton>
     </Screen>
   );
 }
@@ -828,9 +1086,14 @@ function SpeakingAvatar() {
   );
 }
 
-function Mic() {
+// Pulses while listening; steady and muted while paused (2.8).
+function Mic({ paused = false }: { paused?: boolean }) {
   return (
-    <div className="flex h-32 w-32 animate-pulse items-center justify-center rounded-full bg-answer shadow-lg">
+    <div
+      className={`flex h-32 w-32 items-center justify-center rounded-full shadow-lg ${
+        paused ? "bg-ink/30" : "animate-pulse bg-answer"
+      }`}
+    >
       <svg viewBox="0 0 24 24" className="h-14 w-14 fill-white" aria-hidden>
         <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z" />
       </svg>
@@ -869,6 +1132,26 @@ function BigButton({
       type="button"
       onClick={onClick}
       className="w-full rounded-3xl bg-emerald-600 px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98]"
+    >
+      {children}
+    </button>
+  );
+}
+
+// A neutral second choice that isn't a "no" — Pause, Record again, Play it
+// again. Big enough to hit easily, quieter than the green primary.
+function SoftButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-3xl border-2 border-ink/25 bg-white px-6 py-4 text-lg font-bold text-ink/80 transition active:scale-[0.98]"
     >
       {children}
     </button>

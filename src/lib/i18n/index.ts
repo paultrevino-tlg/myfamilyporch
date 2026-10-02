@@ -38,6 +38,20 @@ export const ui: Record<Lang, Record<string, string>> = {
     finished: "I'm finished",
     saving: "Saving your story…",
     skip: "Skip this one",
+    // Pause and continue (2.8)
+    pause: "Pause",
+    paused_title: "Paused — take your time",
+    paused_hint: "Everything you've said so far is kept.",
+    keep_going: "Keep going",
+    // Hear it back (2.7)
+    hear_back_title: "Want to hear it back?",
+    hear_back_yes: "Yes, play it",
+    hear_back_no: "No, thanks",
+    hear_back_playing: "Playing your answer…",
+    hear_back_decide: "Keep that one, or record it again?",
+    keep_it: "Keep it",
+    record_again: "Record again",
+    play_again: "Play it again",
     // AI follow-up
     follow_tag: "↳ a question about what you just said",
     open_tag: "↳ one more thing",
@@ -164,12 +178,15 @@ export const ui: Record<Lang, Record<string, string>> = {
     // "While you wait" voice offer on the send-link + ready screens. Not a
     // numbered stop on the overview: recording is optional (the questions fall
     // back to a neutral voice), so it must never look like it blocks the invite.
-    setup_voice_title: "While you wait — record your voice",
-    setup_voice_sub:
-      "Record yourself once and they'll hear the questions in your voice instead of a stranger's. Takes about a minute, and you can always do it later in Settings.",
     setup_voice_title_ready: "Record your voice",
     setup_voice_sub_ready:
       "They'll hear the questions in your voice instead of a stranger's. Takes about a minute — or do it later in Settings.",
+    // 4C.H: voice comes BEFORE the invite, so the very first thing the
+    // storyteller hears — the "Read this to me" on their invite page — is you.
+    setup_voice_first_title: "First, record your voice",
+    setup_voice_first_sub:
+      "When {name} opens your invite, they can have it read aloud — in your voice, if you record it now. Takes about a minute.",
+    setup_voice_skip: "Skip for now — send the invite without my voice",
     setup_ov_1: "Sign up",
     setup_ov_1_sub: "Create your account",
     setup_ov_2: "Verify your number",
@@ -200,6 +217,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     setup_ready_title: "You're all set!",
     setup_ready_sub:
       "Your storyteller is ready to record. We'll let you know as new stories come in.",
+    setup_save_contact:
+      "One tip: ask them to save {number} as a contact. Some phones tuck texts from unknown numbers into a separate list.",
     setup_dashboard_cta: "Go to dashboard",
     // Voice-QR play page (TODO 7.2). {name} = the storyteller. Rendered in the
     // storyteller's own language — the recording's language.
@@ -240,6 +259,20 @@ export const ui: Record<Lang, Record<string, string>> = {
     finished: "Ya terminé",
     saving: "Guardando tu historia…",
     skip: "Saltar esta",
+    // Pausa y continuar (2.8)
+    pause: "Pausa",
+    paused_title: "En pausa — tómate tu tiempo",
+    paused_hint: "Todo lo que has dicho hasta ahora se guarda.",
+    keep_going: "Seguir",
+    // Escucharlo de nuevo (2.7)
+    hear_back_title: "¿Quieres escucharlo?",
+    hear_back_yes: "Sí, ponlo",
+    hear_back_no: "No, gracias",
+    hear_back_playing: "Reproduciendo tu respuesta…",
+    hear_back_decide: "¿Te quedas con esa o la grabas de nuevo?",
+    keep_it: "Me quedo con esa",
+    record_again: "Grabar de nuevo",
+    play_again: "Escucharla otra vez",
     // AI follow-up
     follow_tag: "↳ una pregunta sobre lo que acabas de decir",
     open_tag: "↳ una cosa más",
@@ -322,12 +355,13 @@ export const ui: Record<Lang, Record<string, string>> = {
       "Te enviamos un mensaje en cuanto tu narrador esté listo y comience a grabar.",
     setup_ov_aria:
       "Cómo funciona la configuración: te registras, verificas tu número, agregas a tu narrador y le envías un enlace. Ellos tocan para aprobar y quedan listos para grabar. Te avisamos cuando todo esté listo.",
-    setup_voice_title: "Mientras esperas — graba tu voz",
-    setup_voice_sub:
-      "Grábate una vez y escucharán las preguntas con tu voz en lugar de la de un desconocido. Toma alrededor de un minuto, y siempre puedes hacerlo después en Ajustes.",
     setup_voice_title_ready: "Graba tu voz",
     setup_voice_sub_ready:
       "Escucharán las preguntas con tu voz en lugar de la de un desconocido. Toma alrededor de un minuto — o hazlo después en Ajustes.",
+    setup_voice_first_title: "Primero, graba tu voz",
+    setup_voice_first_sub:
+      "Cuando {name} abra tu invitación, podrá escucharla en voz alta — con tu voz, si la grabas ahora. Toma alrededor de un minuto.",
+    setup_voice_skip: "Omitir por ahora — enviar la invitación sin mi voz",
     setup_ov_1: "Regístrate",
     setup_ov_1_sub: "Crea tu cuenta",
     setup_ov_2: "Verifica tu número",
@@ -358,6 +392,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     setup_ready_title: "¡Todo listo!",
     setup_ready_sub:
       "Tu narrador está listo para grabar. Te avisaremos cuando lleguen historias nuevas.",
+    setup_save_contact:
+      "Un consejo: pídele que guarde {number} como contacto. Algunos teléfonos apartan los mensajes de números desconocidos en otra lista.",
     setup_dashboard_cta: "Ir al panel",
     // Voice-QR play page (TODO 7.2)
     qr_caption: "Escanea para escuchar a {name} contarlo",

@@ -609,6 +609,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_outbound: {
+        Row: {
+          created_at: string
+          error_code: number | null
+          family_id: string
+          id: string
+          kind: string
+          source: string
+          status: string
+          storyteller_id: string | null
+          twilio_sid: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: number | null
+          family_id: string
+          id?: string
+          kind: string
+          source: string
+          status?: string
+          storyteller_id?: string | null
+          twilio_sid?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: number | null
+          family_id?: string
+          id?: string
+          kind?: string
+          source?: string
+          status?: string
+          storyteller_id?: string | null
+          twilio_sid?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_outbound_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_outbound_storyteller_id_fkey"
+            columns: ["storyteller_id"]
+            isOneToOne: false
+            referencedRelation: "storytellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sms_suppressions: {
         Row: {
           phone_e164: string

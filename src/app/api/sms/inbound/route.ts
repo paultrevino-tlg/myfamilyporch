@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseService } from "@/lib/supabase/service";
 import { classifyInbound } from "@/lib/sms/keywords";
 import { t, type Lang } from "@/lib/i18n";
+import { twilioSignature, webhookUrl } from "@/lib/sms/signature";
 
 // Twilio inbound-SMS webhook (consent-flow.md "Inbound keyword handling"). Set as
 // the phone number's "A message comes in" URL in the Twilio console. This is the
@@ -19,26 +20,6 @@ import { t, type Lang } from "@/lib/i18n";
 // SERVER-ONLY (service role — the sender has no session; authenticity comes from
 // the X-Twilio-Signature check, which fails closed).
 export const dynamic = "force-dynamic";
-
-// Twilio request signature: Base64(HMAC-SHA1(authToken, url + sorted(key+value))).
-// Web-Crypto (Worker-compatible), no Node 'crypto' import.
-async function twilioSignature(
-  authToken: string,
-  url: string,
-  params: URLSearchParams,
-): Promise<string> {
-  const keys = [...new Set([...params.keys()])].sort();
-  const payload = url + keys.map((k) => k + params.get(k)).join("");
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(authToken),
-    { name: "HMAC", hash: "SHA-1" },
-    false,
-    ["sign"],
-  );
-  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  return btoa(String.fromCharCode(...new Uint8Array(mac)));
-}
 
 // TwiML reply (or an empty <Response/> for "handled, say nothing").
 function twiml(message?: string): Response {
@@ -74,8 +55,7 @@ export async function POST(req: Request) {
 
   // Validate against the public URL Twilio was configured with (APP_BASE_URL),
   // not req.url — the Worker may see an internal host behind the proxy.
-  const base = (process.env.APP_BASE_URL ?? "").replace(/\/$/, "");
-  const url = `${base}/api/sms/inbound`;
+  const url = webhookUrl("/api/sms/inbound");
   const presented = req.headers.get("x-twilio-signature") ?? "";
   const expected = await twilioSignature(authToken, url, params);
   if (presented !== expected) {

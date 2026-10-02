@@ -12,7 +12,10 @@ import {
   prettyTime,
   tzLabel,
   MANUAL_NUDGE_DAILY_CAP,
+  DEFAULT_TIMEZONE,
 } from "@/lib/schedule";
+import { manualNudgesToday } from "@/lib/sms/nudge-quota";
+import { formatPhone } from "@/lib/phone";
 import {
   loadStorytellerTopics,
   type StorytellerTopics,
@@ -37,6 +40,7 @@ import { consentBadge } from "@/lib/consent/badge";
 import { deriveStorytellerSetupStep } from "@/lib/setup";
 import PhoneForm from "./PhoneForm";
 import InvitePanel from "./InvitePanel";
+import VoiceSetup from "../VoiceSetup";
 import ScheduleEditor from "./ScheduleEditor";
 import { t, type Lang } from "@/lib/i18n";
 
@@ -169,6 +173,23 @@ export default async function StorytellerDetailPage({
       .limit(1)
       .maybeSingle(),
   ]);
+  // What was last sent, and whether it arrived (4.5) — plus today's manual
+  // count against the cap, so the button can say so instead of a surprise.
+  const sendTz = schedule?.timezone || DEFAULT_TIMEZONE;
+  const [{ data: lastSend }, sentToday] = await Promise.all([
+    sb
+      .from("sms_outbound")
+      .select("created_at, status, source")
+      .eq("family_id", active.family_id)
+      .eq("storyteller_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    canManage ? manualNudgesToday(id) : Promise.resolve(0),
+  ]);
+  const atCap = sentToday >= MANUAL_NUDGE_DAILY_CAP;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER ? formatPhone(process.env.TWILIO_FROM_NUMBER) : null;
+
   const exportJob: ExportJob = exportRes.data
     ? {
         id: exportRes.data.id,
@@ -313,6 +334,28 @@ export default async function StorytellerDetailPage({
       )}
       {sp.export === "error" && (
         <Banner tone="red">Couldn&apos;t start the export. Please try again.</Banner>
+      )}
+
+      {/* 4C.H: the fallback voice is never a silent surprise. The interviewer
+          records here if it's them; otherwise we say who needs to. */}
+      {!interviewer?.hasVoice && (
+        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">Questions play in a standard voice</p>
+          {interviewer && interviewer.userId === user.id ? (
+            <>
+              <p className="mt-1 text-amber-800">
+                Record yours once and {st.name} hears every question in your voice instead.
+              </p>
+              <VoiceSetup linked={null} />
+            </>
+          ) : (
+            <p className="mt-1 text-amber-800">
+              {interviewer
+                ? `${interviewer.name} hasn’t recorded their voice yet — they can do it in Settings → My voice.`
+                : `Choose an interviewer below, then they record their voice in Settings → My voice.`}
+            </p>
+          )}
+        </div>
       )}
       {sp.translated === "done" && <Banner tone="green">Translated {st.name}&apos;s stories. 🌐</Banner>}
       {sp.translated === "none" && (
@@ -480,7 +523,7 @@ export default async function StorytellerDetailPage({
               : "pending",
             !!st.phone?.trim(),
           )}
-          open={sp.saved === "phone" || sp.error === "phone"}
+          open={sp.saved === "phone" || sp.error === "phone" || sp.open === "phone"}
         >
           {canManage ? (
             <PhoneForm
@@ -522,20 +565,61 @@ export default async function StorytellerDetailPage({
                     : " · not opened yet")
                 : "No recording link yet"}
             </p>
+            {lastSend && (
+              <p className="mt-1 text-ink/60">
+                Last request: {formatSendTime(lastSend.created_at, sendTz)}
+                {lastSend.source === "schedule" ? " (scheduled)" : ""} ·{" "}
+                <SendStatus status={lastSend.status} />
+              </p>
+            )}
+
+            {/* "Send a request now" (5.6) — always visible to admins, so the
+                send-now action is never hidden; when it can't send, it says why
+                and points at the fix instead of disappearing. */}
+            {canManage && st.consent_state !== "opted_in" && (
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-amber-800">
+                {!st.phone?.trim() ? (
+                  <>
+                    To send {st.name} a request, first{" "}
+                    <Link href={`/storytellers/${st.id}?open=phone`} className="font-semibold underline">
+                      add their number
+                    </Link>
+                    .
+                  </>
+                ) : st.consent_state === "opted_out" ? (
+                  <>{st.name} replied STOP, so we can&apos;t text them. They can text START to turn texts back on.</>
+                ) : (
+                  <>
+                    We can text {st.name} once they accept your invite.{" "}
+                    <Link href={`/storytellers/${st.id}?open=phone`} className="font-semibold underline">
+                      Send the invite
+                    </Link>{" "}
+                    from your own phone first.
+                  </>
+                )}
+              </p>
+            )}
 
             {canManage && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {st.phone?.trim() && st.consent_state === "opted_in" && (
                   <form action={sendNudge}>
                     <input type="hidden" name="storyteller_id" value={st.id} />
-                    <button type="submit" className="btn-ghost">
-                      Send a nudge
+                    <button
+                      type="submit"
+                      disabled={atCap}
+                      className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {atCap ? "Daily limit reached" : "Send a request now"}
                     </button>
                   </form>
                 )}
                 <form action={createRecordingLink}>
                   <input type="hidden" name="storyteller_id" value={st.id} />
-                  <button type="submit" className="btn-primary">
+                  <button
+                    type="submit"
+                    className={st.consent_state === "opted_in" && st.phone?.trim() ? "btn-ghost" : "btn-primary"}
+                  >
                     {linkCount > 0 ? "New link" : "Create recording link"}
                   </button>
                 </form>
@@ -546,6 +630,22 @@ export default async function StorytellerDetailPage({
                       Revoke links
                     </button>
                   </form>
+                )}
+              </div>
+            )}
+            {canManage && st.phone?.trim() && st.consent_state === "opted_in" && (
+              <div className="mt-2 space-y-1 text-xs text-ink/55">
+                {(atCap || sentToday > 0) && (
+                  <p className={atCap ? "font-medium text-amber-800" : ""}>
+                    {sentToday} of {MANUAL_NUDGE_DAILY_CAP} sent today
+                    {atCap ? " — you can send more tomorrow." : "."}
+                  </p>
+                )}
+                {fromNumber && (
+                  <p>
+                    Tip: ask {st.name} to save {fromNumber} as a contact. Some phones tuck
+                    texts from unknown numbers into a separate list.
+                  </p>
                 )}
               </div>
             )}
@@ -682,6 +782,29 @@ export default async function StorytellerDetailPage({
 
 // One expandable setup box: summary shows label + current value; the body holds
 // the inline editor (children).
+// "Fri 1:57 PM CDT", in the storyteller's own zone.
+function formatSendTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(iso));
+}
+
+// Twilio's delivery status, in plain words (4.5).
+function SendStatus({ status }: { status: string }) {
+  if (status === "delivered" || status === "read") {
+    return <span className="font-medium text-emerald-700">Delivered</span>;
+  }
+  if (status === "undelivered" || status === "failed") {
+    return <span className="font-medium text-red-700">Not delivered</span>;
+  }
+  if (status === "sent") return <span>Sent</span>;
+  return <span>Sending…</span>;
+}
+
 function ConfigBox({
   label,
   value,

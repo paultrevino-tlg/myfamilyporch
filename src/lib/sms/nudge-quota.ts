@@ -62,6 +62,22 @@ export async function claimManualNudge(
 }
 
 /**
+ * How many manual sends this storyteller has had today (their local day), for
+ * showing the cap at the button. Read-only. Caller must already have authorized
+ * the storyteller (RLS read on the page) — this reads the service-role-only table.
+ */
+export async function manualNudgesToday(storytellerId: string): Promise<number> {
+  const db = supabaseService();
+  const day = await localDay(db, storytellerId);
+  const { data } = await db
+    .from("manual_nudge_quota")
+    .select("day, count")
+    .eq("storyteller_id", storytellerId)
+    .maybeSingle();
+  return data && data.day === day ? data.count : 0;
+}
+
+/**
  * Give a claim back when the send did not actually go out — the pre-send gate
  * skipped it, or it threw. Best-effort: a failed refund costs the admin one slot
  * for the day, which is the safe direction to fail.

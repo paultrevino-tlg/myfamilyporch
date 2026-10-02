@@ -37,6 +37,9 @@ export type StorytellerStat = {
   storiesSaved: number;
   topicsTouched: number;
   topicsTotal: number; // family-wide library size (shared across storytellers)
+  // No cloned voice for this storyteller's interviewer (or no interviewer), so
+  // questions play in the neutral fallback voice — surfaced, never silent (4C.H).
+  standardVoice: boolean;
 };
 
 // A surfaced signal/insight for the active family (TODO 6.2 — mic-failed; the
@@ -79,7 +82,7 @@ export async function loadStorytellerStats(
   const sb = await supabaseServer();
   const weekAgo = new Date(Date.now() - WEEK_MS).toISOString();
 
-  const [storytellersRes, sessionsRes, schedulesRes, answersRes, libraryRes] =
+  const [storytellersRes, sessionsRes, schedulesRes, answersRes, libraryRes, relsRes, voicesRes] =
     await Promise.all([
       sb
         .from("storytellers")
@@ -104,7 +107,23 @@ export async function loadStorytellerStats(
         .from("prompts")
         .select("category")
         .or(`family_id.is.null,family_id.eq.${familyId}`),
+      sb
+        .from("storyteller_relationships")
+        .select("storyteller_id, user_id")
+        .eq("family_id", familyId)
+        .eq("is_interviewer", true),
+      sb.from("voice_profiles").select("owner_user_id").eq("family_id", familyId),
     ]);
+
+  // Whose voice each storyteller hears: the interviewer's clone, if any.
+  const withVoice = new Set(
+    (voicesRes.data ?? []).map((v) => v.owner_user_id).filter(Boolean) as string[],
+  );
+  const voicedStorytellers = new Set(
+    (relsRes.data ?? [])
+      .filter((r) => withVoice.has(r.user_id as string))
+      .map((r) => r.storyteller_id as string),
+  );
 
   const topicsTotal = new Set(
     (libraryRes.data ?? []).map((p) => p.category as string).filter(Boolean)
@@ -172,6 +191,7 @@ export async function loadStorytellerStats(
       storiesSaved: storiesBy.get(st.id) ?? 0,
       topicsTouched: topicsBy.get(st.id)?.size ?? 0,
       topicsTotal,
+      standardVoice: !voicedStorytellers.has(st.id),
     };
   });
 }
