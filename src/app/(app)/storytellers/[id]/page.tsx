@@ -185,9 +185,11 @@ export default async function StorytellerDetailPage({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    canManage ? manualNudgesToday(id) : Promise.resolve(0),
+    canManage && MANUAL_NUDGE_DAILY_CAP != null ? manualNudgesToday(id) : Promise.resolve(0),
   ]);
-  const atCap = sentToday >= MANUAL_NUDGE_DAILY_CAP;
+  // null cap = limit switched off (testing): never greyed out, no count shown.
+  const cap = MANUAL_NUDGE_DAILY_CAP;
+  const atCap = cap != null && sentToday >= cap;
   const fromNumber = process.env.TWILIO_FROM_NUMBER ? formatPhone(process.env.TWILIO_FROM_NUMBER) : null;
 
   const exportJob: ExportJob = exportRes.data
@@ -322,7 +324,7 @@ export default async function StorytellerDetailPage({
       )}
       {(sp.sent === "nudge_rate-limited" || sp.sent === "asked_rate-limited") && (
         <Banner tone="amber">
-          That&apos;s {MANUAL_NUDGE_DAILY_CAP} questions sent to {st.name} today — enough for one
+          That&apos;s {cap} questions sent to {st.name} today — enough for one
           day. You can send more tomorrow, and their scheduled questions still go out as normal.
         </Banner>
       )}
@@ -635,9 +637,9 @@ export default async function StorytellerDetailPage({
             )}
             {canManage && st.phone?.trim() && st.consent_state === "opted_in" && (
               <div className="mt-2 space-y-1 text-xs text-ink/55">
-                {(atCap || sentToday > 0) && (
+                {cap != null && (atCap || sentToday > 0) && (
                   <p className={atCap ? "font-medium text-amber-800" : ""}>
-                    {sentToday} of {MANUAL_NUDGE_DAILY_CAP} sent today
+                    {sentToday} of {cap} sent today
                     {atCap ? " — you can send more tomorrow." : "."}
                   </p>
                 )}

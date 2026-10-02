@@ -16,6 +16,7 @@ import { mintStorytellerToken } from "@/lib/storyteller/token";
 import { sendSms } from "@/lib/sms/twilio";
 import { preSendGate } from "@/lib/sms/gate";
 import { claimManualNudge, releaseManualNudge } from "@/lib/sms/nudge-quota";
+import { MANUAL_NUDGE_DAILY_CAP } from "@/lib/schedule";
 import { recordNudge, type OutboundSource } from "@/lib/sms/outbound";
 import { webhookUrl } from "@/lib/sms/signature";
 import { t, type Lang } from "@/lib/i18n";
@@ -197,7 +198,12 @@ export async function sendManualNudge(
   storytellerId: string,
   familyId: string,
 ): Promise<NudgeResult> {
-  const claim = await claimManualNudge(storytellerId);
+  // Limit switched off (testing) — send straight through, still gated by consent.
+  if (MANUAL_NUDGE_DAILY_CAP == null) {
+    return sendStorytellerNudge(storytellerId, familyId, "manual");
+  }
+
+  const claim = await claimManualNudge(storytellerId, MANUAL_NUDGE_DAILY_CAP);
   if (!claim.ok) return { status: "skipped", reason: "rate-limited" };
 
   let result: NudgeResult;

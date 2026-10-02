@@ -11,11 +11,7 @@
 // storytellers/schedules, because RLS grants family admins UPDATE on those, so
 // the person being limited could reset their own counter via PostgREST.
 import { supabaseService } from "@/lib/supabase/service";
-import {
-  DEFAULT_TIMEZONE,
-  MANUAL_NUDGE_DAILY_CAP,
-  localDayIn,
-} from "@/lib/schedule";
+import { DEFAULT_TIMEZONE, localDayIn } from "@/lib/schedule";
 
 /** The storyteller's local calendar day, per their schedule's timezone. */
 async function localDay(
@@ -43,6 +39,7 @@ export type QuotaClaim =
  */
 export async function claimManualNudge(
   storytellerId: string,
+  cap: number,
 ): Promise<QuotaClaim> {
   const db = supabaseService();
   const day = await localDay(db, storytellerId);
@@ -50,7 +47,7 @@ export async function claimManualNudge(
   const { data, error } = await db.rpc("claim_manual_nudge", {
     p_storyteller: storytellerId,
     p_day: day,
-    p_cap: MANUAL_NUDGE_DAILY_CAP,
+    p_cap: cap,
   });
   if (error) {
     console.error("[nudge-quota] claim failed", error);

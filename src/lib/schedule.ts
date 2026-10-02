@@ -52,7 +52,10 @@ export const DEFAULT_TIMEZONE = "America/New_York";
 // It lives HERE rather than in nudge-quota.ts so the storyteller hub can render
 // the number in its "that's enough for today" banner without importing the
 // service-role client into a page's module graph.
-export const MANUAL_NUDGE_DAILY_CAP = 3;
+//
+// null = no limit. OFF since 2026-10-02 for live testing — TODO 10.4 restores it
+// at 5/day before real families use it. The quota table + RPC stay in place.
+export const MANUAL_NUDGE_DAILY_CAP: number | null = null;
 
 // The calendar day ("YYYY-MM-DD") at `at` in `timeZone`, falling back to the
 // default zone if the zone string is unusable — never throws, because callers
