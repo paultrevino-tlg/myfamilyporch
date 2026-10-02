@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
-import { buildConsentLink } from "@/lib/consent/storyteller";
+import { buildConsentLink, inviteGreetingName } from "@/lib/consent/storyteller";
 import {
   deriveStorytellerSetupStep,
   ST_STEP_NO,
@@ -82,12 +82,16 @@ export default async function StorytellerSetupPage({
     step === "invite" && st.phone?.trim()
       ? await buildConsentLink(st.id, active.family_id, st.phone.trim(), stLang)
       : null;
-  const inviteMessage = link
-    ? t(stLang, "copy_paste_block", {
-        name: st.name.trim().split(/\s+/)[0] || st.name,
-        link,
-      })
-    : null;
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  const inviteMessage =
+    link && user
+      ? t(stLang, "copy_paste_block", {
+          name: await inviteGreetingName(sb, st.id, user.id, st.name),
+          link,
+        })
+      : null;
 
   const stepNo = ST_STEP_NO[step];
 

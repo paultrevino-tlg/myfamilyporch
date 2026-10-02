@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership } from "@/lib/auth";
 import { loadSetupState } from "@/lib/setup";
-import { buildConsentLink } from "@/lib/consent/storyteller";
+import { buildConsentLink, inviteGreetingName } from "@/lib/consent/storyteller";
 import { t } from "@/lib/i18n";
 import SetupOverview from "./SetupOverview";
 import CopyBlock from "../storytellers/[id]/CopyBlock";
@@ -37,7 +37,7 @@ export default async function SetupPage() {
     );
     if (link) {
       consentMessage = t(state.pending.language, "copy_paste_block", {
-        name: state.pending.name.trim().split(/\s+/)[0] || state.pending.name,
+        name: await inviteGreetingName(sb, state.pending.id, user.id, state.pending.name),
         link,
       });
     }

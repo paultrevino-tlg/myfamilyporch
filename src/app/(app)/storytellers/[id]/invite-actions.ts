@@ -11,7 +11,7 @@
 // caller's OWN verified number.
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
-import { buildConsentLink } from "@/lib/consent/storyteller";
+import { buildConsentLink, inviteGreetingName } from "@/lib/consent/storyteller";
 import { sendInviteCopyToMember, type InviteCopyResult } from "@/lib/consent/invite";
 import { t, type Lang } from "@/lib/i18n";
 
@@ -54,13 +54,13 @@ export async function sendInviteToMyPhone(storytellerId: string): Promise<Invite
   const link = await buildConsentLink(st.id, active.family_id, st.phone.trim(), stLang);
   if (!link) return { status: "error" };
 
-  const firstName = st.name.trim().split(/\s+/)[0] || st.name;
-  const inviteMessage = t(stLang, "copy_paste_block", { name: firstName, link });
+  const greeting = await inviteGreetingName(sb, st.id, user.id, st.name);
+  const inviteMessage = t(stLang, "copy_paste_block", { name: greeting, link });
 
   return sendInviteCopyToMember({
     membershipId: mem.id,
     familyId: active.family_id,
-    storytellerName: firstName,
+    storytellerName: greeting,
     inviteMessage,
   });
 }

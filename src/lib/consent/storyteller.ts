@@ -7,6 +7,7 @@
 // the storyteller's phone with no session), and the signed 'consent' token is
 // the authorization. Follows the provider failure contract (fail soft on
 // missing Twilio config).
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseService } from "@/lib/supabase/service";
 import { sendSms } from "@/lib/sms/twilio";
 import { preSendGate } from "@/lib/sms/gate";
@@ -20,6 +21,24 @@ const CONSENT_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] || name.trim();
+}
+
+// Who the invite greets. The member texts it from their own phone, so it uses
+// what THEY call the storyteller ("Dad"), from their own relationship row; else
+// the storyteller's first name. Pass the caller's RLS-scoped client.
+export async function inviteGreetingName(
+  db: Pick<SupabaseClient, "from">,
+  storytellerId: string,
+  userId: string,
+  storytellerName: string,
+): Promise<string> {
+  const { data } = await db
+    .from("storyteller_relationships")
+    .select("address_term")
+    .eq("storyteller_id", storytellerId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return (data?.address_term as string | null | undefined)?.trim() || firstName(storytellerName);
 }
 
 // Step 5: mint the storyteller's authorization link. Called by the copy-paste

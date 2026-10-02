@@ -32,7 +32,7 @@ import {
 } from "../actions";
 import SaveButton from "./SaveButton";
 import { setTopicPreference } from "../../topics/actions";
-import { buildConsentLink } from "@/lib/consent/storyteller";
+import { buildConsentLink, inviteGreetingName } from "@/lib/consent/storyteller";
 import { consentBadge } from "@/lib/consent/badge";
 import { deriveStorytellerSetupStep } from "@/lib/setup";
 import PhoneForm from "./PhoneForm";
@@ -203,7 +203,7 @@ export default async function StorytellerDetailPage({
       : null;
   const consentMessage = consentLink
     ? t(stLang, "copy_paste_block", {
-        name: st.name.trim().split(/\s+/)[0] || st.name,
+        name: await inviteGreetingName(sb, st.id, user.id, st.name),
         link: consentLink,
       })
     : null;
