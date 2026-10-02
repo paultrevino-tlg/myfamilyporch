@@ -4,7 +4,9 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadSettings } from "@/lib/settings";
 import { loadStorytellerStats } from "@/lib/overview";
 import { formatPhone } from "@/lib/phone";
-import { setAlertPreference } from "./actions";
+import { setAlertPreference, setMyName } from "./actions";
+import { supabaseServer } from "@/lib/supabase/server";
+import { myName } from "@/lib/profile";
 import VoiceSetup from "../storytellers/VoiceSetup";
 import StorytellerGrid from "../StorytellerGrid";
 
@@ -27,6 +29,10 @@ export default async function SettingsPage({
   const canManage = roleAtLeast(active.role, "admin");
   const { mySms, myVoice } = await loadSettings(active.family_id);
   const storytellerStats = await loadStorytellerStats(active.family_id);
+  const {
+    data: { user },
+  } = await (await supabaseServer()).auth.getUser();
+  const currentName = myName(user);
 
   const smsBadge = !mySms.phone
     ? { label: "Not set up", cls: "bg-surface2 text-ink/60" }
@@ -53,6 +59,39 @@ export default async function SettingsPage({
           </Link>
         </div>
         <StorytellerGrid stats={storytellerStats} />
+      </section>
+
+      {sp.saved === "name" && (
+        <p className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">Name saved.</p>
+      )}
+
+      {/* My name — signs the storyteller's texts ("it's Paul"). Without it the
+          nudge drops the "it's …" clause rather than guessing from the email. */}
+      <section className="card mt-7 p-6">
+        <h2 className="text-lg font-semibold">My name</h2>
+        <p className="text-sm text-ink/55">
+          Your storyteller sees it in their texts: &ldquo;…it&apos;s {currentName.split(" ")[0] || "…"} — tap here to tell me a story.&rdquo;
+        </p>
+        {!currentName && (
+          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Not set yet — texts go out without your name until you add it.
+          </p>
+        )}
+        <form action={setMyName} className="mt-3 flex flex-wrap items-end gap-2">
+          <label className="flex flex-col text-sm">
+            <span className="font-medium">First name</span>
+            <input
+              type="text"
+              name="my_name"
+              required
+              maxLength={40}
+              defaultValue={currentName}
+              autoComplete="given-name"
+              className="input mt-1"
+            />
+          </label>
+          <button type="submit" className="btn-primary">Save</button>
+        </form>
       </section>
 
       {sp.saved === "alert" && (

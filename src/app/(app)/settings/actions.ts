@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { normalizePhone } from "@/lib/phone";
+import { saveMyName } from "@/lib/profile";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -75,6 +76,21 @@ export async function setStorytellerPhone(formData: FormData) {
 // opt-in surface registered with the A2P campaign), and delivery is still gated
 // at send time by preSendGate. Turning this on can never start texts to someone
 // who has not opted in or who has replied STOP.
+// Set the caller's own name (signs the storyteller's texts). Any member, not
+// just admins — it's their own profile, and updateUser can only touch the
+// session's user.
+export async function setMyName(formData: FormData) {
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) redirect("/login");
+
+  const saved = await saveMyName(sb, formData.get("my_name"));
+  revalidatePath("/settings");
+  redirect(saved ? "/settings?saved=name" : "/settings");
+}
+
 export async function setAlertPreference(formData: FormData) {
   const active = await getActiveMembership();
   if (!active || !roleAtLeast(active.role, "admin")) return;

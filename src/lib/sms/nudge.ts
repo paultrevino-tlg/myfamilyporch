@@ -48,9 +48,10 @@ export function buildNudge(
 }
 
 // Resolve the interviewer's display name from auth metadata (full_name / name,
-// else the email local-part). Falls back to the relationship's asker_relation
-// ("your son"), else undefined → the no-interviewer copy is used.
-async function resolveInterviewerName(
+// set in onboarding / Settings). Never the email local-part — "it's
+// paul.trevino" reads as a robot. Falls back to the relationship's
+// asker_relation ("your son"), else undefined → the no-interviewer copy is used.
+export async function resolveInterviewerName(
   db: ReturnType<typeof supabaseService>,
   userId: string | null,
   askerRelation: string | null,
@@ -63,8 +64,6 @@ async function resolveInterviewerName(
       (typeof meta?.name === "string" && meta.name) ||
       "";
     if (metaName.trim()) return metaName.trim().split(/\s+/)[0]; // first name
-    const email = data?.user?.email ?? "";
-    if (email.includes("@")) return email.split("@")[0];
   }
   return askerRelation?.trim() || undefined;
 }

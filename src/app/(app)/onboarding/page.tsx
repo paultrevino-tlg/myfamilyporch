@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getFamilies } from "@/lib/auth";
+import { myName, saveMyName } from "@/lib/profile";
 
 // First-run onboarding (TODO 1.2). A newly authenticated member has no family
 // yet; here they name one and the create_family RPC makes them its owner
@@ -9,11 +10,19 @@ export default async function OnboardingPage() {
   // Already in a family? Nothing to onboard — go to the dashboard.
   if ((await getFamilies()).length > 0) redirect("/dashboard");
 
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  const currentName = myName(user);
+
   async function createFamily(formData: FormData) {
     "use server";
     const name = (formData.get("name") as string | null)?.trim();
     if (!name) return;
     const sb = await supabaseServer();
+    // The member's own name signs the storyteller's texts ("it's Paul").
+    await saveMyName(sb, formData.get("my_name"));
     const { error } = await sb.rpc("create_family", { p_name: name });
     if (error) throw error;
     // Into the guided setup wizard (consent-flow.md): verify number → add
@@ -31,7 +40,27 @@ export default async function OnboardingPage() {
           and add storytellers next. You&apos;ll be the owner.
         </p>
         <form action={createFamily} className="mt-6 space-y-3">
+          <label className="block text-sm font-medium">
+            Your first name
+            <span className="block text-xs font-normal text-ink/50">
+              Signs the texts your storyteller gets — &ldquo;Hi Mom, it&apos;s Sam.&rdquo;
+            </span>
+            <input
+              type="text"
+              name="my_name"
+              required
+              maxLength={40}
+              defaultValue={currentName}
+              placeholder="e.g. Sam"
+              autoComplete="given-name"
+              className="input mt-1 w-full"
+            />
+          </label>
+          <label className="block text-sm font-medium" htmlFor="family-name">
+            Family name
+          </label>
           <input
+            id="family-name"
             type="text"
             name="name"
             required
