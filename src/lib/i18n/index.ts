@@ -122,6 +122,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_spoken_finish:
       "If that sounds alright, tap the checkbox on the screen, then tap the big button at the bottom that says: Yes, text me. If you'd rather not, just close this page — we won't send you anything.",
     consent_hear: "🔊 Read this to me",
+    consent_tap_begin: "🔊 Tap to begin — I'll read this to you",
     consent_hear_loading: "🔊 Starting…",
     consent_stop: "Stop",
     consent_optin_required: "Please check the box above so we can text you.",
@@ -323,6 +324,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     consent_spoken_finish:
       "Si te parece bien, marca la casilla en la pantalla y luego toca el botón grande que dice: Sí, envíenme mensajes. Si prefieres que no, simplemente cierra esta página — no te enviaremos nada.",
     consent_hear: "🔊 Léeme esto",
+    consent_tap_begin: "🔊 Toca para empezar — te lo leo",
     consent_hear_loading: "🔊 Comenzando…",
     consent_stop: "Detener",
     consent_optin_required: "Marca la casilla de arriba para que podamos enviarte mensajes.",

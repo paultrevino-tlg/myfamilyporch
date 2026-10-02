@@ -235,7 +235,7 @@ export default function VoiceSetup({ linked }: { linked: Linked }) {
               disabled={status === "cloning"}
               className="btn-ink"
             >
-              {status === "cloning" ? "Creating voice…" : "Create cloned voice"}
+              {status === "cloning" ? "Saving…" : "Save"}
             </button>
           </div>
         )}

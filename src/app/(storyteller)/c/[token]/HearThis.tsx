@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { playVoice, stopVoice, unlockAudio } from "@/lib/voice/player";
 
 // "Read this to me" for the authorization page (Elder-facing UX: every
-// storyteller page reads its instructions aloud, tap-to-play).
+// storyteller page reads its instructions aloud).
 //
 // Speaks in the INTERVIEWER'S CLONED VOICE via api/consent/voice — the same
 // familiar voice that will ask the questions later, heard at the moment the
@@ -12,6 +13,10 @@ import { useEffect, useRef, useState } from "react";
 //   2. the browser's own SpeechSynthesis, if that request fails
 //   3. the large on-screen text, which is always the real backup channel
 // The button only hides when there is nothing at all it could do.
+//
+// Plays through the shared storyteller player (2.10): the tap on this button
+// (or on "Yes, text me") unlocks it, and the player survives the form's
+// client-side redirect — so the confirmation screen reads itself, no tap.
 export default function HearThis({
   token,
   text,
@@ -29,26 +34,22 @@ export default function HearThis({
   loadingLabel: string;
   stopLabel: string;
   variant?: "consent" | "success";
-  // Try to speak on arrival (the confirmation screen). Browsers block audio
-  // without a user gesture, and the tap that submitted the form does NOT carry
-  // across the redirect — so on iOS this will usually be refused and the button
-  // below is what actually plays it. Treated as a bonus, never a guarantee.
+  // Speak on arrival (the confirmation screen). Works once the elder has tapped
+  // anything on the page before it; on a cold load the button plays it.
   autoPlay?: boolean;
 }) {
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const [canSpeak, setCanSpeak] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
+  const playIdRef = useRef<number | null>(null);
   // Bumped on every play/stop. A fetch that resolves after its generation is
   // stale must not start playing — otherwise tapping "stop" while it's still
   // loading looks like it worked, then the audio starts anyway.
   const genRef = useRef(0);
 
-  // Release the object URL and stop any audio/speech when the page goes away.
+  // Stop any audio/speech when the page goes away.
   useEffect(() => {
     return () => {
-      audioRef.current?.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      stopVoice(playIdRef.current);
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -57,8 +58,7 @@ export default function HearThis({
 
   function stopAll() {
     genRef.current += 1; // abandon any in-flight synthesis
-    audioRef.current?.pause();
-    audioRef.current = null;
+    stopVoice(playIdRef.current);
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
@@ -87,6 +87,8 @@ export default function HearThis({
       stopAll();
       return;
     }
+    // Must run synchronously in the tap, before any await.
+    if (gestured) unlockAudio();
     const gen = ++genRef.current;
     setState("loading");
     try {
@@ -100,18 +102,13 @@ export default function HearThis({
       const blob = await res.blob();
       if (genRef.current !== gen) return; // stopped while we were loading
 
-      const url = URL.createObjectURL(blob);
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      urlRef.current = url;
-
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => setState("idle");
-      audio.onerror = () => {
-        // Decode/playback failure — fall through to the browser voice.
-        if (!gestured || !speakLocally()) setState("idle");
-      };
-      await audio.play();
+      const id = await playVoice(blob, () => setState("idle"));
+      if (genRef.current !== gen) {
+        stopVoice(id);
+        return;
+      }
+      if (id == null) throw new Error("playback refused");
+      playIdRef.current = id;
       setState("playing");
     } catch {
       if (genRef.current !== gen) return; // stopped while we were loading
@@ -120,8 +117,7 @@ export default function HearThis({
         setState("idle");
         return;
       }
-      // Network, 401/502 — the browser voice may still work, and we're inside a
-      // tap handler so it's user-gestured.
+      // Network, 401/502, decode failure — the browser voice may still work.
       if (!speakLocally()) {
         setCanSpeak(false);
         setState("idle");

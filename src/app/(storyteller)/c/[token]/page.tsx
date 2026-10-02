@@ -5,6 +5,7 @@ import { consentSpokenText, successSpokenText } from "@/lib/consent/spoken";
 import { t, type Lang } from "@/lib/i18n";
 import { submitConsent } from "./actions";
 import HearThis from "./HearThis";
+import AgreeButton from "./AgreeButton";
 
 // Storyteller authorization page (consent-flow.md step 7). The legal spine: the
 // storyteller's OWN first-person tap is the operative consent. Token-gated
@@ -25,10 +26,10 @@ function DeadLink({ lang }: { lang: Lang }) {
 }
 
 // The confirmation screen reads itself aloud in the interviewer's cloned voice —
-// the familiar voice closing the loop right after they've agreed. Autoplay is
-// attempted but browsers commonly refuse it without a gesture (and the tap that
-// submitted the form doesn't survive the redirect), so the button below is the
-// dependable path, not a fallback bolted on.
+// the familiar voice closing the loop right after they've agreed. The "Yes, text
+// me" tap unlocked the shared player and the redirect is a client-side
+// navigation, so it plays without another tap (2.10). The button stays for a
+// replay, and for a cold load of this screen (no tap yet).
 function Success({ lang, token }: { lang: Lang; token: string }) {
   return (
     <main lang={lang} className="flex min-h-screen items-center justify-center p-6 text-center">
@@ -99,24 +100,27 @@ export default async function ConsentPage({
         </Link>
       </div>
 
-      <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight">
+      {/* First thing on the page (2.10): phones won't play sound until the page
+          is tapped, so the one tap they need is the big obvious one — and it
+          reads the whole page aloud. It also unlocks the voice for the
+          confirmation screen after "Yes, text me". */}
+      <div className="mt-3 flex justify-center">
+        <HearThis
+          token={token}
+          text={hearText}
+          lang={lang}
+          label={t(lang, "consent_tap_begin")}
+          loadingLabel={t(lang, "consent_hear_loading")}
+          stopLabel={`⏹ ${t(lang, "consent_stop")}`}
+        />
+      </div>
+
+      <h1 className="mt-6 font-serif text-4xl font-semibold leading-tight">
         {t(lang, "consent_title")}
       </h1>
       <p className="mt-5 text-2xl leading-relaxed text-ink/80">{t(lang, "consent_what_it_is")}</p>
       <p className="mt-4 text-2xl leading-relaxed text-ink/80">{t(lang, "consent_whats_next")}</p>
 
-      {/* Centered and large: this is the first thing an elder who'd rather listen
-          than read should be able to find. */}
-      <div className="mt-7 flex justify-center">
-        <HearThis
-          token={token}
-          text={hearText}
-          lang={lang}
-          label={t(lang, "consent_hear")}
-          loadingLabel={t(lang, "consent_hear_loading")}
-          stopLabel={`⏹ ${t(lang, "consent_stop")}`}
-        />
-      </div>
 
       <form action={submitConsent} className="mt-8 space-y-6">
         <input type="hidden" name="token" value={token} />
@@ -152,12 +156,7 @@ export default async function ConsentPage({
           </span>
         </label>
 
-        <button
-          type="submit"
-          className="min-h-[64px] w-full rounded-2xl bg-brand px-6 text-2xl font-bold text-white shadow-sm active:translate-y-px"
-        >
-          {t(lang, "consent_agree_btn")}
-        </button>
+        <AgreeButton label={t(lang, "consent_agree_btn")} />
       </form>
 
       <footer className="mt-8 flex justify-center gap-6 text-lg text-ink/55">

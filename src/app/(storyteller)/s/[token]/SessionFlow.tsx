@@ -2,6 +2,7 @@
 
 import { Children, isValidElement, useEffect, useRef, useState } from "react";
 import { t, type Lang } from "@/lib/i18n";
+import { playVoice, silenceAll, stopVoice, unlockAudio } from "@/lib/voice/player";
 
 // The storyteller's voice session as a client-side state machine. Matches
 // docs/prototypes/storyteller-flow.html: Welcome → Question → Your turn →
@@ -180,7 +181,20 @@ export default function SessionFlow({
     setStep("done");
   }
 
+  // Every self-reading screen speaks through the same chip + shared player.
+  const speak: Speaker = (text) => (
+    <QuestionVoice
+      token={token}
+      text={text}
+      lang={lang}
+      chipLabel={tr("voice_chip")}
+      hearLabel={tr("hear_question")}
+      playingLabel={tr("playing_question")}
+    />
+  );
+
   const answerLabels = {
+    speak,
     listening: tr("listening"),
     finishedLabel: tr("finished"),
     savingLabel: tr("saving"),
@@ -350,6 +364,7 @@ export default function SessionFlow({
           <ReviewScreen
             blob={clip.blob}
             labels={reviewLabels}
+            speak={speak}
             onKeep={() => keepOpening(clip.blob, clip.durationSec)}
             onAgain={() => setStep("answer1")}
           />
@@ -392,6 +407,7 @@ export default function SessionFlow({
           <ReviewScreen
             blob={clip.blob}
             labels={reviewLabels}
+            speak={speak}
             onKeep={() => keepFollowUp(clip.blob, clip.durationSec)}
             onAgain={() => setStep("answer2")}
           />
@@ -462,53 +478,38 @@ function WelcomeScreen({
   onDecline: () => void;
 }) {
   const [phase, setPhase] = useState<"intro" | "loading" | "playing" | "ready">("intro");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
+  const playIdRef = useRef<number | null>(null);
 
-  // Tear down any audio + object URL on unmount.
-  useEffect(() => {
-    return () => {
-      audioRef.current?.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      urlRef.current = null;
-      audioRef.current = null;
-    };
-  }, []);
+  // Stop the greeting if they move on mid-sentence.
+  useEffect(() => () => stopVoice(playIdRef.current), []);
 
+  // "Tap to begin" is the elder's first tap — the one the phone needs before it
+  // will play any sound. BigButton unlocks the shared player on it, so this
+  // greeting and every screen after it read themselves (2.10).
   async function begin() {
     setPhase("loading");
     // The instructions read aloud = the greeting + the gentle sub-line.
     const instructions = `${greeting}. ${sub}`;
-    let audio: HTMLAudioElement | null = null;
+    let blob: Blob | null = null;
     try {
       const res = await fetch("/api/storyteller/voice", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token, text: instructions, lang }),
       });
-      if (res.status === 200) {
-        const url = URL.createObjectURL(await res.blob());
-        urlRef.current = url;
-        audio = new Audio(url);
-      }
+      if (res.status === 200) blob = await res.blob();
     } catch {
       // network/synthesis miss — fall through to ready below
     }
-    if (!audio) {
+    if (!blob) {
       setPhase("ready");
       return;
     }
-    audioRef.current = audio;
     // Reveal "Let's talk" only when the reading finishes (or on playback error).
-    audio.onended = () => setPhase("ready");
-    audio.onerror = () => setPhase("ready");
-    try {
-      await audio.play();
-      setPhase("playing");
-    } catch {
-      // Even with the gesture, playback can be refused — don't trap the elder.
-      setPhase("ready");
-    }
+    const id = await playVoice(blob, () => setPhase("ready"));
+    playIdRef.current = id;
+    // Refused even after the tap — don't trap the elder.
+    setPhase(id != null ? "playing" : "ready");
   }
 
   return (
@@ -567,6 +568,7 @@ function AnswerScreen({
   pausedTitle,
   pausedHint,
   keepGoingLabel,
+  speak,
   onFinished,
   onMicFail,
   skipLabel,
@@ -581,6 +583,7 @@ function AnswerScreen({
   pausedTitle: string;
   pausedHint: string;
   keepGoingLabel: string;
+  speak: Speaker;
   onFinished: (blob: Blob | null, durationSec: number) => void | Promise<void>;
   onMicFail: () => void;
   skipLabel?: string;
@@ -665,6 +668,9 @@ function AnswerScreen({
   }
 
   function handleResume() {
+    // Silence the spoken "Paused" prompt BEFORE the mic goes live again, so not
+    // a syllable of it lands in their answer.
+    silenceAll();
     const rec = recorderRef.current;
     if (rec && rec.state === "paused") {
       try {
@@ -733,6 +739,8 @@ function AnswerScreen({
         <Mic paused />
         <DisplayText>{pausedTitle}</DisplayText>
         <Hint>{pausedHint}</Hint>
+        {/* Safe to speak here: the recorder is paused, so it isn't captured. */}
+        {speak(`${pausedTitle}. ${pausedHint}`)}
         <Spacer />
         <BigButton onClick={handleResume}>{keepGoingLabel}</BigButton>
         <SoftButton onClick={handleFinished}>{finishedLabel}</SoftButton>
@@ -772,52 +780,46 @@ type ReviewLabels = {
   saving: string;
 };
 
+// How a screen's own words get spoken (QuestionVoice), passed to screens that
+// read themselves aloud but don't otherwise know the token or language.
+type Speaker = (text: string) => React.ReactNode;
+
 function ReviewScreen({
   blob,
   labels,
+  speak,
   onKeep,
   onAgain,
 }: {
   blob: Blob;
   labels: ReviewLabels;
+  speak: Speaker;
   onKeep: () => Promise<void>;
   onAgain: () => void;
 }) {
   const [phase, setPhase] = useState<"ask" | "playing" | "decide" | "saving">("ask");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
+  const playIdRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    return () => {
-      audioRef.current?.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    };
-  }, []);
+  useEffect(() => () => stopVoice(playIdRef.current), []);
 
+  // Their own take plays through the shared player too: it's the same element
+  // the spoken prompt was using, so this never fights it for the speaker.
   async function play() {
-    try {
-      if (!urlRef.current) urlRef.current = URL.createObjectURL(blob);
-      const audio = audioRef.current ?? new Audio(urlRef.current);
-      audioRef.current = audio;
-      audio.currentTime = 0;
-      audio.onended = () => setPhase("decide");
-      audio.onerror = () => setPhase("decide");
-      setPhase("playing");
-      await audio.play();
-    } catch {
-      // Playback blocked or unsupported — never strand them; offer the choice.
-      setPhase("decide");
-    }
+    setPhase("playing");
+    const id = await playVoice(blob, () => setPhase("decide"));
+    playIdRef.current = id;
+    // Refused or unsupported — never strand them; offer the choice.
+    if (id == null) setPhase("decide");
   }
 
   async function keep() {
-    audioRef.current?.pause();
+    stopVoice(playIdRef.current);
     setPhase("saving");
     await onKeep();
   }
 
   function again() {
-    audioRef.current?.pause();
+    stopVoice(playIdRef.current);
     onAgain();
   }
 
@@ -847,6 +849,7 @@ function ReviewScreen({
       <Screen>
         <Check />
         <DisplayText>{labels.decide}</DisplayText>
+        {speak(labels.decide)}
         <Spacer />
         <BigButton onClick={keep}>{labels.keep}</BigButton>
         <SoftButton onClick={again}>{labels.again}</SoftButton>
@@ -859,6 +862,7 @@ function ReviewScreen({
     <Screen>
       <Check />
       <DisplayText>{labels.title}</DisplayText>
+      {speak(labels.title)}
       <Spacer />
       <BigButton onClick={play}>{labels.yes}</BigButton>
       <SoftButton onClick={keep}>{labels.no}</SoftButton>
@@ -963,12 +967,11 @@ function VoiceChip({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Plays the question in the interviewer's cloned voice (TODO 4.2). Fetches the
-// audio from the token-gated api/storyteller/voice when the screen appears,
-// attempts autoplay (iOS blocks gesture-less playback, so this is best-effort),
-// and renders a big tap-to-(re)play chip. The large question text on the screen
-// is the always-present backup channel, so if there's no cloned voice (204) or
-// synthesis fails, we fall back to the static chip and never block the elder.
+// Reads a screen aloud in the interviewer's cloned voice (TODO 4.2; neutral
+// voice if none is recorded). Fetches from the token-gated api/storyteller/voice
+// when the screen appears and plays it automatically through the shared player
+// (2.10); the chip replays it. The large on-screen text is the always-present
+// backup channel, so a synthesis failure falls back to the static chip.
 function QuestionVoice({
   token,
   text,
@@ -985,9 +988,12 @@ function QuestionVoice({
   playingLabel: string;
 }) {
   const [state, setState] = useState<"loading" | "ready" | "playing" | "unavailable">("loading");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
+  const blobRef = useRef<Blob | null>(null);
+  const playIdRef = useRef<number | null>(null);
 
+  // Read the screen aloud on arrival (2.10). Plays through the shared player,
+  // which the elder's first tap unlocked — so no per-screen tap is needed. If
+  // the browser still refuses (no tap yet), the chip below plays it instead.
   useEffect(() => {
     let cancelled = false;
     setState("loading");
@@ -1000,49 +1006,46 @@ function QuestionVoice({
         });
         if (cancelled) return;
         if (res.status !== 200) {
-          setState("unavailable"); // 204 (no cloned voice) or error → text only
+          setState("unavailable"); // synthesis failed → the text carries it
           return;
         }
-        const url = URL.createObjectURL(await res.blob());
+        const blob = await res.blob();
+        if (cancelled) return;
+        blobRef.current = blob;
+        const id = await playVoice(blob, () => !cancelled && setState("ready"));
         if (cancelled) {
-          URL.revokeObjectURL(url);
+          stopVoice(id);
           return;
         }
-        urlRef.current = url;
-        const audio = new Audio(url);
-        audio.onended = () => setState("ready");
-        audioRef.current = audio;
-        setState("ready");
-        // Best-effort autoplay; on iOS this rejects without a gesture and the
-        // elder taps the chip instead.
-        audio.play().then(() => !cancelled && setState("playing")).catch(() => {});
+        playIdRef.current = id;
+        setState(id != null ? "playing" : "ready");
       } catch {
         if (!cancelled) setState("unavailable");
       }
     })();
     return () => {
       cancelled = true;
-      audioRef.current?.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      urlRef.current = null;
-      audioRef.current = null;
+      stopVoice(playIdRef.current);
+      playIdRef.current = null;
+      blobRef.current = null;
     };
   }, [token, text, lang]);
 
-  function toggle() {
-    const audio = audioRef.current;
-    if (!audio) return;
+  async function toggle() {
     if (state === "playing") {
-      audio.pause();
-      audio.currentTime = 0;
+      stopVoice(playIdRef.current);
       setState("ready");
       return;
     }
-    audio.currentTime = 0;
-    audio.play().then(() => setState("playing")).catch(() => {});
+    const blob = blobRef.current;
+    if (!blob) return;
+    unlockAudio();
+    const id = await playVoice(blob, () => setState("ready"));
+    playIdRef.current = id;
+    if (id != null) setState("playing");
   }
 
-  // No cloned voice / failed → the static chip; the text above carries the question.
+  // Synthesis failed → the static chip; the large text above carries it.
   if (state === "unavailable") return <VoiceChip>{chipLabel}</VoiceChip>;
 
   const playing = state === "playing";
@@ -1120,6 +1123,15 @@ function Check() {
 
 // Every positive CTA in the flow is the same green button — one clear "go"
 // affordance the elder can always trust to mean "continue / yes".
+// Every tap keeps the shared voice player unlocked (2.10), so whatever the next
+// screen says can play by itself. Harmless when it is already unlocked.
+function withUnlock(fn: () => void) {
+  return () => {
+    unlockAudio();
+    fn();
+  };
+}
+
 function BigButton({
   children,
   onClick,
@@ -1130,7 +1142,7 @@ function BigButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={withUnlock(onClick)}
       className="w-full rounded-3xl bg-emerald-600 px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98]"
     >
       {children}
@@ -1150,7 +1162,7 @@ function SoftButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={withUnlock(onClick)}
       className="w-full rounded-3xl border-2 border-ink/25 bg-white px-6 py-4 text-lg font-bold text-ink/80 transition active:scale-[0.98]"
     >
       {children}
@@ -1172,7 +1184,7 @@ function QuietButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={withUnlock(onClick)}
       className="w-full rounded-3xl border-2 border-red-600 px-6 py-4 text-lg font-bold text-red-600 transition active:scale-[0.98]"
     >
       {children}
