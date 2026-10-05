@@ -117,10 +117,24 @@ the keepsake survives independently.
 - **Billing model:** a recurring **subscription per family** (tiered) covers ongoing
   interviews + storage, **plus a one-time book add-on** charge to print/export a
   keepsake. The **owner** role holds billing (see Multi-tenancy & roles).
-- **Paywall placement:** **pay during signup** — Stripe Checkout is part of the
-  signup funnel; a new family subscribes *before* reaching the dashboard (trial
-  optional). On successful checkout, reuse the existing `create_family` onboarding
-  to create the account/family.
+- **Paywall placement: pay first, account second** (decided 2026-10-05). There is
+  no self-serve account creation:
+  1. "Get started" (`/signup`) → pick a plan → **Stripe Checkout**, which collects
+     the email. No Supabase user or family exists yet.
+  2. **The Stripe webhook is the only trigger** (`checkout.session.completed` /
+     `invoice.paid` with an active subscription — never the success redirect).
+     Server-side (service role) it creates the Supabase user, the family + owner
+     membership, stores the Stripe customer/subscription on the family, and emails
+     a welcome with a magic link.
+  3. **Login never creates accounts** (`shouldCreateUser: false`; sign-ups off in
+     Supabase). An unknown email gets the same neutral "if you have an account,
+     we sent a link" (no account enumeration) with a pointer to Get started.
+  4. **No self-serve family creation** — `create_family` is not callable by
+     signed-in users. Invited family members still join via their invitation
+     (the inviter's family is already paid for).
+  5. A lapsed subscription gates access (9.5) — but never the export/download.
+  Trial, if any, is a Stripe trial on the subscription (still created via
+  Checkout + webhook).
 - **Stripe** is the processor: Checkout (subscription + one-time add-on), the
   customer **billing portal** (upgrade/downgrade/cancel/update card), and
   **webhooks** that persist subscription/entitlement state on the family. Billing
