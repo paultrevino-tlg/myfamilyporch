@@ -48,3 +48,9 @@ CRON_SECRET=generate-a-shared-secret
 # ---- Marketing: where email-capture leads are notified (TODO 8.8) ----
 # Optional — falls back to support@myfamilyporch.net if unset.
 LEAD_NOTIFY_EMAIL=support@myfamilyporch.net
+
+# ---- Cloudflare account this project deploys to (not secrets) ----
+# Checked against `wrangler whoami` at session start; on a mismatch, `wrangler login`
+# as this email before running any wrangler command.
+CLOUDFLARE_ACCOUNT_ID=b3112d0f111629f160ad9902184baa2e
+CLOUDFLARE_ACCOUNT_EMAIL=paul.trevino@techleadershipgroup.com
