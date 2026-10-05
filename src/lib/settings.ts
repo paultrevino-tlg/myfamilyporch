@@ -10,13 +10,18 @@ import { loadFamilyMembers, type FamilyMember } from "@/lib/members";
 
 export type MyVoice = { id: string; label: string } | null;
 
-export type RosterMember = FamilyMember & { isYou: boolean };
+// canSee: storyteller ids a VIEWER has been given (TODO 5.8). Owners/admins see
+// every storyteller, so it's empty for them and the UI says "All storytellers".
+export type RosterMember = FamilyMember & { isYou: boolean; canSee: string[] };
+
+export type StorytellerOption = { id: string; name: string };
 
 export type PendingInvite = {
   id: string;
   email: string;
   role: "owner" | "admin" | "viewer";
   status: "Accepted" | "Expired" | "Pending";
+  storytellerIds: string[]; // who a viewer invite will be able to see (5.8)
 };
 
 // The signed-in member's own SMS state: the ONE consented number (migration
@@ -34,6 +39,7 @@ export type FamilySettings = {
   myVoice: MyVoice;
   roster: RosterMember[];
   invitations: PendingInvite[];
+  storytellers: StorytellerOption[]; // as visible to the caller (RLS)
 };
 
 export async function loadSettings(familyId: string): Promise<FamilySettings> {
@@ -43,7 +49,7 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
   } = await sb.auth.getUser();
   const myId = user?.id ?? "";
 
-  const [members, memRes, invRes, voiceRes] = await Promise.all([
+  const [members, memRes, invRes, voiceRes, stRes, accessRes] = await Promise.all([
     loadFamilyMembers(familyId),
     // Only the caller's OWN row — this panel is "my number", and there's no
     // reason to pull every family member's phone to render it.
@@ -55,7 +61,7 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
       .maybeSingle(),
     sb
       .from("invitations")
-      .select("id, email, role, accepted_at, expires_at, created_at")
+      .select("id, email, role, accepted_at, expires_at, created_at, storyteller_ids")
       .eq("family_id", familyId)
       .order("created_at", { ascending: false }),
     // My own cloned voice (voice-per-member). owner_user_id = me.
@@ -65,6 +71,10 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
       .eq("family_id", familyId)
       .eq("owner_user_id", myId)
       .maybeSingle(),
+    // Storytellers + viewer access (5.8). RLS: admins get the whole family's
+    // list; a viewer gets only their own storytellers and access rows.
+    sb.from("storytellers").select("id, name").eq("family_id", familyId).order("name"),
+    sb.from("storyteller_access").select("user_id, storyteller_id").eq("family_id", familyId),
   ]);
 
   const myMem = memRes.data;
@@ -82,7 +92,19 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
     ? { id: voiceRes.data.id, label: voiceRes.data.label }
     : null;
 
-  const roster: RosterMember[] = members.map((m) => ({ ...m, isYou: m.userId === myId }));
+  const canSeeByUser = new Map<string, string[]>();
+  for (const a of accessRes.data ?? []) {
+    canSeeByUser.set(a.user_id, [...(canSeeByUser.get(a.user_id) ?? []), a.storyteller_id]);
+  }
+  const roster: RosterMember[] = members.map((m) => ({
+    ...m,
+    isYou: m.userId === myId,
+    canSee: m.role === "viewer" ? (canSeeByUser.get(m.userId) ?? []) : [],
+  }));
+  const storytellers: StorytellerOption[] = (stRes.data ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+  }));
 
   const invitations: PendingInvite[] = (invRes.data ?? []).map((inv) => ({
     id: inv.id,
@@ -93,7 +115,8 @@ export async function loadSettings(familyId: string): Promise<FamilySettings> {
       : new Date(inv.expires_at) < new Date()
         ? "Expired"
         : "Pending",
+    storytellerIds: inv.role === "viewer" ? (inv.storyteller_ids ?? []) : [],
   }));
 
-  return { mySms, myVoice, roster, invitations };
+  return { mySms, myVoice, roster, invitations, storytellers };
 }

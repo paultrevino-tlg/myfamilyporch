@@ -73,9 +73,11 @@ export default async function Dashboard() {
             {active.name} · you&apos;re {active.role === "owner" ? "the owner" : `an ${active.role}`}
           </p>
         </div>
-        <Link href="/storytellers/new" className="btn-primary">
-          <span aria-hidden>＋</span> Add storyteller
-        </Link>
+        {canDismiss && (
+          <Link href="/storytellers/new" className="btn-primary">
+            <span aria-hidden>＋</span> Add storyteller
+          </Link>
+        )}
       </div>
 
       {/* Member SMS opt-in nudge (consent-flow.md): renders only until the
@@ -102,8 +104,12 @@ export default async function Dashboard() {
 
       {/* Storytellers first: one card per elder with their own metrics, the
           whole thing a link into their config + answers hub. */}
-      <SectionHead title="Storytellers" href="/storytellers/new" cta="Add storyteller" />
-      <StorytellerGrid stats={storytellerStats} />
+      {canDismiss ? (
+        <SectionHead title="Storytellers" href="/storytellers/new" cta="Add storyteller" />
+      ) : (
+        <SectionHead title="Storytellers" />
+      )}
+      <StorytellerGrid stats={storytellerStats} canAdd={canDismiss} />
 
       <SectionHead title="Lately" href="/stories" cta="Review stories" />
       <ul className="space-y-2.5">
@@ -121,13 +127,15 @@ export default async function Dashboard() {
   );
 }
 
-function SectionHead({ title, href, cta }: { title: string; href: string; cta: string }) {
+function SectionHead({ title, href, cta }: { title: string; href?: string; cta?: string }) {
   return (
     <div className="mb-3.5 mt-9 flex items-center justify-between px-1">
       <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-ink/45">{title}</h2>
-      <Link href={href} className="text-sm font-semibold text-brand hover:underline">
-        {cta} →
-      </Link>
+      {href && cta && (
+        <Link href={href} className="text-sm font-semibold text-brand hover:underline">
+          {cta} →
+        </Link>
+      )}
     </div>
   );
 }

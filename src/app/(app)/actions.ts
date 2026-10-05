@@ -42,10 +42,13 @@ export async function createInvitation(formData: FormData) {
   const sb = await supabaseServer();
   const token = crypto.randomUUID();
   const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Viewers see only the storytellers picked here (5.8); admins see everyone.
+  const storyteller_ids =
+    role === "viewer" ? await familyStorytellerIds(sb, active.family_id, formData) : [];
 
   const { error } = await sb
     .from("invitations")
-    .insert({ family_id: active.family_id, email, role, token, expires_at });
+    .insert({ family_id: active.family_id, email, role, token, expires_at, storyteller_ids });
   if (error) throw error;
 
   const h = await headers();
@@ -67,6 +70,70 @@ export async function createInvitation(formData: FormData) {
 
   // Family access is its own section now — return there after sending.
   redirect("/family-access");
+}
+
+// The checked `storyteller_ids` boxes, kept only if they're storytellers in this
+// family (RLS-scoped read) — a forged id from the form is dropped, not stored.
+async function familyStorytellerIds(
+  sb: Awaited<ReturnType<typeof supabaseServer>>,
+  familyId: string,
+  formData: FormData,
+): Promise<string[]> {
+  const picked = formData.getAll("storyteller_ids").map(String).filter(Boolean);
+  if (picked.length === 0) return [];
+  const { data } = await sb
+    .from("storytellers")
+    .select("id")
+    .eq("family_id", familyId)
+    .in("id", picked);
+  return (data ?? []).map((s) => s.id);
+}
+
+// Set which storytellers a viewer can see (TODO 5.8): the checked boxes become
+// their whole access list. Owner/admin only; RLS (sa_write) enforces the same.
+// Only viewers have a list — owners/admins always see every storyteller.
+export async function setStorytellerAccess(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const userId = String(formData.get("user_id") ?? "");
+  if (!userId) return;
+
+  const sb = await supabaseServer();
+  const { data: target } = await sb
+    .from("memberships")
+    .select("role")
+    .eq("family_id", active.family_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!target || target.role !== "viewer") return;
+
+  const wanted = await familyStorytellerIds(sb, active.family_id, formData);
+
+  // Replace the list: drop what's no longer checked, add what's new.
+  const del = sb
+    .from("storyteller_access")
+    .delete()
+    .eq("family_id", active.family_id)
+    .eq("user_id", userId);
+  const { error: delErr } = wanted.length
+    ? await del.not("storyteller_id", "in", `(${wanted.join(",")})`)
+    : await del;
+  if (delErr) throw delErr;
+
+  if (wanted.length) {
+    const { error: insErr } = await sb.from("storyteller_access").upsert(
+      wanted.map((storyteller_id) => ({
+        family_id: active.family_id,
+        user_id: userId,
+        storyteller_id,
+      })),
+      { onConflict: "user_id,storyteller_id", ignoreDuplicates: true },
+    );
+    if (insErr) throw insErr;
+  }
+
+  redirect("/family-access?saved=access");
 }
 
 // Remove an accepted family member. Owner/admin only; RLS enforces the same.

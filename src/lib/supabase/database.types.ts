@@ -307,6 +307,7 @@ export type Database = {
           family_id: string
           id: string
           role: Database["public"]["Enums"]["membership_role"]
+          storyteller_ids: string[]
           token: string
         }
         Insert: {
@@ -317,6 +318,7 @@ export type Database = {
           family_id: string
           id?: string
           role?: Database["public"]["Enums"]["membership_role"]
+          storyteller_ids?: string[]
           token: string
         }
         Update: {
@@ -327,6 +329,7 @@ export type Database = {
           family_id?: string
           id?: string
           role?: Database["public"]["Enums"]["membership_role"]
+          storyteller_ids?: string[]
           token?: string
         }
         Relationships: [
@@ -729,6 +732,45 @@ export type Database = {
           },
         ]
       }
+      storyteller_access: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          storyteller_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          storyteller_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          storyteller_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storyteller_access_storyteller_id_family_id_fkey"
+            columns: ["storyteller_id", "family_id"]
+            isOneToOne: false
+            referencedRelation: "storytellers"
+            referencedColumns: ["id", "family_id"]
+          },
+          {
+            foreignKeyName: "storyteller_access_user_id_family_id_fkey"
+            columns: ["user_id", "family_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["user_id", "family_id"]
+          },
+        ]
+      }
       storyteller_relationships: {
         Row: {
           address_term: string
@@ -973,6 +1015,10 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      can_see_storyteller: {
+        Args: { p_family: string; p_storyteller: string }
+        Returns: boolean
+      }
       claim_manual_nudge: {
         Args: { p_cap: number; p_day: string; p_storyteller: string }
         Returns: number

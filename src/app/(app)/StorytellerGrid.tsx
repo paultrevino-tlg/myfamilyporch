@@ -42,21 +42,35 @@ function avatarClass(seed: string): string {
 }
 
 // The card grid plus the empty state. Pages wrap this with their own heading.
-export default function StorytellerGrid({ stats }: { stats: StorytellerStat[] }) {
+// canAdd: admins get "Add one"; a viewer (who can't add, and sees only the
+// storytellers shared with them — 5.8) is pointed to their family admin.
+export default function StorytellerGrid({
+  stats,
+  canAdd = true,
+}: {
+  stats: StorytellerStat[];
+  canAdd?: boolean;
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {stats.map((s) => (
         <StorytellerBlock key={s.id} stat={s} />
       ))}
-      {stats.length === 0 && (
-        <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
-          No storytellers yet.{" "}
-          <Link href="/storytellers/new" className="link">
-            Add one
-          </Link>
-          .
-        </p>
-      )}
+      {stats.length === 0 &&
+        (canAdd ? (
+          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
+            No storytellers yet.{" "}
+            <Link href="/storytellers/new" className="link">
+              Add one
+            </Link>
+            .
+          </p>
+        ) : (
+          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
+            No storytellers have been shared with you yet. Ask your family admin to
+            share one with you.
+          </p>
+        ))}
     </div>
   );
 }

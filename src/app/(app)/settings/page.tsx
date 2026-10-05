@@ -54,11 +54,13 @@ export default async function SettingsPage({
       <section className="mt-7">
         <div className="mb-3.5 flex items-center justify-between px-1">
           <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-ink/45">Storytellers</h2>
-          <Link href="/storytellers/new" className="text-sm font-semibold text-brand hover:underline">
-            Add storyteller →
-          </Link>
+          {canManage && (
+            <Link href="/storytellers/new" className="text-sm font-semibold text-brand hover:underline">
+              Add storyteller →
+            </Link>
+          )}
         </div>
-        <StorytellerGrid stats={storytellerStats} />
+        <StorytellerGrid stats={storytellerStats} canAdd={canManage} />
       </section>
 
       {sp.saved === "name" && (
