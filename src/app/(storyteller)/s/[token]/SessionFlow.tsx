@@ -36,9 +36,11 @@ type Step =
   | "question"
   | "answer1"
   | "review1"
+  | "missed1"
   | "followup"
   | "answer2"
   | "review2"
+  | "missed2"
   | "done"
   | "closed";
 
@@ -148,17 +150,20 @@ export default function SessionFlow({
   }
 
   // Hear it back (2.7): a finished take waits here, un-uploaded, until the elder
-  // keeps it. A missing/empty clip (capture never started) skips straight to keep
-  // — the same fail-soft path as before, so nothing new can strand them.
+  // keeps it. An empty take used to skip review AND upload silently, so the answer
+  // was lost without a word (2.11) — now it lands on a gentle "try again" screen.
   const [clip, setClip] = useState<{ blob: Blob; durationSec: number } | null>(null);
 
-  function reviewOrKeep(
+  function reviewOrRetry(
     blob: Blob | null,
     durationSec: number,
     reviewStep: "review1" | "review2",
-    keep: (blob: Blob | null, durationSec: number) => Promise<void>,
-  ): Promise<void> | void {
-    if (!blob || blob.size === 0) return keep(blob, durationSec);
+    missedStep: "missed1" | "missed2",
+  ) {
+    if (!blob || blob.size === 0) {
+      setStep(missedStep);
+      return;
+    }
     setClip({ blob, durationSec });
     setStep(reviewStep);
   }
@@ -214,6 +219,12 @@ export default function SessionFlow({
     again: tr("record_again"),
     playAgain: tr("play_again"),
     saving: tr("saving"),
+  };
+
+  const missedLabels = {
+    title: tr("missed_title"),
+    sub: tr("missed_sub"),
+    retry: tr("try_again"),
   };
 
   // "Maybe later" after the opening answer (2.9): the opener is already saved,
@@ -354,7 +365,7 @@ export default function SessionFlow({
             title={tr("your_turn")}
             hint={tr("take_time")}
             onMicFail={beaconMicFailed}
-            onFinished={(blob, dur) => reviewOrKeep(blob, dur, "review1", keepOpening)}
+            onFinished={(blob, dur) => reviewOrRetry(blob, dur, "review1", "missed1")}
             skipLabel={tr("skip")}
             onSkip={() => setStep("done")}
           />
@@ -367,6 +378,16 @@ export default function SessionFlow({
             speak={speak}
             onKeep={() => keepOpening(clip.blob, clip.durationSec)}
             onAgain={() => setStep("answer1")}
+          />
+        )}
+
+        {step === "missed1" && (
+          <MissedScreen
+            labels={missedLabels}
+            speak={speak}
+            onRetry={() => setStep("answer1")}
+            skipLabel={tr("skip")}
+            onSkip={() => setStep("done")}
           />
         )}
 
@@ -397,7 +418,7 @@ export default function SessionFlow({
             title={tr("your_turn_again")}
             hint={tr("no_rush")}
             onMicFail={beaconMicFailed}
-            onFinished={(blob, dur) => reviewOrKeep(blob, dur, "review2", keepFollowUp)}
+            onFinished={(blob, dur) => reviewOrRetry(blob, dur, "review2", "missed2")}
             skipLabel={tr("maybe_later")}
             onSkip={finishEarly}
           />
@@ -410,6 +431,16 @@ export default function SessionFlow({
             speak={speak}
             onKeep={() => keepFollowUp(clip.blob, clip.durationSec)}
             onAgain={() => setStep("answer2")}
+          />
+        )}
+
+        {step === "missed2" && (
+          <MissedScreen
+            labels={missedLabels}
+            speak={speak}
+            onRetry={() => setStep("answer2")}
+            skipLabel={tr("maybe_later")}
+            onSkip={finishEarly}
           />
         )}
 
@@ -595,12 +626,22 @@ function AnswerScreen({
   // the browser can't pause, rather than offering a button that does nothing.
   const [paused, setPaused] = useState(false);
   const [canPause, setCanPause] = useState(false);
+  // "I'm finished" waits for the recorder: a tap before the mic is live used to
+  // hand back an empty take (2.11).
+  const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   // Recorded length excludes paused time: banked active ms + the live segment.
   const activeMsRef = useRef<number>(0);
   const segmentStartRef = useRef<number>(0);
+  const segmentLiveRef = useRef(false);
+
+  function bankSegment() {
+    if (!segmentLiveRef.current) return;
+    activeMsRef.current += Date.now() - segmentStartRef.current;
+    segmentLiveRef.current = false;
+  }
 
   function stopTracks() {
     streamRef.current?.getTracks().forEach((tk) => tk.stop());
@@ -624,11 +665,18 @@ function AnswerScreen({
         rec.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
         };
-        rec.start();
+        // The recorder can stop on its own (mic lost, audio device switched).
+        // Bank the time so a take that ended early still has its true length.
+        rec.addEventListener("stop", bankSegment);
+        // 1 s slices: audio accrues as it's spoken, so a recorder that dies
+        // mid-answer still leaves everything said up to that point.
+        rec.start(1000);
         activeMsRef.current = 0;
         segmentStartRef.current = Date.now();
+        segmentLiveRef.current = true;
         recorderRef.current = rec;
         setCanPause(typeof rec.pause === "function" && typeof rec.resume === "function");
+        setRecording(true);
       } catch {
         // Mic was granted at priming but is unavailable now — fall to recovery.
         if (!cancelled) onMicFail();
@@ -650,8 +698,7 @@ function AnswerScreen({
   }, []);
 
   function activeSeconds(): number {
-    const rec = recorderRef.current;
-    const live = rec && rec.state === "recording" ? Date.now() - segmentStartRef.current : 0;
+    const live = segmentLiveRef.current ? Date.now() - segmentStartRef.current : 0;
     return Math.round((activeMsRef.current + live) / 1000);
   }
 
@@ -660,7 +707,7 @@ function AnswerScreen({
     if (!rec || rec.state !== "recording") return;
     try {
       rec.pause();
-      activeMsRef.current += Date.now() - segmentStartRef.current;
+      bankSegment();
       setPaused(true);
     } catch {
       // Couldn't pause — keep recording; nothing the elder needs to know.
@@ -676,6 +723,7 @@ function AnswerScreen({
       try {
         rec.resume();
         segmentStartRef.current = Date.now();
+        segmentLiveRef.current = true;
       } catch {
         // ignore — the recording is still there; "I'm finished" still works.
       }
@@ -684,22 +732,23 @@ function AnswerScreen({
   }
 
   // Stop the recorder and resolve with the assembled clip + its length. Works
-  // from paused too: stop() flushes the final chunk either way.
+  // from paused too: stop() flushes the final chunk either way. A recorder that
+  // already stopped on its own still hands back what it captured (2.11).
   function stopRecording(): Promise<{ blob: Blob | null; durationSec: number }> {
     return new Promise((resolve) => {
       const rec = recorderRef.current;
-      const durationSec = activeSeconds();
-      if (!rec || rec.state === "inactive") {
-        resolve({ blob: null, durationSec });
-        return;
-      }
-      rec.onstop = () => {
-        const type = rec.mimeType || "audio/webm";
+      const collect = () => {
+        const type = rec?.mimeType || "audio/webm";
         const blob = chunksRef.current.length
           ? new Blob(chunksRef.current, { type })
           : null;
-        resolve({ blob, durationSec });
+        resolve({ blob, durationSec: activeSeconds() });
       };
+      if (!rec || rec.state === "inactive") {
+        collect();
+        return;
+      }
+      rec.addEventListener("stop", collect, { once: true });
       rec.stop();
     });
   }
@@ -755,7 +804,9 @@ function AnswerScreen({
       <DisplayText>{title}</DisplayText>
       <Hint>{hint}</Hint>
       <Spacer />
-      <BigButton onClick={handleFinished}>{finishedLabel}</BigButton>
+      <BigButton onClick={handleFinished} disabled={!recording}>
+        {finishedLabel}
+      </BigButton>
       {canPause && <SoftButton onClick={handlePause}>{pauseLabel}</SoftButton>}
       {skipLabel && onSkip && (
         <QuietButton onClick={handleSkip}>{skipLabel}</QuietButton>
@@ -866,6 +917,34 @@ function ReviewScreen({
       <Spacer />
       <BigButton onClick={play}>{labels.yes}</BigButton>
       <SoftButton onClick={keep}>{labels.no}</SoftButton>
+    </Screen>
+  );
+}
+
+// The take came back empty (2.11). Nothing was saved, so say so kindly and offer
+// the same answer screen again — never advance as if the answer was kept.
+function MissedScreen({
+  labels,
+  speak,
+  onRetry,
+  skipLabel,
+  onSkip,
+}: {
+  labels: { title: string; sub: string; retry: string };
+  speak: Speaker;
+  onRetry: () => void;
+  skipLabel: string;
+  onSkip: () => void;
+}) {
+  return (
+    <Screen>
+      <Mic />
+      <DisplayText>{labels.title}</DisplayText>
+      <Hint>{labels.sub}</Hint>
+      {speak(`${labels.title}. ${labels.sub}`)}
+      <Spacer />
+      <BigButton onClick={onRetry}>{labels.retry}</BigButton>
+      <QuietButton onClick={onSkip}>{skipLabel}</QuietButton>
     </Screen>
   );
 }
@@ -1135,15 +1214,18 @@ function withUnlock(fn: () => void) {
 function BigButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={withUnlock(onClick)}
-      className="w-full rounded-3xl bg-emerald-600 px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98]"
+      disabled={disabled}
+      className="w-full rounded-3xl bg-emerald-600 px-6 py-6 text-2xl font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
     >
       {children}
     </button>

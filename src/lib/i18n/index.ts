@@ -52,6 +52,9 @@ export const ui: Record<Lang, Record<string, string>> = {
     keep_it: "Keep it",
     record_again: "Record again",
     play_again: "Play it again",
+    missed_title: "I didn’t catch that one",
+    missed_sub: "Nothing to worry about. Let’s try it again.",
+    try_again: "Try again",
     // AI follow-up
     follow_tag: "↳ a question about what you just said",
     open_tag: "↳ one more thing",
@@ -274,6 +277,9 @@ export const ui: Record<Lang, Record<string, string>> = {
     keep_it: "Me quedo con esa",
     record_again: "Grabar de nuevo",
     play_again: "Escucharla otra vez",
+    missed_title: "No alcancé a escuchar esa",
+    missed_sub: "No te preocupes. Intentémoslo otra vez.",
+    try_again: "Intentar otra vez",
     // AI follow-up
     follow_tag: "↳ una pregunta sobre lo que acabas de decir",
     open_tag: "↳ una cosa más",
