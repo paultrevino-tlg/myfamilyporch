@@ -1032,10 +1032,15 @@ export type Database = {
         Returns: boolean
       }
       is_member_of: { Args: { p_family: string }; Returns: boolean }
+      provision_family: {
+        Args: { p_name: string; p_user: string }
+        Returns: string
+      }
       release_manual_nudge: {
         Args: { p_day: string; p_storyteller: string }
         Returns: undefined
       }
+      user_id_by_email: { Args: { p_email: string }; Returns: string }
     }
     Enums: {
       emo_weight: "light" | "medium" | "heavy"

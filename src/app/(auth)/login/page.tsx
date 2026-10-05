@@ -1,35 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { requestMagicLink } from "./actions";
 
-// Passwordless sign-in for family members. signInWithOtp triggers Supabase's
-// "Send Email" hook, which routes through our Resend sender (api/auth/email-hook).
-// The emailed link round-trips through Supabase /auth/v1/verify back to
-// /auth/callback. Storytellers never use this surface.
+// Passwordless sign-in for family members. The server action (./actions) sends
+// the link via Supabase's "Send Email" hook → our Resend sender
+// (api/auth/email-hook); the link round-trips through /auth/v1/verify back to
+// /auth/callback. It never creates accounts (TODO 9.0) — only existing members
+// and invitees get a link, and the reply never says which. Storytellers never
+// use this surface.
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState("");
 
+  // The welcome email links here with ?email= so it's already filled in.
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get("email");
+    if (preset) setEmail(preset);
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
     setError("");
-    // Carry a safe relative ?next through the magic link (e.g. /invite/<token>),
-    // so an invited member lands back on the accept page after signing in.
+    // Carry ?next through the magic link (e.g. /invite/<token>), so an invited
+    // member lands back on the accept page; the action keeps it relative-only.
     const next = new URLSearchParams(window.location.search).get("next");
-    const safeNext = next && next.startsWith("/") ? next : null;
-    const callback = `${window.location.origin}/auth/callback${
-      safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""
-    }`;
-    const sb = supabaseBrowser();
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: callback },
-    });
-    if (error) {
-      setError(error.message);
+    const res = await requestMagicLink(email, next);
+    if (!res.ok) {
+      setError(res.error);
       setStatus("error");
       return;
     }
@@ -43,8 +44,14 @@ export default function LoginPage() {
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-3xl">📬</div>
           <h1 className="mt-4 font-serif text-2xl font-semibold">Check your email</h1>
           <p className="mt-3 text-ink/65">
-            We sent a sign-in link to <strong className="text-ink">{email}</strong>. Open it on this
-            device to continue.
+            If <strong className="text-ink">{email}</strong> has a My Family Porch account, a
+            sign-in link is on its way. Open it on this device to continue.
+          </p>
+          <p className="mt-5 text-sm text-ink/55">
+            New here?{" "}
+            <Link href="/signup" className="link">
+              Get started
+            </Link>
           </p>
         </div>
       </main>

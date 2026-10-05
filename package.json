@@ -13,7 +13,8 @@
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
     "seed:prompts": "tsx supabase/seed/seed-prompts.ts",
-    "check:openers": "tsx scripts/check-openers.ts"
+    "check:openers": "tsx scripts/check-openers.ts",
+    "family:create": "tsx --env-file=.dev.vars scripts/family-create.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
