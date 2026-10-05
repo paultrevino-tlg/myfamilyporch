@@ -26,7 +26,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     mic_retry_btn: "Try again",
     // Question
     q_label: "A question for you",
-    q_placeholder: "What was your first car?",
+    q_placeholder: "Tell me about a day you’ll never forget.",
     voice_chip: "in your family's voice",
     hear_question: "Tap to hear it",
     playing_question: "Playing…",
@@ -58,7 +58,6 @@ export const ui: Record<Lang, Record<string, string>> = {
     // AI follow-up
     follow_tag: "↳ a question about what you just said",
     open_tag: "↳ one more thing",
-    follow_placeholder: "Where's the farthest you ever drove it?",
     // Your turn, again
     your_turn_again: "Go ahead.",
     no_rush: "No rush at all.",
@@ -251,7 +250,7 @@ export const ui: Record<Lang, Record<string, string>> = {
     mic_retry_btn: "Intentar de nuevo",
     // Question
     q_label: "Una pregunta para ti",
-    q_placeholder: "¿Cuál fue tu primer carro?",
+    q_placeholder: "Cuéntame de un día que nunca olvidarás.",
     voice_chip: "con la voz de tu familia",
     hear_question: "Toca para escuchar",
     playing_question: "Reproduciendo…",
@@ -283,7 +282,6 @@ export const ui: Record<Lang, Record<string, string>> = {
     // AI follow-up
     follow_tag: "↳ una pregunta sobre lo que acabas de decir",
     open_tag: "↳ una cosa más",
-    follow_placeholder: "¿Cuál es el lugar más lejano al que llegaste con él?",
     // Your turn, again
     your_turn_again: "Adelante.",
     no_rush: "Sin ninguna prisa.",

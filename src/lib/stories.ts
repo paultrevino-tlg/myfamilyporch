@@ -5,7 +5,7 @@
 // service role here — audio playback mints signed URLs separately (audio route).
 import { supabaseServer } from "@/lib/supabase/server";
 
-// One answer in a follow-up thread (an AI/pre-authored follow-up + its reply).
+// One answer in a follow-up thread (an AI or open-floor follow-up + its reply).
 export type StoryFollowUp = {
   id: string;
   question: string | null;

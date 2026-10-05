@@ -12,7 +12,7 @@ import { transcribe } from "@/lib/voice/stt";
 // every answer — opener, follow-up, final — gets a transcript for Stories review
 // and the keepsake, and so the immediate api/ai/interview call sees a transcript
 // and fires the AI follow-up. STT is fail-soft: if it errors or the key is unset,
-// transcript stays null and the follow-up degrades to pre-authored (3.2 behavior).
+// transcript stays null and api/ai/interview asks the next library question instead (3.6).
 //
 // Seam kept intact: admin playback mints signed URLs after a membership check
 // (→ 5.2).

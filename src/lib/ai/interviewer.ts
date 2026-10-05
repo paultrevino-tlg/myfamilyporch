@@ -111,8 +111,8 @@ function contextBlock(args: {
     .join("\n\n");
 }
 
-// Generate one follow-up. Throws on API/auth failure so the route can fall back
-// to a pre-authored follow-up rather than stranding the elder.
+// Generate one follow-up. Throws on API/auth failure so the route can move on to
+// the next library question rather than stranding the elder.
 export async function generateFollowUp(args: {
   ctx: RelationshipContext;
   questionAsked: string;

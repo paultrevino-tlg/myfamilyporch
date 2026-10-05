@@ -12,7 +12,8 @@
     "cf-typegen": "wrangler types",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
-    "seed:prompts": "tsx supabase/seed/seed-prompts.ts"
+    "seed:prompts": "tsx supabase/seed/seed-prompts.ts",
+    "check:openers": "tsx scripts/check-openers.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

@@ -169,6 +169,10 @@ export async function assembleOpeningQuestion(args: {
   // Extra Avoid topics merged on top of the stored Topics-steering prefs (5.3).
   // Optional override; the stored per-storyteller preferences are the source.
   avoidCategories?: Iterable<string>;
+  // Prompts to skip on top of the answered ones — the session's opener when the
+  // next library question stands in for an AI follow-up (its answer may not
+  // have saved, so the answered set alone can't be trusted to exclude it).
+  excludePromptIds?: Iterable<string>;
 }): Promise<AssembledQuestion | null> {
   const db = supabaseService();
 
@@ -206,9 +210,10 @@ export async function assembleOpeningQuestion(args: {
       .eq("storyteller_id", args.storytellerId),
   ]);
 
-  const askedPromptIds = new Set(
-    (askedRes.data ?? []).map((a) => a.prompt_id as string),
-  );
+  const askedPromptIds = new Set([
+    ...(askedRes.data ?? []).map((a) => a.prompt_id as string),
+    ...(args.excludePromptIds ?? []),
+  ]);
 
   // Per-category counts (topic weighting) + the latest weight (never-stack-heavy).
   const categoryCounts = new Map<string, number>();
@@ -256,7 +261,17 @@ export async function assembleOpeningQuestion(args: {
     focusCategories,
     easeOffCategories,
   });
-  if (!chosen) return null;
+  if (!chosen) {
+    // Callers fall back (placeholder opener / no second question); log it so a
+    // real fallback is visible in Worker logs, not mistaken for a library pick.
+    console.warn("[assembly] no eligible library prompt", {
+      storytellerId: args.storytellerId,
+      lang,
+      kind: context.kind,
+      pool: prompts?.length ?? 0,
+    });
+    return null;
+  }
 
   return {
     promptId: chosen.id,

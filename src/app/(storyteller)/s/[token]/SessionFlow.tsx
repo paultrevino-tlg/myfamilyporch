@@ -19,10 +19,11 @@ import { playVoice, silenceAll, stopVoice, unlockAudio } from "@/lib/voice/playe
 // LIVE as of 3.1: the greeting uses the resolved address term and the opening
 // question is a real library prompt (server-assembled), recorded with its
 // prompt_id. Both fall back to placeholders if assembly returned nothing.
-// LIVE as of 3.2: after the opening answer saves, we fetch one follow-up from
-// api/ai/interview (AI once a transcript exists — 3.4 — else a pre-authored
-// follow-up). Falls back to the gentle generic placeholder if nothing returns.
+// LIVE as of 3.2: after the opening answer, we fetch the second question from
+// api/ai/interview — an AI follow-up to what they said.
 // LIVE as of 3.5: that slot is sometimes the open-floor question, relabeled.
+// LIVE as of 3.6: when the AI can't run, the slot is the next library question
+// (labeled and saved as its own story); if nothing returns, the session ends.
 // LIVE as of 2.9: the follow-up and its answer screen offer "Maybe later" —
 // the opener is already saved, so the session closes and lands on Done.
 // LIVE as of 2.8: each answer can be paused and continued (one clip).
@@ -67,13 +68,17 @@ export default function SessionFlow({
   const greetAddress = address || name;
   const openingQuestion = question || tr("q_placeholder");
 
-  // The follow-up question, fetched from api/ai/interview after the opening
-  // answer is saved (3.2). Null until fetched (or if generation yields nothing) —
-  // the follow-up screen then keeps a gentle generic placeholder.
-  const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
-  const followUpText = followUpQuestion || tr("follow_placeholder");
-  // The open-floor question (3.5) isn't about what they just said — relabel it.
-  const [openFloor, setOpenFloor] = useState(false);
+  // The session's second question, fetched from api/ai/interview after the
+  // opening answer (3.2): an AI follow-up, the open-floor question (3.5), or — when
+  // the AI can't run — the next library question (3.6), which is its own story,
+  // not a follow-up. Nothing comes back → there is no second question.
+  const [second, setSecond] = useState<{
+    text: string;
+    source: "ai" | "open_floor" | "library";
+    promptId: string | null;
+  } | null>(null);
+  const secondText = second?.text ?? "";
+  const secondIsFollowup = second?.source !== "library";
 
   // The captured answers ground in a session and thread together. The first
   // answer's POST returns these; later answers send them back so the follow-up
@@ -117,9 +122,16 @@ export default function SessionFlow({
   async function uploadAnswer(
     blob: Blob | null,
     durationSec: number,
-    opts: { isFollowup: boolean; isFinal: boolean },
-  ): Promise<string | null> {
-    if (!blob || blob.size === 0) return null;
+    opts: {
+      isFollowup: boolean;
+      isFinal: boolean;
+      questionText: string;
+      promptId: string | null;
+      parentAnswerId: string | null;
+    },
+  ): Promise<{ answerId: string | null; sessionId: string | null }> {
+    const none = { answerId: null, sessionId };
+    if (!blob || blob.size === 0) return none;
     const fd = new FormData();
     fd.set("token", token);
     fd.set("audio", blob, `answer.${blob.type.includes("mp4") ? "mp4" : "webm"}`);
@@ -127,26 +139,25 @@ export default function SessionFlow({
     fd.set("final", String(opts.isFinal));
     fd.set("lang", lang);
     fd.set("duration_sec", String(durationSec));
-    // Opening = the assembled library prompt (3.1); follow-up = the question we
-    // fetched from api/ai/interview (3.2). prompt_id rides along for the opening
-    // so the answer row links back to the coverage backbone.
-    fd.set("question_text", opts.isFollowup ? followUpText : openingQuestion);
-    if (!opts.isFollowup && promptId) fd.set("prompt_id", promptId);
+    // prompt_id rides along for library questions (the opener, or the next
+    // library question standing in for a follow-up) so the answer row links back
+    // to the coverage backbone; follow-ups link to their parent answer instead.
+    fd.set("question_text", opts.questionText);
+    if (opts.promptId) fd.set("prompt_id", opts.promptId);
     if (sessionId) fd.set("session_id", sessionId);
-    if (opts.isFollowup && firstAnswerId) fd.set("parent_answer_id", firstAnswerId);
+    if (opts.parentAnswerId) fd.set("parent_answer_id", opts.parentAnswerId);
     try {
       const res = await fetch("/api/storyteller/answer", { method: "POST", body: fd });
       if (res.ok) {
         const data = (await res.json()) as { session_id?: string; answer_id?: string };
         if (data.session_id) setSessionId(data.session_id);
-        if (!opts.isFollowup && data.answer_id) setFirstAnswerId(data.answer_id);
-        return data.answer_id ?? null;
+        return { answerId: data.answer_id ?? null, sessionId: data.session_id ?? sessionId };
       }
       console.error("[storyteller] answer upload rejected", res.status);
     } catch (e) {
       console.error("[storyteller] answer upload failed", e);
     }
-    return null;
+    return none;
   }
 
   // Hear it back (2.7): a finished take waits here, un-uploaded, until the elder
@@ -169,19 +180,34 @@ export default function SessionFlow({
   }
 
   async function keepOpening(blob: Blob | null, durationSec: number) {
-    const answerId = await uploadAnswer(blob, durationSec, {
+    const saved = await uploadAnswer(blob, durationSec, {
       isFollowup: false,
       isFinal: false,
+      questionText: openingQuestion,
+      promptId: promptId ?? null,
+      parentAnswerId: null,
     });
+    if (saved.answerId) setFirstAnswerId(saved.answerId);
     setClip(null);
-    // Generate the follow-up while the "saving" screen is still up, so it's
-    // ready when the follow-up screen appears (no placeholder flash).
-    await fetchFollowUp(answerId);
+    // Fetch the second question while the "saving" screen is still up, so it's
+    // ready when its screen appears. None at all → end warmly, no filler question.
+    const next = await fetchSecondQuestion(saved.answerId);
+    if (!next) {
+      finishEarly(saved.sessionId);
+      return;
+    }
+    setSecond(next);
     setStep("followup");
   }
 
-  async function keepFollowUp(blob: Blob | null, durationSec: number) {
-    await uploadAnswer(blob, durationSec, { isFollowup: true, isFinal: true });
+  async function keepSecond(blob: Blob | null, durationSec: number) {
+    await uploadAnswer(blob, durationSec, {
+      isFollowup: secondIsFollowup,
+      isFinal: true,
+      questionText: secondText,
+      promptId: secondIsFollowup ? null : (second?.promptId ?? null),
+      parentAnswerId: secondIsFollowup ? firstAnswerId : null,
+    });
     setClip(null);
     setStep("done");
   }
@@ -227,16 +253,17 @@ export default function SessionFlow({
     retry: tr("try_again"),
   };
 
-  // "Maybe later" after the opening answer (2.9): the opener is already saved,
-  // so close the session and land on the warm Done screen. Fire-and-forget —
-  // the elder never waits on it.
-  function finishEarly() {
-    if (sessionId) {
+  // "Maybe later" after the opening answer (2.9), or no second question to ask
+  // (3.6): the opener is already saved, so close the session and land on the warm
+  // Done screen. Fire-and-forget — the elder never waits on it. `id` is passed
+  // when the session was opened in this same tick (state not yet updated).
+  function finishEarly(id: string | null = sessionId) {
+    if (id) {
       try {
         void fetch("/api/storyteller/session/finish", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ token, session_id: sessionId }),
+          body: JSON.stringify({ token, session_id: id }),
           keepalive: true,
         });
       } catch {
@@ -246,27 +273,34 @@ export default function SessionFlow({
     setStep("done");
   }
 
-  // Ask the interview brain (3.2) for one natural follow-up to the opening answer.
-  // Fail-soft: any miss leaves followUpQuestion null and the screen shows the
-  // gentle generic placeholder — the elder is never stranded.
-  async function fetchFollowUp(answerId: string | null) {
-    if (!answerId) return;
+  // Ask the interview brain (3.2) for the session's second question. Called even
+  // when the opener didn't save: the server then skips the follow-up and returns
+  // the next library question, excluding the opener's prompt. Fail-soft: any miss
+  // returns null and the session ends warmly — never a canned follow-up.
+  async function fetchSecondQuestion(answerId: string | null): Promise<typeof second> {
     try {
       const res = await fetch("/api/ai/interview", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token, answer_id: answerId }),
+        body: JSON.stringify({ token, answer_id: answerId, opener_prompt_id: promptId }),
       });
       if (res.ok) {
-        const data = (await res.json()) as { question?: string | null; source?: string };
-        if (data.question) {
-          setFollowUpQuestion(data.question);
-          setOpenFloor(data.source === "open_floor");
+        const data = (await res.json()) as {
+          question?: string | null;
+          source?: string;
+          prompt_id?: string | null;
+        };
+        if (
+          data.question &&
+          (data.source === "ai" || data.source === "open_floor" || data.source === "library")
+        ) {
+          return { text: data.question, source: data.source, promptId: data.prompt_id ?? null };
         }
       }
     } catch (e) {
-      console.error("[storyteller] follow-up fetch failed", e);
+      console.error("[storyteller] second-question fetch failed", e);
     }
+    return null;
   }
 
   return (
@@ -394,11 +428,19 @@ export default function SessionFlow({
         {step === "followup" && (
           <Screen>
             <SpeakingAvatar />
-            <FollowTag>{tr(openFloor ? "open_tag" : "follow_tag")}</FollowTag>
-            <DisplayText>{followUpText}</DisplayText>
+            {/* A library question isn't about what they just said — label it
+                like the opener; the open floor (3.5) gets its own tag. */}
+            {second?.source === "library" ? (
+              <Label>{tr("q_label")}</Label>
+            ) : (
+              <FollowTag>
+                {tr(second?.source === "open_floor" ? "open_tag" : "follow_tag")}
+              </FollowTag>
+            )}
+            <DisplayText>{secondText}</DisplayText>
             <QuestionVoice
               token={token}
-              text={followUpText}
+              text={secondText}
               lang={lang}
               chipLabel={tr("voice_chip")}
               hearLabel={tr("hear_question")}
@@ -408,7 +450,7 @@ export default function SessionFlow({
             <BigButton onClick={() => setStep("answer2")}>
               {tr("ready_to_answer")}
             </BigButton>
-            <QuietButton onClick={finishEarly}>{tr("maybe_later")}</QuietButton>
+            <QuietButton onClick={() => finishEarly()}>{tr("maybe_later")}</QuietButton>
           </Screen>
         )}
 
@@ -420,7 +462,7 @@ export default function SessionFlow({
             onMicFail={beaconMicFailed}
             onFinished={(blob, dur) => reviewOrRetry(blob, dur, "review2", "missed2")}
             skipLabel={tr("maybe_later")}
-            onSkip={finishEarly}
+            onSkip={() => finishEarly()}
           />
         )}
 
@@ -429,7 +471,7 @@ export default function SessionFlow({
             blob={clip.blob}
             labels={reviewLabels}
             speak={speak}
-            onKeep={() => keepFollowUp(clip.blob, clip.durationSec)}
+            onKeep={() => keepSecond(clip.blob, clip.durationSec)}
             onAgain={() => setStep("answer2")}
           />
         )}
@@ -440,7 +482,7 @@ export default function SessionFlow({
             speak={speak}
             onRetry={() => setStep("answer2")}
             skipLabel={tr("maybe_later")}
-            onSkip={finishEarly}
+            onSkip={() => finishEarly()}
           />
         )}
 
