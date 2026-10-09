@@ -511,6 +511,8 @@ export default function SessionFlow({
           <Screen>
             <Avatar>❤️</Avatar>
             <DisplayText>{tr("done_sub")}</DisplayText>
+            <Spacer />
+            <CloseTabButton label={tr("close_btn")} hint={tr("close_hint")} />
           </Screen>
         )}
       </div>
@@ -1298,6 +1300,36 @@ function SoftButton({
 // red outline rather than a solid fill so it reads as clearly negative without
 // visually competing with the green primary or nudging a hesitant elder to
 // decline (elder-facing UX: forgiving, never coercive).
+// Browsers only let a page close its own tab when that tab was opened straight
+// from a link with no back history — the usual case for the SMS deep link, since
+// the whole session is one page. iOS Safari and some in-app SMS browsers refuse
+// anyway, silently; if the page is still here shortly after, swap the button for
+// a calm hint so the elder never taps a button that does nothing.
+function CloseTabButton({ label, hint }: { label: string; hint: string }) {
+  const [blocked, setBlocked] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  if (blocked) return <Hint>{hint}</Hint>;
+
+  return (
+    <BigButton
+      onClick={() => {
+        window.close();
+        timer.current = setTimeout(() => setBlocked(true), 300);
+      }}
+    >
+      {label}
+    </BigButton>
+  );
+}
+
 function QuietButton({
   children,
   onClick,

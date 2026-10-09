@@ -66,6 +66,10 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_sub: "Saved. We'll talk again soon. ❤️",
     done_count: "2 questions today — that's plenty",
     done_btn: "Done",
+    // Closing the tab only works when the browser allows it (opened straight
+    // from the SMS link); otherwise close_hint replaces the button.
+    close_btn: "Close this page",
+    close_hint: "You can close this tab now.",
     // SMS nudge (TODO 4.3). {address} = how the elder is addressed; {interviewer}
     // = who it's from. The deep-link URL is appended after this line by the
     // sender, never interpolated into the translated string.
@@ -290,6 +294,8 @@ export const ui: Record<Lang, Record<string, string>> = {
     done_sub: "Guardada. Hablamos pronto. ❤️",
     done_count: "Dos preguntas hoy — con eso basta",
     done_btn: "Listo",
+    close_btn: "Cerrar esta página",
+    close_hint: "Ya puedes cerrar esta pestaña.",
     // SMS nudge (TODO 4.3)
     sms_nudge: "My Family Porch: Hola {address}, soy {interviewer} — toca aquí para contarme una historia",
     sms_nudge_no_interviewer: "My Family Porch: Hola {address} — toca aquí para contarme una historia",
