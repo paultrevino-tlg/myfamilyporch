@@ -12,6 +12,7 @@ import { dismissInsight, applyScheduleSuggestion } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
 import StorytellerGrid from "../StorytellerGrid";
 import VerifyPhoneBanner from "../VerifyPhoneBanner";
+import { EmptyState } from "@/components/EmptyState";
 
 // A calm relative day for the status cards / Lately list ("Today", "Fri",
 // "12 days ago") — never a raw timestamp on the elder-adjacent surface.
@@ -117,9 +118,9 @@ export default async function Dashboard() {
           <RecentRow key={story.id} story={story} />
         ))}
         {overview.recent.length === 0 && (
-          <li className="card px-4 py-8 text-center text-sm text-ink/50">
+          <EmptyState as="li" photo="phone">
             No stories yet — they&apos;ll appear here once {active.name} starts recording.
-          </li>
+          </EmptyState>
         )}
       </ul>
 

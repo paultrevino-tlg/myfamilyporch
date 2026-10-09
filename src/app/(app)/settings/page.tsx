@@ -8,7 +8,7 @@ import { setAlertPreference, setMyName } from "./actions";
 import { supabaseServer } from "@/lib/supabase/server";
 import { myName } from "@/lib/profile";
 import VoiceSetup from "../storytellers/VoiceSetup";
-import StorytellerGrid from "../StorytellerGrid";
+import StorytellersPanel from "./StorytellersPanel";
 
 // Settings (TODO 5.5). The signed-in member's own SMS number + consent state
 // and their cloned-voice status. (Family access — the roster + invitations —
@@ -50,18 +50,8 @@ export default async function SettingsPage({
       </div>
 
       {/* Same per-storyteller summary cards as the dashboard, for a quick jump
-          into any elder's hub from here too. */}
-      <section className="mt-7">
-        <div className="mb-3.5 flex items-center justify-between px-1">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-ink/45">Storytellers</h2>
-          {canManage && (
-            <Link href="/storytellers/new" className="text-sm font-semibold text-brand hover:underline">
-              Add storyteller →
-            </Link>
-          )}
-        </div>
-        <StorytellerGrid stats={storytellerStats} canAdd={canManage} />
-      </section>
+          into any elder's hub from here too — set on the porch photograph. */}
+      <StorytellersPanel stats={storytellerStats} canManage={canManage} />
 
       {sp.saved === "name" && (
         <p className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">Name saved.</p>

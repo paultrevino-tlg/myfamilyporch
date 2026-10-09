@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseService } from "@/lib/supabase/service";
 import { acceptInvitation } from "@/app/(app)/actions";
+import { AuthShell } from "@/components/AuthShell";
 
 // Invitation accept surface (TODO 1.3). Lives OUTSIDE the (app) group so we can
 // route an unauthenticated invitee through login with a `next` back to here,
@@ -32,13 +33,12 @@ export default async function InvitePage({
     .maybeSingle();
 
   const Shell = ({ children }: { children: React.ReactNode }) => (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-      <div className="mb-6 flex items-center gap-2.5">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-xl shadow-sm">🏡</span>
-        <span className="font-bold tracking-tight">My Family Porch</span>
-      </div>
-      <div className="card p-8">{children}</div>
-    </main>
+    <AuthShell
+      photo="hands"
+      position="60% 50%"
+    >
+      {children}
+    </AuthShell>
   );
 
   if (!inv) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { requestMagicLink } from "./actions";
+import { AuthShell } from "@/components/AuthShell";
 
 // Passwordless sign-in for family members. The server action (./actions) sends
 // the link via Supabase's "Send Email" hook → our Resend sender
@@ -39,8 +40,8 @@ export default function LoginPage() {
 
   if (status === "sent") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-        <div className="card p-8 text-center">
+      <AuthShell photo="porch">
+        <div className="text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-3xl">📬</div>
           <h1 className="mt-4 font-serif text-2xl font-semibold">Check your email</h1>
           <p className="mt-3 text-ink/65">
@@ -54,37 +55,31 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-      <div className="mb-6 flex items-center gap-2.5">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-xl shadow-sm">🏡</span>
-        <span className="font-bold tracking-tight">My Family Porch</span>
-      </div>
-      <div className="card p-8">
-        <h1 className="font-serif text-2xl font-semibold">Welcome back</h1>
-        <p className="mt-2 text-ink/65">
-          Enter your email and we&apos;ll send a secure sign-in link — no password.
-        </p>
-        <form onSubmit={onSubmit} className="mt-6 space-y-3">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            className="input w-full"
-          />
-          <button type="submit" disabled={status === "sending"} className="btn-primary w-full py-3">
-            {status === "sending" ? "Sending…" : "Send sign-in link"}
-          </button>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-        </form>
-      </div>
-    </main>
+    <AuthShell photo="porch">
+      <h1 className="font-serif text-2xl font-semibold">Welcome back</h1>
+      <p className="mt-2 text-ink/65">
+        Enter your email and we&apos;ll send a secure sign-in link — no password.
+      </p>
+      <form onSubmit={onSubmit} className="mt-6 space-y-3">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+          className="input w-full"
+        />
+        <button type="submit" disabled={status === "sending"} className="btn-primary w-full py-3">
+          {status === "sending" ? "Sending…" : "Send sign-in link"}
+        </button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+    </AuthShell>
   );
 }

@@ -3,6 +3,7 @@ import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
 import { toggleInBook, editTranscript, deleteStory, translateStory } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
+import { EmptyState } from "@/components/EmptyState";
 
 // The cached English translation of a Spanish transcript (TODO 7.4), tucked
 // behind a toggle so the elder's own Spanish stays primary. Shown to everyone
@@ -109,10 +110,10 @@ export default async function StoriesPage() {
           </section>
         ))}
         {stories.length === 0 && (
-          <div className="card px-4 py-10 text-center text-sm text-ink/50">
+          <EmptyState photo="phone">
             No stories yet — they&apos;ll appear here once {active.name} starts
             recording.
-          </div>
+          </EmptyState>
         )}
       </div>
     </main>

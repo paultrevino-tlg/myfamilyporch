@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "./Container";
-import { Photo, type PhotoName } from "./Photo";
+import { Photo, type PhotoName } from "@/components/Photo";
 
 // Porchlight editorial building blocks (design direction 1), shared by every
 // marketing page so the layouts stay one system: narrow measure, hairline

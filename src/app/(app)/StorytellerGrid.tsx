@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { StorytellerStat } from "@/lib/overview";
 import { consentBadge } from "@/lib/consent/badge";
+import { EmptyState } from "@/components/EmptyState";
 
 // The dashboard's per-storyteller summary cards, extracted so both the
 // Overview and My Settings can render the same grid. RLS-scoped data comes in
@@ -44,32 +45,47 @@ function avatarClass(seed: string): string {
 // The card grid plus the empty state. Pages wrap this with their own heading.
 // canAdd: admins get "Add one"; a viewer (who can't add, and sees only the
 // storytellers shared with them — 5.8) is pointed to their family admin.
+// onPhoto: the grid sits on My Settings' porch photograph — the cards lift off
+// it with a shadow, and the empty message stays text-only (the photo is behind).
 export default function StorytellerGrid({
   stats,
   canAdd = true,
+  onPhoto = false,
 }: {
   stats: StorytellerStat[];
   canAdd?: boolean;
+  onPhoto?: boolean;
 }) {
+  const empty = canAdd ? (
+    <>
+      No storytellers yet.{" "}
+      <Link href="/storytellers/new" className="link">
+        Add one
+      </Link>
+      .
+    </>
+  ) : (
+    <>
+      No storytellers have been shared with you yet. Ask your family admin to
+      share one with you.
+    </>
+  );
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {stats.map((s) => (
-        <StorytellerBlock key={s.id} stat={s} />
+        <StorytellerBlock key={s.id} stat={s} lifted={onPhoto} />
       ))}
       {stats.length === 0 &&
-        (canAdd ? (
-          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
-            No storytellers yet.{" "}
-            <Link href="/storytellers/new" className="link">
-              Add one
-            </Link>
-            .
-          </p>
+        (onPhoto ? (
+          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/70 shadow-lg">{empty}</p>
         ) : (
-          <p className="card col-span-full px-4 py-8 text-center text-sm text-ink/50">
-            No storytellers have been shared with you yet. Ask your family admin to
-            share one with you.
-          </p>
+          <EmptyState
+            photo="porch"
+            className="col-span-full"
+          >
+            {empty}
+          </EmptyState>
         ))}
     </div>
   );
@@ -107,14 +123,17 @@ function Ring({ value, total, tone }: { value: number; total: number | null; ton
 
 // One storyteller's card: avatar, name, status chip, a weekly progress ring,
 // then the four status metrics. The whole card links into the hub.
-function StorytellerBlock({ stat }: { stat: StorytellerStat }) {
+function StorytellerBlock({ stat, lifted }: { stat: StorytellerStat; lifted: boolean }) {
   const quietDays = stat.lastSessionAt ? daysSince(stat.lastSessionAt) : null;
   const onTrack = stat.lastSessionFresh;
   const tone: "ok" | "warn" = onTrack ? "ok" : "warn";
   const sms = consentBadge(stat.consentState, stat.hasPhone);
 
   return (
-    <Link href={`/storytellers/${stat.id}`} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link
+      href={`/storytellers/${stat.id}`}
+      className={`card p-5 transition hover:-translate-y-0.5 ${lifted ? "shadow-lg hover:shadow-xl" : "hover:shadow-md"}`}
+    >
       <div className="flex items-center gap-3.5">
         <div
           className={`grid h-12 w-12 flex-none place-items-center rounded-full bg-gradient-to-br ${avatarClass(stat.id)} text-base font-bold text-white`}

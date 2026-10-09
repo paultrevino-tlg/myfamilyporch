@@ -9,6 +9,7 @@ import { formatPhone } from "@/lib/phone";
 import SetupOverview from "./SetupOverview";
 import CopyBlock from "../storytellers/[id]/CopyBlock";
 import VoiceSetup from "../storytellers/VoiceSetup";
+import { Photo } from "@/components/Photo";
 
 // Guided family-member setup (consent-flow.md). The overview graphic is always
 // on top; below it, a single step card derived from the member's real state
@@ -128,10 +129,14 @@ export default async function SetupPage() {
 
         {state.step === "ready" && (
           <div className="text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-brand/10 text-4xl">
-              🎉
-            </div>
-            <h2 className="mt-4 font-serif text-2xl font-semibold">
+            {/* The porch light is on: setup is done and the first question is on its way. */}
+            <Photo
+              name="porchlight"
+              sizes="(min-width: 768px) 48rem, 100vw"
+              className="h-40 w-full rounded-xl object-cover sm:h-52"
+              style={{ objectPosition: "70% 40%" }}
+            />
+            <h2 className="mt-6 font-serif text-2xl font-semibold">
               {t(lang, "setup_ready_title")}
             </h2>
             <p className="mt-2 text-ink/65">{t(lang, "setup_ready_sub")}</p>

@@ -43,6 +43,7 @@ import InvitePanel from "./InvitePanel";
 import VoiceSetup from "../VoiceSetup";
 import ScheduleEditor from "./ScheduleEditor";
 import { t, type Lang } from "@/lib/i18n";
+import { EmptyState } from "@/components/EmptyState";
 
 // Per-storyteller hub. RLS scopes every read to the member's families; we also
 // pin to the active family + this storyteller id. This is the single place to
@@ -772,9 +773,9 @@ export default async function StorytellerDetailPage({
             <StoryCard key={story.id} story={story} />
           ))}
           {stories.length === 0 && (
-            <p className="rounded-lg border px-3 py-4 text-sm text-ink/50">
+            <EmptyState photo="phone">
               No stories yet — they&apos;ll appear here once {st.name} starts recording.
-            </p>
+            </EmptyState>
           )}
         </div>
       </section>

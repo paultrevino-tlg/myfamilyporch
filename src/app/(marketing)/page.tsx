@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "./_components/Container";
 import { Section } from "./_components/Section";
 import { EmailCapture } from "./_components/EmailCapture";
-import { Photo } from "./_components/Photo";
+import { Photo } from "@/components/Photo";
 import {
   SectionHead,
   Plate,
