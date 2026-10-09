@@ -1,12 +1,16 @@
 "use server";
 
-// Server actions for Stories review (TODO 5.2): toggle a story "in the book"
-// and edit its transcript. Both are admin-only. The guard here is UX; RLS
-// (ans_write = has_family_role admin) is the real boundary, enforced regardless.
+// Server actions for Stories review (TODO 5.2): toggle a story "in the book",
+// edit its transcript, move it to a different question (5.9). All admin-only.
+// The guard here is UX; RLS (ans_write = has_family_role admin) is the real
+// boundary, enforced regardless.
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { translateToEnglish } from "@/lib/ai/translate";
+import { buildRelationshipContext } from "@/lib/ai/assembly";
+import { resolveTokens } from "@/lib/ai/interviewer";
 import {
   collectAnswerAudioPaths,
   removeAudioObjects,
@@ -135,4 +139,73 @@ export async function deleteStory(formData: FormData) {
     .eq("family_id", active.family_id);
 
   revalidatePath("/stories");
+}
+
+// Move a story to a different question (TODO 5.9): re-point the opening answer
+// at the library question it actually answers. The original question is then no
+// longer "answered" (unless another story also answers it), so the interview
+// picker can ask it again; the new one is retired. The follow-up thread, audio,
+// transcripts, photos and in-book flag all stay with the story.
+export async function reassignStory(formData: FormData) {
+  const active = await getActiveMembership();
+  if (!active || !roleAtLeast(active.role, "admin")) return;
+
+  const id = String(formData.get("answer_id") ?? "");
+  const promptId = String(formData.get("prompt_id") ?? "");
+  if (!UUID_RE.test(id)) return;
+  const back = `/stories/${id}/move`;
+  if (!UUID_RE.test(promptId)) redirect(`${back}?error=pick`);
+
+  const sb = await supabaseServer();
+  // The story must be a top-level answer in the active family (RLS + filter).
+  const { data: story } = await sb
+    .from("answers")
+    .select("id, storyteller_id, prompt_id, is_followup, storyteller:storytellers(language)")
+    .eq("family_id", active.family_id)
+    .eq("id", id)
+    .maybeSingle();
+  if (!story || story.is_followup) redirect("/stories");
+  if (story.prompt_id === promptId) redirect("/stories");
+
+  // The new question must be readable to this family (pr_select: global or own
+  // custom) AND belong to it — a forged id can't attach another family's custom
+  // question — and be in the storyteller's language.
+  const st = Array.isArray(story.storyteller) ? story.storyteller[0] : story.storyteller;
+  const { data: prompt } = await sb
+    .from("prompts")
+    .select("id, prompt, lang, family_id")
+    .eq("id", promptId)
+    .maybeSingle();
+  const lang = (st as { language: string } | null)?.language ?? "en";
+  if (!prompt || (prompt.family_id && prompt.family_id !== active.family_id) || prompt.lang !== lang) {
+    redirect(`${back}?error=pick`);
+  }
+
+  // Not already answered by this storyteller — the picker only offers open
+  // questions, so this guards a stale page or a double submit.
+  const { count } = await sb
+    .from("answers")
+    .select("id", { count: "exact", head: true })
+    .eq("family_id", active.family_id)
+    .eq("storyteller_id", story.storyteller_id)
+    .eq("prompt_id", promptId);
+  if ((count ?? 0) > 0) redirect(`${back}?error=taken`);
+
+  // Word the question the way it would have been asked (names, pronouns).
+  const ctx = await buildRelationshipContext(story.storyteller_id);
+  const questionText = ctx ? resolveTokens(prompt.prompt, ctx) : prompt.prompt;
+
+  // book_sort cleared: the story may land in a different chapter (by category),
+  // where its old position means nothing — it sits chronologically until moved.
+  const { error } = await sb
+    .from("answers")
+    .update({ prompt_id: promptId, question_text: questionText, book_sort: null })
+    .eq("id", id)
+    .eq("family_id", active.family_id);
+  if (error) redirect(`${back}?error=save`);
+
+  revalidatePath("/stories");
+  revalidatePath(`/storytellers/${story.storyteller_id}`);
+  revalidatePath("/book", "layout");
+  redirect("/stories");
 }

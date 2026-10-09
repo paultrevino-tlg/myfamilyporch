@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
 import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
@@ -219,6 +220,15 @@ function StoryActions({ story }: { story: Story }) {
           </button>
         </form>
       )}
+
+      {/* Answered something other than what was asked → file it under the
+          right question (5.9); the original goes back in the queue. */}
+      <Link
+        href={`/stories/${story.id}/move`}
+        className="rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold text-ink/70 hover:bg-ink/5"
+      >
+        ↔ Move to a different question
+      </Link>
 
       <details className="text-sm">
         <summary className="cursor-pointer rounded-full border border-line px-3.5 py-1.5 font-semibold text-ink/70 hover:bg-ink/5">
