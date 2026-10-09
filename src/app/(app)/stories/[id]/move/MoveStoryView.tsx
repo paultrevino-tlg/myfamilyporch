@@ -1,14 +1,17 @@
 import Link from "next/link";
-import type { MoveContext } from "@/lib/reassign";
-import { reassignStory } from "../../actions";
+import { NEW_QUESTION_MAX, NEW_QUESTION_MIN, type MoveContext } from "@/lib/reassign";
+import { reassignStory, moveToNewQuestion } from "../../actions";
 
 // The Move page body (TODO 5.9), split from page.tsx so it renders from a
-// MoveContext alone. One radio list, one confirm — no client JS.
+// MoveContext alone. Pick an unanswered question, or write a new one (5.11) —
+// two plain forms, no client JS.
 
 const ERRORS: Record<string, string> = {
   pick: "Choose one of the questions below to move the story to.",
   taken: "That question was just answered by another story. Pick a different one.",
   save: "Something went wrong saving the move. Nothing changed — please try again.",
+  "new-question": `Write the new question in ${NEW_QUESTION_MIN}–${NEW_QUESTION_MAX} characters.`,
+  "new-topic": "Choose a topic for the new question.",
 };
 
 export default function MoveStoryView({ move, error: errorKey }: { move: MoveContext; error?: string }) {
@@ -49,8 +52,8 @@ export default function MoveStoryView({ move, error: errorKey }: { move: MoveCon
 
       {move.options.length === 0 ? (
         <p className="card mt-6 px-5 py-8 text-center text-sm text-ink/70">
-          Every question in {move.storytellerName}&apos;s library already has a story, so there&apos;s
-          nowhere to move this one.
+          Every question in {move.storytellerName}&apos;s library already has a story — write the
+          question this one really answers below.
         </p>
       ) : (
         <form action={reassignStory} className="mt-6">
@@ -89,6 +92,48 @@ export default function MoveStoryView({ move, error: errorKey }: { move: MoveCon
           </div>
         </form>
       )}
+
+      {/* Or write the question it really answers (TODO 5.11). It joins the
+          family's own question list, so it can be asked of the others too. */}
+      <form action={moveToNewQuestion} className="card mt-8 p-5">
+        <input type="hidden" name="answer_id" value={move.answerId} />
+        <h2 className="font-serif text-xl">Or write a new question</h2>
+        <p className="mt-1.5 text-sm text-ink/70">
+          It joins your family&apos;s question list — word it so it works for anyone you ask,
+          e.g. &ldquo;{move.lang === "es" ? "Cuéntame de…" : "Tell me about…"}&rdquo;.
+          {move.lang === "es" && <> Write it in Spanish — {move.storytellerName} hears questions in Spanish.</>}
+        </p>
+        <label htmlFor="new-question" className="mt-4 block text-sm font-semibold">
+          Question
+        </label>
+        <textarea
+          id="new-question"
+          name="question"
+          required
+          minLength={NEW_QUESTION_MIN}
+          maxLength={NEW_QUESTION_MAX}
+          rows={3}
+          lang={move.lang}
+          placeholder={move.lang === "es" ? "Cuéntame de…" : "Tell me about…"}
+          className="input mt-1.5 w-full"
+        />
+        <label htmlFor="new-topic" className="mt-4 block text-sm font-semibold">
+          Topic
+        </label>
+        <select id="new-topic" name="topic" required defaultValue="" className="input mt-1.5 w-full">
+          <option value="" disabled>
+            Choose a topic…
+          </option>
+          {move.topics.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <button type="submit" className="btn-primary mt-5 w-full py-3 text-base sm:w-auto sm:px-8">
+          Add question &amp; move story
+        </button>
+      </form>
     </main>
   );
 }

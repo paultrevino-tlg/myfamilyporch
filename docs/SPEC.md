@@ -98,8 +98,9 @@ the three tones.
 ## Admin dashboard surfaces
 Match `docs/prototypes/family-admin.html`. Overview (status + 3 signals + recent),
 Stories (audio + transcript + follow-up thread + edit + in-book + photo + skip
-handling + move to a different question — the original question is then free to
-be asked again), Topics (focus/ease-off/avoid), Schedule (days/time/quiet hours/pause/
+handling + move to a different question, or to a new family question written on
+the spot — the original question is then free to be asked again; a storyteller
+filter), Topics (focus/ease-off/avoid), Schedule (days/time/quiet hours/pause/
 ask-now), The Book, Settings (storyteller phone, admin alert number, cloned voice,
 family access).
 

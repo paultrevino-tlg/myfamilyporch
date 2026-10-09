@@ -23,6 +23,7 @@ export type Story = {
   question: string | null;
   category: string | null;
   storyteller: string;
+  storytellerId: string;
   createdAt: string;
   durationSec: number | null;
   transcript: string | null;
@@ -56,7 +57,7 @@ export async function loadStories(
   let query = sb
     .from("answers")
     .select(
-      "id, question_text, transcript, transcript_en, transcript_es, lang, in_book, duration_sec, audio_path, created_at, " +
+      "id, storyteller_id, question_text, transcript, transcript_en, transcript_es, lang, in_book, duration_sec, audio_path, created_at, " +
         "storyteller:storytellers(name), prompt:prompts(category), " +
         "followups:answers!parent_answer_id(id, question_text, transcript, transcript_en, transcript_es, lang, duration_sec, audio_path, created_at)"
     )
@@ -78,6 +79,7 @@ export async function loadStories(
   };
   type StoryRow = {
     id: string;
+    storyteller_id: string;
     question_text: string | null;
     transcript: string | null;
     transcript_en: string | null;
@@ -97,6 +99,7 @@ export async function loadStories(
     question: a.question_text ?? null,
     category: one<{ category: string }>(a.prompt)?.category ?? null,
     storyteller: one<{ name: string }>(a.storyteller)?.name ?? "Storyteller",
+    storytellerId: a.storyteller_id,
     createdAt: a.created_at,
     durationSec: a.duration_sec ?? null,
     transcript: a.transcript ?? null,
@@ -120,4 +123,20 @@ export async function loadStories(
         hasAudio: !!f.audio_path,
       })),
   }));
+}
+
+// The storyteller filter on /stories (TODO 5.10): one entry per storyteller who
+// has stories in the loaded set, with a count, alphabetical. Derived from the
+// stories already loaded (RLS-scoped, so a viewer only sees the storytellers
+// shared with them) — no extra query, and no empty filters.
+export type StorytellerFilter = { id: string; name: string; count: number };
+
+export function storytellerFilters(stories: Pick<Story, "storytellerId" | "storyteller">[]): StorytellerFilter[] {
+  const byId = new Map<string, StorytellerFilter>();
+  for (const s of stories) {
+    const f = byId.get(s.storytellerId);
+    if (f) f.count++;
+    else byId.set(s.storytellerId, { id: s.storytellerId, name: s.storyteller, count: 1 });
+  }
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

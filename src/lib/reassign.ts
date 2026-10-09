@@ -33,9 +33,31 @@ export function pickableQuestions(
     .filter((c) => c.questions.length > 0);
 }
 
+// A family-authored question written on the Move page (TODO 5.11). Trimmed and
+// whitespace-collapsed; 5–300 characters; filed under one of the existing
+// topics (so Topics steering, coverage and the book's chapters stay
+// coherent). Pure — unit-checked; the action re-checks the topic list from the
+// database rather than trusting the form.
+export const NEW_QUESTION_MIN = 5;
+export const NEW_QUESTION_MAX = 300;
+
+export function validateNewQuestion(
+  rawText: string,
+  rawTopic: string,
+  topics: readonly string[],
+): { ok: true; text: string; topic: string } | { ok: false; error: "question" | "topic" } {
+  const text = rawText.replace(/\s+/g, " ").trim();
+  if (text.length < NEW_QUESTION_MIN || text.length > NEW_QUESTION_MAX) return { ok: false, error: "question" };
+  const topic = rawTopic.trim();
+  if (!topics.includes(topic)) return { ok: false, error: "topic" };
+  return { ok: true, text, topic };
+}
+
 export type MoveContext = {
   answerId: string;
   storytellerName: string;
+  lang: string; // a new question is written in the storyteller's language
+  topics: string[]; // every topic in their library, for filing a new question
   currentQuestion: string | null;
   fromLibrary: boolean; // the story is filed under a library question (not open-floor)
   // Whether the current question is a library question that goes back in the
@@ -77,6 +99,8 @@ export async function loadMoveContext(familyId: string, answerId: string): Promi
   return {
     answerId: a.id,
     storytellerName: (st as { name: string } | null)?.name ?? library.name,
+    lang: library.language,
+    topics: library.categories.map((c) => c.category),
     currentQuestion: a.question_text,
     fromLibrary: !!a.prompt_id,
     frees: !!a.prompt_id && (sameQuestion.count ?? 0) <= 1,

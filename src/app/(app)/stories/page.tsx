@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getActiveMembership, roleAtLeast } from "@/lib/auth";
-import { loadStories, type Story, type StoryFollowUp } from "@/lib/stories";
+import { loadStories, storytellerFilters, type Story, type StoryFollowUp } from "@/lib/stories";
 import { toggleInBook, editTranscript, deleteStory, translateStory } from "./actions";
 import PlayAudioButton from "../PlayAudioButton";
+import StorytellerFilterBar from "./StorytellerFilterBar";
 import { EmptyState } from "@/components/EmptyState";
 
 // The cached English translation of a Spanish transcript (TODO 7.4), tucked
@@ -69,12 +70,23 @@ function formatDuration(sec: number | null): string | null {
 // Stories review (TODO 5.2). Listen in the elder's voice, read the transcript,
 // fix anything, choose what goes in the book. RLS scopes everything to the
 // member's families; viewers can hear + read, only admins edit / toggle.
-export default async function StoriesPage() {
+export default async function StoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ storyteller?: string }>;
+}) {
   const active = await getActiveMembership();
   if (!active) redirect("/onboarding");
 
   const canManage = roleAtLeast(active.role, "admin");
-  const stories = await loadStories(active.family_id);
+  const allStories = await loadStories(active.family_id);
+
+  // Storyteller filter (TODO 5.10): ?storyteller=<id>. Only ids that have
+  // stories here count — anything else (stale, forged, not shared) shows All.
+  const filters = storytellerFilters(allStories);
+  const wanted = (await searchParams).storyteller;
+  const selected = filters.find((f) => f.id === wanted)?.id ?? null;
+  const stories = selected ? allStories.filter((s) => s.storytellerId === selected) : allStories;
 
   // Stories already arrive newest-first (date desc, then time desc within a
   // day). Walk once, bucketing consecutive same-day stories — groups come out
@@ -96,6 +108,8 @@ export default async function StoriesPage() {
           {canManage ? ", fix anything, choose what goes in the book." : "."}
         </p>
       </div>
+
+      <StorytellerFilterBar filters={filters} selected={selected} total={allStories.length} />
 
       <div className="mt-7 space-y-8">
         {groups.map((group) => (
