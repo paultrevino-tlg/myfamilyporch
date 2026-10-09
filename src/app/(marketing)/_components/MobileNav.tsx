@@ -28,14 +28,14 @@ export default function MobileNav() {
   }, [open]);
 
   return (
-    <div className="sm:hidden">
+    <div className="md:hidden">
       <button
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => setOpen((v) => !v)}
-        className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface text-ink/70 transition hover:bg-surface2"
+        className="grid h-11 w-11 place-items-center rounded-full border border-ink/25 text-ink transition hover:bg-surface2 group-data-[overlay=true]:border-cream/70 group-data-[overlay=true]:text-cream group-data-[overlay=true]:hover:bg-cream/10"
       >
         {open ? (
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
@@ -51,21 +51,21 @@ export default function MobileNav() {
       {open && (
         <div
           id="mobile-menu"
-          className="absolute inset-x-0 top-full border-b border-line bg-paper/95 backdrop-blur"
+          className="absolute inset-x-0 top-full border-b border-line bg-paper text-ink [text-shadow:none]"
         >
-          <nav aria-label="Primary" className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4">
+          <nav aria-label="Primary" className="mx-auto flex max-w-6xl flex-col px-5 py-4">
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                className="rounded-xl px-3 py-3 text-base font-semibold text-ink/80 hover:bg-surface2"
+                className="border-b border-line px-1 py-3.5 font-serif text-lg text-ink hover:text-brand"
               >
                 {l.label}
               </Link>
             ))}
             <Link
               href="/login"
-              className="btn-primary mt-2 px-5 py-3 text-base"
+              className="btn-primary mt-4 px-5 py-3 text-base"
             >
               Login
             </Link>

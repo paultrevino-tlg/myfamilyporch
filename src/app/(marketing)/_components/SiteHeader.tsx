@@ -1,31 +1,31 @@
 import Link from "next/link";
 import MobileNav from "./MobileNav";
+import { HeaderShell } from "./HeaderShell";
 import { NAV_LINKS } from "./nav";
 
-// Sticky marketing header (Phase 8.1): wordmark left, primary nav + warm CTA
-// right, hamburger on mobile. The translucent paper background + backdrop blur
-// gives the "subtle background on scroll" feel without any scroll JS.
+// Sticky marketing header (Phase 8.1, restyled Porchlight): lamp-dot wordmark
+// left, hairline-underlined nav + pill CTA right, hamburger on mobile. Over the
+// home photograph it is light-on-dark; HeaderShell flips it solid on scroll and
+// on every other page.
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-7">
+    <HeaderShell>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-7">
         <Link
           href="/"
-          className="flex items-center gap-2.5 font-bold tracking-tight"
+          className="flex items-center gap-2.5 whitespace-nowrap"
           aria-label="My Family Porch — home"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-lg shadow-sm">
-            🏡
-          </span>
-          <span className="font-serif text-lg font-semibold">My Family Porch</span>
+          <span aria-hidden className="lamp" />
+          <span className="font-serif text-lg font-semibold tracking-tight">My Family Porch</span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-7 sm:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-sm font-semibold text-ink/70 transition hover:text-ink"
+              className="border-b border-transparent pb-0.5 text-[0.95rem] text-ink/80 transition duration-300 ease-porch hover:border-brand hover:text-brand group-data-[overlay=true]:text-cream/90 group-data-[overlay=true]:hover:border-cream group-data-[overlay=true]:hover:text-cream"
             >
               {l.label}
             </Link>
@@ -34,13 +34,13 @@ export function SiteHeader() {
 
         <Link
           href="/login"
-          className="btn-primary hidden px-5 py-2.5 sm:inline-flex"
+          className="btn-primary hidden px-5 py-2.5 md:inline-flex group-data-[overlay=true]:bg-cream group-data-[overlay=true]:text-ink group-data-[overlay=true]:[text-shadow:none] group-data-[overlay=true]:hover:bg-honey"
         >
           Login
         </Link>
 
         <MobileNav />
       </div>
-    </header>
+    </HeaderShell>
   );
 }

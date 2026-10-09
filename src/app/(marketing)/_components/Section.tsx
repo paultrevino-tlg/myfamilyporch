@@ -21,7 +21,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={`scroll-mt-24 py-14 sm:py-20 ${className}`}
+      className={`scroll-mt-24 py-[clamp(4.5rem,9vh,8.5rem)] ${className}`}
     >
       {bleed ? (
         children

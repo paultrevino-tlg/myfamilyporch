@@ -45,5 +45,12 @@ contrast check of every text pairing.
   storyteller) at 1280/390. Dashboard not visually checked (needs a real login).
   Storyteller buttons (user call): green "go" stays; red secondary
   ("Maybe later", "Skip") → umber outline.
-- [ ] Step 2
+- [x] Step 2 — 2026-10-09: home page in the editorial layout; header over
+  the hero photo (HeaderShell flips solid on scroll / other pages), mobile menu,
+  umber footer; shared editorial classes + CSS-only motion in globals; Section
+  spacing → editorial rhythm. Photos 4x-upscaled via CreativeClaw aura (6
+  credits) → WebP 640/1280/1920 in public/images/porchlight (Photo component,
+  srcset). tsc + build clean; Playwright at 1280/390 (overlay states, image
+  selection per device, focus ring, menu); measured contrast — hero eyebrow →
+  pale honey #F0C27A and plate-caption scrim added to pass AA.
 - [ ] Step 3

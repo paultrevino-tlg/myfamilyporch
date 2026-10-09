@@ -57,6 +57,86 @@ body {
   .link {
     @apply font-semibold text-brand underline-offset-4 hover:underline;
   }
+
+  /* Buttons that sit on umber bands or over the hero photograph. */
+  .btn-cream {
+    @apply btn bg-cream text-ink hover:bg-honey;
+  }
+  .btn-line-cream {
+    @apply btn border border-cream/80 text-cream hover:bg-cream hover:text-ink;
+  }
+
+  /* --- Porchlight editorial type (marketing) ---------------------------- */
+  /* Small-caps label above a display line. */
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.22em] text-brand;
+  }
+  /* Margin label beside a section's display line (desktop) / above it (phone). */
+  .marginalia {
+    @apply text-[0.8rem] uppercase leading-normal tracking-[0.16em] text-ink/70;
+  }
+  .display {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+    font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+  }
+  .display-xl { font-size: clamp(3rem, 1.4rem + 7.2vw, 8.5rem); line-height: 0.94; }
+  .display-lg { font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4.75rem); }
+  .display-md { font-size: clamp(1.9rem, 1.3rem + 2.4vw, 3.4rem); }
+  .lede {
+    font-size: clamp(1.15rem, 1.03rem + 0.55vw, 1.45rem);
+    line-height: 1.62;
+  }
+}
+
+/* --- Porchlight motion ----------------------------------------------------
+   Slow and cinematic, never required to read the page. Everything here is
+   switched off by the reduced-motion block below. */
+
+/* The porch-light dot beside the wordmark: a slow, soft pulse. */
+.lamp {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--honey);
+  animation: lamp 4s var(--ease) infinite;
+}
+@keyframes lamp {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 150, 47, 0.5); }
+  50%      { box-shadow: 0 0 0 0.45rem rgba(217, 150, 47, 0); }
+}
+
+/* The hero photograph breathes: a very slow ease out of a slight zoom. */
+.breathe {
+  transform: scale(1.06);
+  animation: breathe 26s var(--ease) infinite alternate;
+}
+@keyframes breathe { to { transform: scale(1); } }
+
+/* Level-meter bars ("Listening…", the voice waveform): each bar sways on its
+   own delay, set inline by the markup. */
+.vu > i {
+  transform-origin: bottom;
+  animation: vu 1.6s var(--ease) infinite alternate;
+}
+@keyframes vu { to { transform: scaleY(0.4); } }
+
+/* Sections fade and rise as they scroll into view. CSS scroll-driven
+   animation only — no JS — and only where the browser supports it; elsewhere
+   the content is simply there. */
+@supports (animation-timeline: view()) {
+  .rise {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: none; }
+  }
 }
 
 /* Accessibility pass (Phase 8.11, brief §9/§12). Applies product-wide. */
@@ -84,4 +164,22 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Porchlight motion, explicitly off: a scroll-driven animation ignores the
+   duration override above, and the photo and lamp should simply sit still. */
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .breathe,
+  .lamp,
+  .vu > i {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* On umber bands and over the hero photograph the clay ring disappears into
+   the dark; switch focus to cream there. */
+.on-dark :focus-visible {
+  outline-color: var(--paper);
 }
