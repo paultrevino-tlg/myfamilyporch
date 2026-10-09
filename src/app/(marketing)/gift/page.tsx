@@ -1,6 +1,15 @@
 import Link from "next/link";
-import { Container } from "../_components/Container";
 import { Section } from "../_components/Section";
+import {
+  PageIntro,
+  SectionHead,
+  Lede,
+  NumberedRows,
+  Rows,
+  PullQuote,
+  MoreLink,
+  ClosingBand,
+} from "../_components/Editorial";
 import { pageMeta } from "@/lib/seo";
 import { GIFT, formatPrice } from "@/lib/pricing";
 
@@ -37,31 +46,23 @@ export default function GiftPage() {
 
 function Hero() {
   return (
-    <Container>
-      <section className="mx-auto max-w-2xl py-12 text-center sm:py-20">
-        <span className="chip bg-accent/10 text-accent">A gift that lasts</span>
-        <h1 className="mt-4 font-serif text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
-          The gift that keeps their voice.
-        </h1>
-        <p className="mt-5 text-lg leading-relaxed text-ink/65">
-          For the parent or grandparent who has everything, give something they
-          can&apos;t buy: their own life stories, in their own voice, kept for the
-          whole family. A birthday, Mother&apos;s or Father&apos;s Day, the
-          holidays, a milestone anniversary — there&apos;s no wrong time to start.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href={GIFT_BUY_HREF} className="btn-primary px-7 py-3.5 text-base">
-            Give it as a gift
-          </Link>
-          <Link
-            href="/how-it-works"
-            className="btn px-7 py-3.5 text-base ring-1 ring-line hover:bg-surface2"
-          >
-            See how it works
-          </Link>
-        </div>
-      </section>
-    </Container>
+    <PageIntro
+      label="A gift that lasts"
+      title="The gift that keeps their voice."
+      actions={[
+        { href: GIFT_BUY_HREF, label: "Give it as a gift" },
+        { href: "/how-it-works", label: "See how it works" },
+      ]}
+      photo={{
+        name: "gift",
+        alt: "A hardcover book wrapped in kraft paper and twine on a weathered porch table beside a wicker chair, in late golden light.",
+      }}
+    >
+      For the parent or grandparent who has everything, give something they
+      can&apos;t buy: their own life stories, in their own voice, kept for the
+      whole family. A birthday, Mother&apos;s or Father&apos;s Day, the holidays,
+      a milestone anniversary — there&apos;s no wrong time to start.
+    </PageIntro>
   );
 }
 
@@ -69,14 +70,20 @@ function Hero() {
 
 function WhyMeaningful() {
   return (
-    <Section className="border-t border-line bg-surface2/50">
-      <div className="grid items-center gap-10 sm:grid-cols-2">
+    <Section className="bg-surface2">
+      <div className="grid gap-14 lg:grid-cols-[1fr_36rem] lg:gap-20">
         <div>
-          <span className="chip bg-brand/10 text-brand">Why it matters</span>
-          <h2 className="mt-4 font-serif text-3xl font-semibold leading-tight sm:text-4xl">
+          <p className="eyebrow rise mb-5">Why it matters</p>
+          <PullQuote
+            quote={<>“I didn&apos;t know I needed to hear his voice again until I could.”</>}
+            cite="A keepsake you can hear, not just hold"
+          />
+        </div>
+        <div className="rise">
+          <h2 className="display display-md">
             Not another thing. The one gift they&apos;ll want to leave behind.
           </h2>
-          <div className="mt-5 space-y-4 text-lg leading-relaxed text-ink/70">
+          <div className="mt-6 space-y-4 text-ink/85">
             <p>
               Most gifts get unwrapped and forgotten. This one gives your loved
               one a reason to tell the stories they&apos;ve been meaning to — the
@@ -87,26 +94,6 @@ function WhyMeaningful() {
               It&apos;s a gift to them and to the whole family at once: they feel
               heard, and you get to keep the sound of them telling it.
             </p>
-          </div>
-        </div>
-
-        <div className="card relative overflow-hidden p-8 shadow-lg">
-          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-honey/25 to-accent/10 blur-2xl" />
-          <p className="font-serif text-2xl font-semibold leading-relaxed text-ink/85">
-            “I didn&apos;t know I needed to hear his voice again until I could.”
-          </p>
-          {/* Sound-wave / porch-railing motif (brief §5). */}
-          <div className="mt-7 flex h-12 items-end gap-1" aria-hidden>
-            {[6, 10, 15, 9, 19, 25, 17, 28, 21, 13, 23, 11, 16, 8, 5].map((h, i) => (
-              <span
-                key={i}
-                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-honey"
-                style={{ height: `${h * 4}%` }}
-              />
-            ))}
-          </div>
-          <div className="mt-3 text-sm font-semibold text-ink/65">
-            A keepsake you can hear, not just hold.
           </div>
         </div>
       </div>
@@ -139,87 +126,60 @@ const GIFT_STEPS: { n: string; title: string; body: string }[] = [
 function HowGiftingWorks() {
   return (
     <Section>
-      <div className="mx-auto max-w-2xl text-center">
-        <span className="chip bg-accent/10 text-accent">How gifting works</span>
-        <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
-          Simple to give. Effortless for them.
-        </h2>
-        <p className="mt-5 text-lg leading-relaxed text-ink/65">
-          You handle the setup; they just talk. The gentle part is the point.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-6 sm:grid-cols-3">
-        {GIFT_STEPS.map((s) => (
-          <div key={s.n} className="card flex flex-col p-7">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand to-accent font-serif text-lg font-semibold text-white shadow-sm">
-              {s.n}
-            </div>
-            <h3 className="mt-4 font-serif text-lg font-semibold">{s.title}</h3>
-            <p className="mt-2 leading-relaxed text-ink/65">{s.body}</p>
-          </div>
-        ))}
-      </div>
+      <SectionHead label="How gifting works" title="Simple to give. Effortless for them.">
+        <Lede>You handle the setup; they just talk. The gentle part is the point.</Lede>
+      </SectionHead>
+      <NumberedRows items={GIFT_STEPS} />
     </Section>
   );
 }
 
 // --- Perfect for -----------------------------------------------------------
 
-const OCCASIONS: { icon: string; label: string }[] = [
-  { icon: "🎂", label: "Birthdays" },
-  { icon: "💐", label: "Mother's Day" },
-  { icon: "🎣", label: "Father's Day" },
-  { icon: "🎄", label: "The holidays" },
-  { icon: "💍", label: "Milestone anniversaries" },
-  { icon: "🤍", label: "Just because" },
+const OCCASIONS = [
+  "Birthdays",
+  "Mother's Day",
+  "Father's Day",
+  "The holidays",
+  "Milestone anniversaries",
+  "Just because",
 ];
 
+// The occasions as a ruled list of serif lines, two columns from tablet up.
 function PerfectFor() {
   return (
-    <Section className="bg-surface2/50">
-      <div className="mx-auto max-w-2xl text-center">
-        <span className="chip bg-brand/10 text-brand">When to give it</span>
-        <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
-          Perfect for the moments that matter.
-        </h2>
-      </div>
-      <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
+    <Section className="bg-surface2">
+      <SectionHead label="When to give it" title="Perfect for the moments that matter." />
+      <ul className="mt-12 grid border-t border-ink/15 sm:grid-cols-2 sm:gap-x-12">
         {OCCASIONS.map((o) => (
-          <div
-            key={o.label}
-            className="card flex flex-col items-center gap-2 p-6 text-center"
+          <li
+            key={o}
+            className="rise border-b border-ink/15 py-5 font-serif text-[clamp(1.15rem,1rem+0.7vw,1.65rem)] font-light"
           >
-            <span className="text-3xl" aria-hidden>
-              {o.icon}
-            </span>
-            <span className="font-semibold text-ink/80">{o.label}</span>
-          </div>
+            {o}
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   );
 }
 
 // --- What they receive -----------------------------------------------------
 
-const INCLUDED: { icon: string; title: string; body: string }[] = [
+const INCLUDED: { title: string; body: string }[] = [
   {
-    icon: "🎙️",
     title: "Their voice, preserved",
     body: "Every story is recorded — the pauses, the laugh, the way they say your name — and kept in their own voice.",
   },
   {
-    icon: "📖",
     title: "Written stories",
     body: "Each recording is transcribed into readable stories, organized by chapter, ready to revisit any time.",
   },
   {
-    icon: "📸",
     title: "Photos that belong with them",
     body: "Add family photos alongside the stories so the memory and the moment live together.",
   },
   {
-    icon: "📚",
     title: "A book you can hear",
     body: "A keepsake book with voice QR codes — scan a page and hear the story read in their own voice.",
   },
@@ -228,40 +188,24 @@ const INCLUDED: { icon: string; title: string; body: string }[] = [
 function WhatTheyReceive() {
   return (
     <Section>
-      <div className="mx-auto max-w-2xl text-center">
-        <span className="chip bg-accent/10 text-accent">What&apos;s inside the gift</span>
-        <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
-          A keepsake the whole family keeps.
-        </h2>
-        <p className="mt-5 text-lg leading-relaxed text-ink/65">
+      <SectionHead label="What's inside the gift" title="A keepsake the whole family keeps.">
+        <Lede>
           {/* TODO: confirm keepsake format (brief §13). */}
           Far more than a card — a living archive plus a book they can hold.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-6 sm:grid-cols-2">
-        {INCLUDED.map((it) => (
-          <div key={it.title} className="card flex items-start gap-4 p-7">
-            <span className="text-3xl" aria-hidden>
-              {it.icon}
-            </span>
-            <div>
-              <h3 className="font-serif text-lg font-semibold">{it.title}</h3>
-              <p className="mt-1.5 leading-relaxed text-ink/65">{it.body}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+        </Lede>
+      </SectionHead>
+      <Rows items={INCLUDED} />
       {/* Price stated here, not only on /pricing — a gift buyer arriving from a
           search or a shared link shouldn't have to leave to learn the number.
           Rendered from lib/pricing so it can't drift from the pricing page. */}
-      <div className="mt-12 text-center">
-        <p className="font-serif text-3xl font-semibold tracking-tight">
-          {formatPrice(GIFT.price)}
-          <span className="ml-2 align-middle text-base font-medium text-ink/65">
+      <div className="rise mt-12 border-t-2 border-ink pt-8">
+        <p className="font-serif text-[clamp(2rem,1.6rem+1.6vw,3rem)] font-light leading-none">
+          {formatPrice(GIFT.price)}{" "}
+          <small className="font-sans text-[0.8rem] font-normal uppercase tracking-[0.14em] text-ink/70">
             one-time · {GIFT.months} months + the printed book
-          </span>
+          </small>
         </p>
-        <p className="mt-2 text-ink/65">
+        <p className="mt-3 text-ink/80">
           It never auto-renews, so you&apos;re not signing them up for anything.
         </p>
         <p className="mt-6">
@@ -278,61 +222,32 @@ function WhatTheyReceive() {
 
 function Reassurance() {
   return (
-    <Section className="bg-surface2/50">
-      <div className="mx-auto max-w-2xl text-center">
-        <span className="chip bg-brand/10 text-brand">No tech worries</span>
-        <h2 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
-          Made for the least techy person you love.
-        </h2>
-        <p className="mt-5 text-lg leading-relaxed text-ink/65">
+    <Section className="bg-surface2">
+      <SectionHead label="No tech worries" title="Made for the least techy person you love." size="md">
+        <Lede>
           The person you&apos;re gifting it to doesn&apos;t need a smartphone, an
           app, or any setup of their own — just the ability to answer a text and
           talk. And the recordings stay private to your family: yours to keep,
           and never sold.
-        </p>
-        <p className="mt-6">
-          <Link href="/privacy" className="link text-base">
-            Read how we protect your recordings →
-          </Link>
-        </p>
-      </div>
+        </Lede>
+        <MoreLink href="/privacy">Read how we protect your recordings →</MoreLink>
+      </SectionHead>
     </Section>
   );
 }
 
-// --- Final CTA band --------------------------------------------------------
-// Porch motif (brief §5): a warm porch-light glow behind a calm, dark band.
+// --- Closing band ----------------------------------------------------------
 
 function FinalCta() {
   return (
-    <Section bleed className="pb-20">
-      <Container>
-        <div className="relative overflow-hidden rounded-3xl bg-ink px-8 py-16 text-center text-white shadow-lg sm:px-12 sm:py-20">
-          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-honey/35 to-transparent blur-3xl" />
-          <div className="relative">
-            <h2 className="mx-auto max-w-xl font-serif text-3xl font-semibold leading-tight sm:text-4xl">
-              Give them a reason to tell the story.
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-lg leading-relaxed text-white/70">
-              The best time to start was years ago. The next best time is today.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href={GIFT_BUY_HREF}
-                className="btn-primary px-7 py-3.5 text-base"
-              >
-                Give it as a gift
-              </Link>
-              <Link
-                href="/pricing"
-                className="btn px-7 py-3.5 text-base text-white/90 ring-1 ring-white/25 hover:bg-white/10"
-              >
-                See pricing
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Container>
-    </Section>
+    <ClosingBand
+      title="Give them a reason to tell the story."
+      actions={[
+        { href: GIFT_BUY_HREF, label: "Give it as a gift" },
+        { href: "/pricing", label: "See pricing" },
+      ]}
+    >
+      The best time to start was years ago. The next best time is today.
+    </ClosingBand>
   );
 }

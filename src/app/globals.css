@@ -58,6 +58,28 @@ body {
     @apply font-semibold text-brand underline-offset-4 hover:underline;
   }
 
+  /* Legal / policy pages: Porchlight type on long-form text, applied from the
+     wrapper so the policy wording itself is never touched. Element selectors
+     outrank the pages' own utility classes. */
+  .legal h1 {
+    font-family: var(--font-serif), Georgia, serif;
+    font-weight: 400;
+    font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+    font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .legal h2 {
+    @apply mt-12 border-t border-line pt-8 font-serif text-2xl font-normal text-ink;
+  }
+  .legal section h2 {
+    @apply mt-0 border-0 pt-0;
+  }
+  .legal p,
+  .legal li {
+    line-height: 1.7;
+  }
+
   /* Buttons that sit on umber bands or over the hero photograph. */
   .btn-cream {
     @apply btn bg-cream text-ink hover:bg-honey;

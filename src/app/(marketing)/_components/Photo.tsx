@@ -7,7 +7,7 @@ import type { CSSProperties } from "react";
 
 const WIDTHS = [640, 1280, 1920] as const;
 
-export type PhotoName = "porch" | "storyteller" | "book";
+export type PhotoName = "porch" | "storyteller" | "book" | "phone" | "hands" | "gift";
 
 export function Photo({
   name,

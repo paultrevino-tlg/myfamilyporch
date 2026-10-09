@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { pageMeta } from "@/lib/seo";
 import { Section } from "../_components/Section";
+import { PageIntro, SectionHead } from "../_components/Editorial";
 
 export const metadata = pageMeta({
   title: "Contact & help",
@@ -36,67 +37,58 @@ const TOPICS: { title: string; body: string; subject: string }[] = [
 // privacy/deletion requests), and the SMS STOP/HELP note.
 export default function ContactPage() {
   return (
-    <Section>
-      <div className="mx-auto max-w-3xl">
-        <header className="text-center">
-          <span className="chip bg-accent/10 text-accent">Contact</span>
-          <h1 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
-            We&apos;re here to help.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-ink/70">
-            My Family Porch is a small, family-run team. Email us any time and a
-            real person will get back to you — usually within about two business
-            days.
-          </p>
-          <p className="mt-6">
-            <a
-              href={`mailto:${SUPPORT_EMAIL}`}
-              className="btn-primary inline-flex"
-            >
-              Email {SUPPORT_EMAIL}
-            </a>
-          </p>
-        </header>
+    <>
+      <PageIntro label="Contact" title="We&apos;re here to help.">
+        <p>
+          My Family Porch is a small, family-run team. Email us any time and a
+          real person will get back to you — usually within about two business
+          days.
+        </p>
+        <p className="mt-8">
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="btn-primary px-7 py-3.5 font-serif text-base font-medium">
+            Email {SUPPORT_EMAIL}
+          </a>
+        </p>
+      </PageIntro>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+      <Section className="bg-surface2">
+        <div className="border-t border-ink/15">
           {TOPICS.map((topic) => (
             <a
               key={topic.title}
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                topic.subject,
-              )}`}
-              className="card block p-6 transition hover:border-brand/40"
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(topic.subject)}`}
+              className="rise group grid gap-x-12 gap-y-2 border-b border-ink/15 py-8 transition-[padding] duration-500 ease-porch hover:pl-5 md:grid-cols-[1fr_1.35fr]"
             >
-              <h2 className="font-semibold">{topic.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-ink/65">
-                {topic.body}
-              </p>
+              <h2 className="font-serif text-[clamp(1.35rem,1.2rem+0.6vw,1.8rem)] font-medium leading-tight group-hover:text-brand">
+                {topic.title} <span aria-hidden className="text-brand">→</span>
+              </h2>
+              <p className="text-ink/80">{topic.body}</p>
             </a>
           ))}
         </div>
+      </Section>
 
-        <div className="card mt-8 p-6">
-          <h2 className="font-semibold">Text-message reminders</h2>
-          <p className="mt-2 leading-relaxed text-ink/70">
+      <Section>
+        <SectionHead label="SMS" title="Text-message reminders" size="md">
+          <p className="mt-6 text-ink/85">
             If a storyteller is getting reminder texts, they can reply{" "}
             <strong>STOP</strong> at any time to stop them, or{" "}
             <strong>HELP</strong> for assistance. Message and data rates may
             apply. See our{" "}
-            <Link href="/terms" className="text-accent underline">
+            <Link href="/terms" className="link">
               Terms
             </Link>{" "}
             for the full SMS program details.
           </p>
-        </div>
-
-        <p className="mt-8 text-center text-ink/65">
-          Curious about something else? Many answers are on our{" "}
-          <Link href="/faq" className="text-accent underline">
-            FAQ page
-          </Link>
-          .
-        </p>
-      </div>
-    </Section>
+          <p className="mt-6 text-ink/80">
+            Curious about something else? Many answers are on our{" "}
+            <Link href="/faq" className="link">
+              FAQ page
+            </Link>
+            .
+          </p>
+        </SectionHead>
+      </Section>
+    </>
   );
 }

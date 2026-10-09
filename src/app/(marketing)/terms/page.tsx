@@ -13,7 +13,7 @@ export const metadata = pageMeta({
 // message/data rates, support contact, and STOP/HELP.
 export default function Terms() {
   return (
-    <div className="mx-auto max-w-3xl px-5 py-12 leading-relaxed sm:px-7">
+    <div className="legal mx-auto max-w-3xl px-5 py-[clamp(3.5rem,9vh,7rem)] sm:px-7">
       <h1 className="font-semibold text-3xl">Terms &amp; Conditions</h1>
       <p className="mt-2 text-ink/65 text-sm">Last updated: July 16, 2026</p>
 

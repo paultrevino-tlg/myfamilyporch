@@ -20,9 +20,9 @@ export const metadata = pageMeta({
 export default function SmsOptInPage() {
   return (
     <Section>
-      <div className="mx-auto max-w-3xl">
+      <div className="legal mx-auto max-w-3xl">
         <header>
-          <span className="chip bg-accent/10 text-accent">SMS program</span>
+          <span className="eyebrow">SMS program</span>
           <h1 className="mt-4 font-serif text-3xl font-semibold sm:text-4xl">
             My Family Porch text messages
           </h1>

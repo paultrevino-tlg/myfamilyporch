@@ -1,14 +1,26 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { Container } from "./_components/Container";
 import { Section } from "./_components/Section";
 import { EmailCapture } from "./_components/EmailCapture";
-import { Photo, type PhotoName } from "./_components/Photo";
+import { Photo } from "./_components/Photo";
+import {
+  SectionHead,
+  Plate,
+  Bars,
+  NumberedRows,
+  Rows,
+  Checks,
+  PullQuote,
+  FaqList,
+  MoreLink,
+  ClosingBand,
+} from "./_components/Editorial";
+import { PricingLedger, GiftBand } from "./_components/PricingLedger";
 import { PRIMARY_CTA, GIFT_HREF } from "./_components/nav";
 import { JsonLd } from "./_components/JsonLd";
 import { pageMeta } from "@/lib/seo";
 import { organizationLd } from "@/lib/jsonld";
-import { TIERS, GIFT, FAQ, formatPrice, type PricingTier } from "@/lib/pricing";
+import { GIFT, FAQ } from "@/lib/pricing";
 
 export const metadata = pageMeta({
   title: "My Family Porch",
@@ -53,80 +65,6 @@ export default function Home() {
       <NotReady />
       <Closing />
     </>
-  );
-}
-
-// --- Shared pieces ---------------------------------------------------------
-
-// The editorial section head: a small margin label beside (desktop) or above
-// (phone) a display line, set in the narrow measure on the right.
-function SectionHead({
-  label,
-  title,
-  size = "lg",
-  children,
-}: {
-  label: string;
-  title: ReactNode;
-  size?: "lg" | "md";
-  children?: ReactNode;
-}) {
-  return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_36rem] lg:gap-20">
-      <p className="marginalia rise">{label}</p>
-      <div className="rise">
-        <h2 className={`display ${size === "lg" ? "display-lg" : "display-md"}`}>{title}</h2>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// A full-bleed photographic plate between sections, with a quiet caption.
-function Plate({
-  name,
-  alt,
-  caption,
-  position = "50% 50%",
-}: {
-  name: PhotoName;
-  alt: string;
-  caption: string;
-  position?: string;
-}) {
-  return (
-    <figure className="rise relative overflow-hidden">
-      <Photo
-        name={name}
-        alt={alt}
-        className="h-[clamp(20rem,58vh,40rem)] w-full object-cover"
-        // Inline so each plate can frame its own subject in the crop.
-        style={{ objectPosition: position }}
-      />
-      {/* Low scrim so the caption reads over bright parts of any photo. */}
-      <div
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[rgba(44,34,27,.7)] to-transparent"
-      />
-      <figcaption className="absolute bottom-5 left-6 text-[0.8rem] uppercase tracking-[0.16em] text-cream [text-shadow:0_1px_12px_rgba(44,34,27,.8)]">
-        {caption}
-      </figcaption>
-    </figure>
-  );
-}
-
-// Level-meter bars; heights in %, each bar on its own sway delay.
-function Bars({ heights, className }: { heights: number[]; className: string }) {
-  return (
-    <span aria-hidden className={`vu flex items-end ${className}`}>
-      {heights.map((h, i) => (
-        <i
-          key={i}
-          className="block rounded-sm bg-brand"
-          style={{ height: `${h}%`, animationDelay: `${i * 0.12}s` }}
-        />
-      ))}
-    </span>
   );
 }
 
@@ -249,24 +187,7 @@ function HowItWorks() {
           You do the easy setup. They just answer the phone. We keep the stories.
         </p>
       </SectionHead>
-      <ol className="mt-12 border-t border-line">
-        {STEPS.map((s) => (
-          <li
-            key={s.n}
-            className="rise grid grid-cols-[auto_1fr] gap-x-6 border-b border-line py-9 transition-[background-color,padding] duration-500 ease-porch hover:bg-surface2 hover:pl-5 lg:grid-cols-[6rem_1fr] lg:gap-x-10"
-          >
-            <span aria-hidden className="font-serif text-[clamp(2.5rem,2rem+2vw,4rem)] font-light leading-[0.8] text-brand">
-              {s.n}
-            </span>
-            <div>
-              <h3 className="font-serif text-[clamp(1.35rem,1.2rem+0.6vw,1.8rem)] font-medium leading-tight">
-                {s.title}
-              </h3>
-              <p className="mt-2 max-w-[44rem] text-ink/80">{s.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <NumberedRows items={STEPS} />
     </Section>
   );
 }
@@ -274,22 +195,16 @@ function HowItWorks() {
 // --- Why voice matters -----------------------------------------------------
 // A pull quote on a paper band, with the sound-wave / porch-railing motif.
 
-const WAVE = [6, 10, 15, 9, 19, 25, 17, 28, 21, 13, 23, 11, 16, 8, 5, 12, 20, 26, 14, 7];
-
 function WhyVoice() {
   return (
     <Section className="bg-surface2">
       <div className="grid gap-14 lg:grid-cols-[36rem_1fr] lg:gap-20">
-        <div className="rise">
-          <p className="eyebrow">Why voice</p>
-          <blockquote className="mt-5 max-w-[22ch] font-serif text-[clamp(1.7rem,1.1rem+2.6vw,3.4rem)] font-light italic leading-[1.16] tracking-[-0.015em]">
-            “…and your grandfather walked the whole way home in the rain, just so he
-            could say he&apos;d done it.”
-          </blockquote>
-          <Bars heights={WAVE.map((h) => h * 3.4)} className="mt-10 h-14 gap-1 opacity-75 [&>i]:w-[5px]" />
-          <p className="mt-8 text-[0.85rem] uppercase tracking-[0.16em] text-brand">
-            Margaret, 78 — recorded on a Sunday afternoon
-          </p>
+        <div>
+          <p className="eyebrow rise mb-5">Why voice</p>
+          <PullQuote
+            quote={<>“…and your grandfather walked the whole way home in the rain, just so he could say he&apos;d done it.”</>}
+            cite="Margaret, 78 — recorded on a Sunday afternoon"
+          />
         </div>
         <div className="rise">
           <h2 className="display display-md">A transcript can&apos;t laugh. Their voice can.</h2>
@@ -298,18 +213,13 @@ function WhyVoice() {
             they say your name — that&apos;s the part you&apos;ll miss most. We keep
             the real recording, not just the words.
           </p>
-          <ul className="mt-8">
-            {[
+          <Checks
+            items={[
               "It’s their actual voice — saved, not summarized.",
               "Nothing to learn: answer a prompt out loud, that’s it.",
               "Works for the least tech-comfortable elder in the family.",
-            ].map((t) => (
-              <li key={t} className="flex gap-4 border-t border-ink/15 py-3.5">
-                <span aria-hidden className="flex-none text-brand">—</span>
-                {t}
-              </li>
-            ))}
-          </ul>
+            ]}
+          />
         </div>
       </div>
     </Section>
@@ -347,19 +257,7 @@ function WhatYouGet() {
           Their stories come back to you in the ways your family will actually use.
         </p>
       </SectionHead>
-      <div className="mt-12 border-t border-line">
-        {KEEPSAKE.map((k) => (
-          <div
-            key={k.title}
-            className="rise grid gap-x-12 gap-y-3 border-b border-line py-9 transition-colors duration-500 ease-porch hover:bg-surface2 md:grid-cols-[1fr_1.35fr] md:items-start"
-          >
-            <h3 className="font-serif text-[clamp(1.35rem,1.2rem+0.6vw,1.8rem)] font-medium leading-tight">
-              {k.title}
-            </h3>
-            <p className="text-ink/80">{k.body}</p>
-          </div>
-        ))}
-      </div>
+      <Rows items={KEEPSAKE} />
     </Section>
   );
 }
@@ -414,50 +312,6 @@ function SocialProof() {
 // A ruled ledger, not cards, read from lib/pricing. The full pricing page
 // (/pricing) is the destination; the gift sits on an umber band below.
 
-function Tier({ tier }: { tier: PricingTier }) {
-  return (
-    <div
-      className={[
-        "rise grid items-baseline gap-x-10 gap-y-4 border-b border-line py-9 transition-[background-color,padding] duration-500 ease-porch hover:bg-surface2 lg:grid-cols-[16rem_1fr_auto] lg:hover:pl-5",
-        tier.recommended ? "bg-surface2 lg:pl-5" : "",
-      ].join(" ")}
-    >
-      <div>
-        {tier.recommended && (
-          <span className="mb-1.5 block text-[0.7rem] uppercase tracking-[0.2em] text-brand">
-            Most popular
-          </span>
-        )}
-        <h3 className="font-serif text-[clamp(1.35rem,1.2rem+0.6vw,1.8rem)] font-medium leading-tight">
-          {tier.name}
-        </h3>
-        <p className="text-[0.95rem] text-ink/70">{tier.tagline}</p>
-      </div>
-      <ul className="text-[0.98rem] text-ink/80">
-        {tier.features.map((f) => (
-          <li key={f} className="py-0.5">
-            {f}
-          </li>
-        ))}
-      </ul>
-      <div className="lg:text-right">
-        <div className="font-serif text-[clamp(2rem,1.6rem+1.6vw,3rem)] font-light leading-none">
-          {formatPrice(tier.price)}{" "}
-          <small className="font-sans text-[0.8rem] font-normal uppercase tracking-[0.14em] text-ink/70">
-            / year
-          </small>
-        </div>
-        {tier.monthly !== undefined && (
-          <p className="mt-1 text-sm text-ink/70">or {formatPrice(tier.monthly)} / month</p>
-        )}
-        <Link href="/pricing" className="link mt-3 inline-block text-sm">
-          {tier.cta} →
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 function PricingPreview() {
   return (
     <Section>
@@ -468,32 +322,10 @@ function PricingPreview() {
         </p>
       </SectionHead>
 
-      <div className="mt-12 border-t-2 border-ink">
-        {TIERS.map((tier) => (
-          <Tier key={tier.id} tier={tier} />
-        ))}
-      </div>
+      <PricingLedger ctaHref="/pricing" />
+      <GiftBand heading={GIFT.tagline} cta={{ href: GIFT_HREF, label: "Give it as a gift" }} />
 
-      <div className="on-dark rise mt-12 grid items-center gap-x-12 gap-y-6 bg-ink p-[clamp(2rem,5vw,3.5rem)] text-cream md:grid-cols-[1fr_auto]">
-        <div>
-          <p className="eyebrow text-honey">
-            {GIFT.name} · {formatPrice(GIFT.price)} one-time
-          </p>
-          <h3 className="mt-2.5 font-serif text-[clamp(1.35rem,1.2rem+0.6vw,1.8rem)] font-medium leading-tight">
-            {GIFT.tagline}
-          </h3>
-          <p className="mt-2 max-w-[40rem] text-cream/75">{GIFT.features.join(" · ")}</p>
-        </div>
-        <Link href={GIFT_HREF} className="btn-line-cream justify-self-start px-7 py-3.5 font-serif text-base font-medium">
-          Give it as a gift
-        </Link>
-      </div>
-
-      <p className="mt-10">
-        <Link href="/pricing" className="link text-base">
-          See full pricing, the gift option &amp; add-ons →
-        </Link>
-      </p>
+      <MoreLink href="/pricing">See full pricing, the gift option &amp; add-ons →</MoreLink>
     </Section>
   );
 }
@@ -505,27 +337,8 @@ function Faq() {
   return (
     <Section id="faq" className="bg-surface2">
       <SectionHead label="FAQ" title="Questions families ask." />
-      <div className="mt-12 border-t border-ink/15">
-        {FAQ.map((item) => (
-          <details key={item.q} className="group border-b border-ink/15 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-baseline gap-8 py-6 font-serif text-[clamp(1.1rem,1rem+0.5vw,1.4rem)] transition-colors duration-300 hover:text-brand">
-              {item.q}
-              <span
-                aria-hidden
-                className="ml-auto text-[1.4rem] text-brand transition-transform duration-500 ease-porch group-open:rotate-45"
-              >
-                +
-              </span>
-            </summary>
-            <p className="max-w-[52rem] pb-7 text-ink/80">{item.a}</p>
-          </details>
-        ))}
-      </div>
-      <p className="mt-10">
-        <Link href="/faq" className="link text-base">
-          Read the full FAQ →
-        </Link>
-      </p>
+      <FaqList items={FAQ} />
+      <MoreLink href="/faq">Read the full FAQ →</MoreLink>
     </Section>
   );
 }
@@ -552,32 +365,15 @@ function NotReady() {
 }
 
 // --- Closing band ----------------------------------------------------------
-// Porch motif (brief §5): a warm porch-light glow behind the umber band.
 
 function Closing() {
   return (
-    <section className="on-dark relative overflow-hidden bg-ink py-[clamp(4.5rem,9vh,8.5rem)] text-cream">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-[30%] left-[12%] h-[44rem] w-[44rem] rounded-full bg-[radial-gradient(circle,rgba(217,150,47,.38),transparent_62%)] blur-[18px]"
-      />
-      <Container className="relative">
-        <h2 className="display display-lg rise max-w-[16ch]">
-          The stories are still here. Start with one question.
-        </h2>
-        <p className="lede rise mt-5 max-w-[34rem] text-cream/75">
-          It takes a few minutes to set up, and there&apos;s no better day than
-          today to begin.
-        </p>
-        <div className="rise mt-8 flex flex-wrap gap-3.5">
-          <Link href={PRIMARY_CTA.href} className="btn-cream px-7 py-3.5 font-serif text-base font-medium">
-            {PRIMARY_CTA.label}
-          </Link>
-          <Link href="/pricing" className="btn-line-cream px-7 py-3.5 font-serif text-base font-medium">
-            See pricing
-          </Link>
-        </div>
-      </Container>
-    </section>
+    <ClosingBand
+      title="The stories are still here. Start with one question."
+      actions={[PRIMARY_CTA, { href: "/pricing", label: "See pricing" }]}
+    >
+      It takes a few minutes to set up, and there&apos;s no better day than today
+      to begin.
+    </ClosingBand>
   );
 }
