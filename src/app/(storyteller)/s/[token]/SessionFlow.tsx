@@ -1296,10 +1296,6 @@ function SoftButton({
   );
 }
 
-// Every negative response ("Maybe later", "Skip") is a red button. Kept as a
-// red outline rather than a solid fill so it reads as clearly negative without
-// visually competing with the green primary or nudging a hesitant elder to
-// decline (elder-facing UX: forgiving, never coercive).
 // Browsers only let a page close its own tab when that tab was opened straight
 // from a link with no back history — the usual case for the SMS deep link, since
 // the whole session is one page. iOS Safari and some in-app SMS browsers refuse
@@ -1330,6 +1326,10 @@ function CloseTabButton({ label, hint }: { label: string; hint: string }) {
   );
 }
 
+// Every negative response ("Maybe later", "Skip") is a quiet umber outline:
+// clearly the secondary choice without competing with the green primary, and
+// not red — red reads as an error, and declining is never wrong (elder-facing
+// UX: forgiving, never coercive).
 function QuietButton({
   children,
   onClick,
@@ -1341,7 +1341,7 @@ function QuietButton({
     <button
       type="button"
       onClick={withUnlock(onClick)}
-      className="w-full rounded-3xl border-2 border-red-600 px-6 py-4 text-lg font-bold text-red-600 transition active:scale-[0.98]"
+      className="w-full rounded-3xl border-2 border-ink/60 px-6 py-4 text-lg font-bold text-ink transition active:scale-[0.98]"
     >
       {children}
     </button>

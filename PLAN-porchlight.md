@@ -43,6 +43,7 @@ contrast check of every text pairing.
   hardcoded blues, email template, print book, SPEC section. tsc + next build
   clean; contrast table passes AA; screenshots (home, pricing, login, email,
   storyteller) at 1280/390. Dashboard not visually checked (needs a real login).
-  Open: storyteller BigButton green / "Maybe later" red — decide in step 2.
+  Storyteller buttons (user call): green "go" stays; red secondary
+  ("Maybe later", "Skip") → umber outline.
 - [ ] Step 2
 - [ ] Step 3
