@@ -53,4 +53,17 @@ contrast check of every text pairing.
   srcset). tsc + build clean; Playwright at 1280/390 (overlay states, image
   selection per device, focus ring, menu); measured contrast — hero eyebrow →
   pale honey #F0C27A and plate-caption scrim added to pass AA.
-- [ ] Step 3
+- [x] Step 3 — 2026-10-09 (b669187): shared Editorial + PricingLedger
+  components; how-it-works / about / gift / why / pricing / faq / contact in the
+  editorial layout; privacy / terms / sms via `.legal` wrapper only. Three new
+  CreativeClaw photos (phone, hands, gift; 54 credits). tsc + build clean;
+  Playwright on all 11 pages at 1280/390 (one h1, no overflow, no broken
+  images, 16 internal links + anchors resolve); legal text verified identical
+  to production; fixed a /pricing phone overflow (sr-only labels escaping the
+  table scroller).
+
+## Completion — 2026-10-09
+Porchlight is live site-wide on `main`: b9e329b (tokens/type/email), 6073b9f
+(storyteller secondary buttons), bb48c44 (home/header/footer), b669187 (all
+other marketing pages). Not verified on real iOS/Android devices; dashboard
+not visually checked (needs a real login). CreativeClaw spend: 6 + 54 credits.

@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Porchlight theme (design direction 1, PLAN-porchlight.md): four warm
+        // Porchlight theme (design direction 1, .done/PLAN-porchlight.md): four warm
         // pigments, no blue. Token names are kept from the old blue theme so
         // every existing class recolors centrally. Clay is deepened from the
         // direction's #B45B3E (4.3:1 on cream, fails AA) to pass as text and
