@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction 1 — Porchlight · My Family Porch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   DIRECTION 1 — "PORCHLIGHT"
+   Lineage: warm photographic editorial — Kodachrome-era family album by way of
+   1970s American magazine layout (Sunset / Life). Full-bleed light, narrow
+   measure, hairline rules, nothing floats.
+   Honors the WRITTEN brief (§5: cream / clay / honey, humanist serif, golden
+   hour). Deliberately BREAKS from the code's current cool-blue tokens.
+   Type: Fraunces (already in the repo) at display sizes + Atkinson Hyperlegible
+   (already in the repo, on the elder surface) for body — a legibility face,
+   chosen because this audience skews 60+.
+   Color rule: four warm pigments only. Zero blue, zero cyan. The only "accent"
+   is real photographic light.
+   Motion: slow, cinematic. 700ms. Images breathe.
+   ========================================================================== */
+
+:root{
+  --cream:#FBF6EC;
+  --paper:#F3EADA;
+  --umber:#2C221B;   /* ink */
+  --clay:#B45B3E;    /* primary pigment */
+  --honey:#D9962F;   /* light */
+  --rule:rgba(44,34,27,.16);
+  --measure:34rem;
+  --ease:cubic-bezier(.16,.84,.3,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--cream);
+  color:var(--umber);
+  font-family:"Atkinson Hyperlegible",Verdana,sans-serif;
+  font-size:clamp(1.0625rem,.98rem + .38vw,1.1875rem);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{display:block;max-width:100%}
+a{color:inherit}
+
+/* --- type scale ---------------------------------------------------------- */
+.display{
+  font-family:"Fraunces",Georgia,serif;
+  font-weight:400;
+  font-variation-settings:"SOFT" 40,"WONK" 1,"opsz" 120;
+  line-height:.94;
+  letter-spacing:-.02em;
+}
+h1.display{font-size:clamp(3rem,1.4rem + 7.2vw,8.5rem)}
+h2.display{font-size:clamp(2.25rem,1.4rem + 3.6vw,4.75rem);line-height:1.0}
+h3{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:clamp(1.35rem,1.2rem + .6vw,1.8rem);line-height:1.15;letter-spacing:-.01em}
+em{font-style:italic}
+
+.eyebrow{
+  font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.22em;color:var(--clay);line-height:1.4;
+}
+.lede{font-size:clamp(1.15rem,1.03rem + .55vw,1.45rem);line-height:1.62}
+.measure{max-width:var(--measure)}
+
+/* --- shell --------------------------------------------------------------- */
+.wrap{width:min(100% - 2.5rem,84rem);margin-inline:auto}
+.rule{border:0;border-top:1px solid var(--rule)}
+
+/* --- nav ----------------------------------------------------------------- */
+/* Over the photograph the bar is light-on-dark; once past it, it inverts. */
+header{position:sticky;top:0;z-index:60;color:var(--cream);
+  text-shadow:0 1px 10px rgba(44,34,27,.55);
+  transition:background .5s var(--ease),box-shadow .5s var(--ease),color .5s var(--ease),text-shadow .5s var(--ease)}
+header.solid{background:rgba(251,246,236,.94);backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--rule);
+  color:var(--umber);text-shadow:none}
+header.solid .nav .cta{border-color:var(--umber)}
+.nav .cta{border-bottom-color:currentColor}
+/* Scrim so the bar reads over any part of the photograph, not just the shadows */
+header::before{content:"";position:absolute;left:0;right:0;top:0;height:8rem;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(28,21,16,.72),rgba(28,21,16,.34) 55%,transparent);
+  transition:opacity .5s var(--ease)}
+header.solid::before{opacity:0}
+.nav{position:relative}
+.nav{display:flex;align-items:baseline;gap:2rem;padding:1.25rem 0}
+.mark{font-family:"Fraunces",serif;font-weight:600;font-size:1.15rem;letter-spacing:-.01em;white-space:nowrap;text-decoration:none}
+.mark .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--honey);margin-right:.5rem;
+  box-shadow:0 0 0 0 rgba(217,150,47,.55);animation:lamp 4s var(--ease) infinite}
+@keyframes lamp{0%,100%{box-shadow:0 0 0 0 rgba(217,150,47,.5)}50%{box-shadow:0 0 0 .45rem rgba(217,150,47,0)}}
+.nav ul{list-style:none;display:flex;gap:1.6rem;margin-left:auto;font-size:.9rem}
+.nav a{text-decoration:none;padding-bottom:.15rem;border-bottom:1px solid transparent;transition:border-color .35s var(--ease),color .35s var(--ease)}
+.nav a:hover{border-color:var(--clay);color:var(--clay)}
+.nav .cta{border-bottom:1px solid var(--umber)}
+@media(max-width:860px){.nav ul{display:none}}
+
+/* --- buttons ------------------------------------------------------------- */
+.btn{
+  display:inline-block;font-family:"Fraunces",serif;font-weight:500;
+  font-size:1.05rem;padding:.85rem 1.9rem;text-decoration:none;
+  border:1px solid var(--umber);border-radius:999px;
+  transition:background .5s var(--ease),color .5s var(--ease),transform .5s var(--ease);
+}
+.btn-solid{background:var(--umber);color:var(--cream)}
+.btn-solid:hover{background:var(--clay);border-color:var(--clay);transform:translateY(-2px)}
+.btn-line:hover{background:var(--umber);color:var(--cream);transform:translateY(-2px)}
+
+/* --- hero ---------------------------------------------------------------- */
+.hero{position:relative;margin-top:-5.2rem}
+.hero-img{position:relative;height:min(94vh,54rem);overflow:hidden}
+.hero-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);animation:breathe 26s var(--ease) infinite alternate}
+@keyframes breathe{to{transform:scale(1.0)}}
+.hero-img::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(44,34,27,.78) 0%,rgba(44,34,27,.32) 42%,rgba(44,34,27,.1) 100%);
+}
+.hero-copy{position:absolute;left:0;right:0;bottom:clamp(2rem,6vh,5rem);z-index:2;color:var(--cream)}
+.hero-copy .eyebrow{color:var(--honey)}
+.hero-copy h1{margin:.6rem 0 1.1rem;max-width:15ch}
+.hero-copy p{max-width:36rem;color:rgba(251,246,236,.86)}
+.hero-actions{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:2rem}
+.hero-actions .btn{border-color:var(--cream)}
+.hero-actions .btn-solid{background:var(--cream);color:var(--umber)}
+.hero-actions .btn-solid:hover{background:var(--honey);border-color:var(--honey);color:var(--umber)}
+.hero-actions .btn-line{color:var(--cream)}
+.hero-actions .btn-line:hover{background:var(--cream);color:var(--umber)}
+
+/* --- the listening slip (overlaps the photo, offset right) --------------- */
+.slip{
+  position:relative;z-index:5;margin-top:-7rem;margin-left:auto;
+  width:min(100%,30rem);background:var(--cream);
+  padding:2rem 2rem 1.6rem;border-top:3px solid var(--clay);
+}
+.slip .q{font-family:"Fraunces",serif;font-size:1.6rem;line-height:1.2;margin:.5rem 0 1.1rem}
+.slip .listening{display:flex;align-items:center;gap:.7rem;font-size:.95rem;font-weight:700;color:var(--clay)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:1.1rem}
+.bars i{width:3px;background:var(--clay);border-radius:2px;animation:vu 1.25s var(--ease) infinite alternate}
+.bars i:nth-child(1){height:35%;animation-delay:0s}
+.bars i:nth-child(2){height:70%;animation-delay:.12s}
+.bars i:nth-child(3){height:45%;animation-delay:.24s}
+.bars i:nth-child(4){height:90%;animation-delay:.36s}
+.bars i:nth-child(5){height:55%;animation-delay:.48s}
+@keyframes vu{to{transform:scaleY(.35)}}
+.slip .hint{font-size:.95rem;margin-top:.5rem;color:rgba(44,34,27,.68)}
+.tally{display:flex;gap:0;margin-top:1.5rem;border-top:1px solid var(--rule);padding-top:1rem}
+.tally div{flex:1;border-right:1px solid var(--rule);padding-right:1rem}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font-family:"Fraunces",serif;font-weight:400;font-size:2.4rem;line-height:1;color:var(--clay)}
+.tally span{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em}
+@media(max-width:760px){.slip{margin-top:-3rem;width:100%}}
+
+/* --- editorial sections -------------------------------------------------- */
+section{padding-block:clamp(4.5rem,9vh,8.5rem)}
+.offset-right{display:grid;grid-template-columns:1fr;gap:2rem}
+@media(min-width:900px){
+  .offset-right{grid-template-columns:1fr var(--measure);gap:5rem}
+  .offset-left{grid-template-columns:var(--measure) 1fr;gap:5rem}
+}
+.marginalia{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(44,34,27,.5);line-height:1.5}
+
+/* stepped list */
+.steps{border-top:1px solid var(--rule);margin-top:3rem}
+.step{display:grid;grid-template-columns:auto 1fr;gap:1.5rem 2.5rem;padding:2.25rem 0;border-bottom:1px solid var(--rule);
+  transition:background .5s var(--ease),padding-left .5s var(--ease)}
+.step:hover{background:var(--paper);padding-left:1.25rem}
+.step .n{font-family:"Fraunces",serif;font-size:clamp(2.5rem,2rem + 2vw,4rem);line-height:.8;color:var(--clay);font-weight:300}
+.step p{max-width:44rem;margin-top:.5rem;color:rgba(44,34,27,.78)}
+@media(min-width:900px){.step{grid-template-columns:6rem 1fr}}
+
+/* full-bleed plate */
+.plate{position:relative;overflow:hidden;margin-block:clamp(3rem,7vh,6rem)}
+.plate img{width:100%;height:clamp(20rem,58vh,40rem);object-fit:cover;transition:transform 1.6s var(--ease)}
+.plate:hover img{transform:scale(1.03)}
+.plate figcaption{
+  position:absolute;left:1.5rem;bottom:1.25rem;color:var(--cream);
+  font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+  text-shadow:0 1px 12px rgba(44,34,27,.7);
+}
+
+/* pull quote */
+.pull{background:var(--paper);padding-block:clamp(4rem,9vh,8rem)}
+.pull blockquote{font-family:"Fraunces",serif;font-weight:300;font-style:italic;
+  font-size:clamp(1.7rem,1.1rem + 2.6vw,3.4rem);line-height:1.16;letter-spacing:-.015em;max-width:22ch}
+.pull cite{display:block;margin-top:2rem;font-style:normal;font-size:.85rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.wave{display:flex;align-items:flex-end;gap:4px;height:3.5rem;margin-top:2.5rem}
+.wave i{width:5px;background:var(--clay);opacity:.75;border-radius:1px;transform-origin:bottom;
+  animation:wv 3.4s var(--ease) infinite alternate}
+@keyframes wv{to{transform:scaleY(.4)}}
+
+/* checklist */
+.checks{list-style:none;margin-top:2rem}
+.checks li{display:flex;gap:1rem;padding:.9rem 0;border-top:1px solid var(--rule)}
+.checks li::before{content:"—";color:var(--clay);flex:none}
+
+/* question library */
+.cats{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem}
+.cat{font-size:.82rem;letter-spacing:.05em;padding:.4rem .9rem;border:1px solid var(--rule);border-radius:999px;
+  transition:background .4s var(--ease),color .4s var(--ease),border-color .4s var(--ease);cursor:default}
+.cat:hover{background:var(--clay);color:var(--cream);border-color:var(--clay)}
+.qlist{margin-top:2.5rem;border-top:1px solid var(--rule)}
+.qlist li{list-style:none;border-bottom:1px solid var(--rule);padding:1.4rem 0;
+  font-family:"Fraunces",serif;font-size:clamp(1.15rem,1rem + .7vw,1.65rem);line-height:1.25;font-weight:300;
+  display:flex;gap:1.5rem;align-items:baseline;transition:color .4s var(--ease),transform .4s var(--ease)}
+.qlist li:hover{color:var(--clay);transform:translateX(.5rem)}
+.qlist li span{font-family:"Atkinson Hyperlegible",sans-serif;font-size:.72rem;letter-spacing:.16em;
+  color:rgba(44,34,27,.4);flex:none;width:3.5rem}
+
+/* keepsake — asymmetric editorial pairs, NOT a card row */
+.keepsake{display:grid;gap:0;margin-top:3rem;border-top:1px solid var(--rule)}
+.keep{display:grid;gap:.75rem 3rem;padding:2.25rem 0;border-bottom:1px solid var(--rule);transition:background .5s var(--ease)}
+.keep:hover{background:var(--paper)}
+@media(min-width:820px){.keep{grid-template-columns:1fr 1.35fr;align-items:start}}
+.keep p{color:rgba(44,34,27,.75)}
+
+/* testimonials — staggered, no cards */
+.voices{display:grid;gap:3.5rem;margin-top:3rem}
+@media(min-width:900px){.voices{grid-template-columns:repeat(3,1fr);gap:3rem}
+  .voices figure:nth-child(2){margin-top:4rem}
+  .voices figure:nth-child(3){margin-top:8rem}}
+.voices blockquote{font-family:"Fraunces",serif;font-weight:300;font-size:1.3rem;line-height:1.35;border-left:2px solid var(--clay);padding-left:1.4rem}
+.voices figcaption{margin-top:1.2rem;padding-left:1.4rem;font-size:.88rem}
+.voices figcaption b{display:block}
+.voices figcaption span{color:rgba(44,34,27,.6)}
+
+/* pricing — a ruled ledger, not cards */
+.ledger{margin-top:3rem;border-top:2px solid var(--umber)}
+.tier{display:grid;gap:.4rem 2.5rem;padding:2.25rem 0;border-bottom:1px solid var(--rule);align-items:baseline;
+  transition:background .5s var(--ease),padding-left .5s var(--ease)}
+.tier:hover{background:var(--paper);padding-left:1.25rem}
+@media(min-width:860px){.tier{grid-template-columns:16rem 1fr auto}}
+.tier .amt{font-family:"Fraunces",serif;font-size:clamp(2rem,1.6rem + 1.6vw,3rem);line-height:1;font-weight:300}
+.tier .amt small{font-family:"Atkinson Hyperlegible",sans-serif;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(44,34,27,.55)}
+.tier ul{list-style:none;font-size:.98rem;color:rgba(44,34,27,.75)}
+.tier ul li{padding:.15rem 0}
+.tier.pick{background:var(--paper)}
+.tier .flag{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--clay);display:block;margin-bottom:.35rem}
+.gift{background:var(--umber);color:var(--cream);padding:clamp(2rem,5vw,3.5rem);margin-top:3rem;
+  display:grid;gap:1.5rem 3rem;align-items:center}
+@media(min-width:860px){.gift{grid-template-columns:1fr auto}}
+.gift h3{color:var(--cream)}
+.gift p{color:rgba(251,246,236,.72);max-width:40rem;margin-top:.5rem}
+.gift .btn{border-color:var(--cream);color:var(--cream)}
+.gift .btn:hover{background:var(--honey);border-color:var(--honey);color:var(--umber)}
+
+/* faq */
+.faq{margin-top:3rem;border-top:1px solid var(--rule)}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq summary{list-style:none;cursor:pointer;padding:1.5rem 0;display:flex;gap:2rem;align-items:baseline;
+  font-family:"Fraunces",serif;font-size:clamp(1.1rem,1rem + .5vw,1.4rem);font-weight:400;transition:color .4s var(--ease)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:hover{color:var(--clay)}
+.faq summary::after{content:"+";margin-left:auto;color:var(--clay);font-size:1.4rem;transition:transform .5s var(--ease)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{padding:0 0 1.75rem;max-width:52rem;color:rgba(44,34,27,.75)}
+
+/* founder */
+.founder{background:var(--paper)}
+.founder .sig{font-family:"Fraunces",serif;font-style:italic;font-size:2.2rem;margin-top:2rem}
+
+/* email capture */
+.capture{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem;max-width:40rem}
+.capture input{flex:1 1 12rem;background:transparent;border:0;border-bottom:1px solid var(--umber);
+  padding:.85rem .25rem;font:inherit;font-size:1rem;color:inherit;transition:border-color .4s var(--ease)}
+.capture input:focus{outline:none;border-color:var(--clay)}
+.capture input::placeholder{color:rgba(44,34,27,.45)}
+
+/* closing band */
+.closing{position:relative;background:var(--umber);color:var(--cream);overflow:hidden;text-align:left}
+.closing::before{content:"";position:absolute;top:-30%;left:12%;width:44rem;height:44rem;border-radius:50%;
+  background:radial-gradient(circle,rgba(217,150,47,.38),transparent 62%);filter:blur(18px)}
+.closing .wrap{position:relative}
+.closing h2{max-width:16ch}
+.closing p{color:rgba(251,246,236,.72);max-width:34rem;margin-top:1.25rem}
+.closing .btn{border-color:var(--cream);color:var(--cream)}
+.closing .btn-solid{background:var(--cream);color:var(--umber)}
+.closing .btn-solid:hover{background:var(--honey);border-color:var(--honey)}
+.closing .btn-line:hover{background:var(--cream);color:var(--umber)}
+
+/* footer */
+footer{background:var(--umber);color:rgba(251,246,236,.7);padding-block:4rem;font-size:.9rem}
+.fgrid{display:grid;gap:2.5rem}
+@media(min-width:820px){.fgrid{grid-template-columns:1.6fr repeat(4,1fr);gap:3rem}}
+footer h4{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--honey);margin-bottom:.9rem}
+footer ul{list-style:none;display:grid;gap:.5rem}
+footer a{text-decoration:none;transition:color .35s var(--ease)}
+footer a:hover{color:var(--cream)}
+footer .mark{color:var(--cream)}
+.fbot{margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(251,246,236,.15);font-size:.82rem}
+
+/* reveal */
+.rise{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rise.in{opacity:1;transform:none}
+:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}.rise{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="mark" href="#"><span class="dot"></span>My Family Porch</a>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#stories">Stories</a></li>
+      <li><a href="#why">Our why</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a class="cta" href="#">Get started</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- HERO — full-bleed golden hour, headline flush-left in the light -->
+<div class="hero">
+  <div class="hero-img">
+    <img src="https://cdn.creativeclaw.co/u/f117164b/images/1d547a0c-e186-4044-9953-a583ebb96c91.jpg" alt="Late afternoon sun across a weathered porch railing and an empty wicker rocking chair.">
+  </div>
+  <div class="hero-copy">
+    <div class="wrap">
+      <p class="eyebrow">For families</p>
+      <h1 class="display">Their stories, in their own voice.</h1>
+      <p class="lede">My Family Porch records a loved one’s life stories through short, AI-guided voice interviews — gentle to use, and kept as a keepsake your whole family can hear.</p>
+      <div class="hero-actions">
+        <a class="btn btn-solid" href="#">Get started</a>
+        <a class="btn btn-line" href="#how">See how it works</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="slip rise">
+    <p class="eyebrow">A question for you</p>
+    <p class="q">What was your first home like?</p>
+    <div class="listening">
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      Listening…
+    </div>
+    <p class="hint">Take your time — there’s no rush, and no wrong answer.</p>
+    <div class="tally">
+      <div><b>31</b><span>stories</span></div>
+      <div><b>12</b><span>topics</span></div>
+      <div><b>2</b><span>voices</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- WHY NOW -->
+<section>
+  <div class="wrap offset-right">
+    <div class="marginalia rise">Why now</div>
+    <div class="rise">
+      <h2 class="display">There are stories we always mean to ask about.</h2>
+      <p class="lede" style="margin-top:1.75rem">How they met. The house they grew up in. The job nobody talks about anymore. We tell ourselves we’ll sit down and ask one day — and then the chance quietly slips away. My Family Porch is that conversation, made easy enough to actually happen, and saved before it’s gone.</p>
+    </div>
+  </div>
+</section>
+
+<figure class="plate rise">
+  <img src="https://cdn.creativeclaw.co/u/f117164b/images/2bd1615a-9ddc-449d-ae66-faae96b0c93a.jpg" alt="An older man on a porch step in golden light, phone in hand, mid-story.">
+  <figcaption>Margaret, 78 — recorded on a Sunday afternoon</figcaption>
+</figure>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <div class="offset-right">
+      <div class="marginalia rise">How it works</div>
+      <div class="rise">
+        <h2 class="display">Three simple steps.</h2>
+        <p class="lede" style="margin-top:1.5rem">You do the easy setup. They just answer the phone. We keep the stories.</p>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step rise"><div class="n">1</div><div><h3>Set it up in minutes</h3><p>Add your loved one and choose the topics you’d love to hear about. No app for them to install — it works over a normal phone.</p></div></div>
+      <div class="step rise"><div class="n">2</div><div><h3>They get gentle prompts — and just talk</h3><p>Every so often, a warm, AI-guided question arrives. They answer out loud, in their own time. No typing, no screens to figure out.</p></div></div>
+      <div class="step rise"><div class="n">3</div><div><h3>Their voice becomes a keepsake</h3><p>Each answer is transcribed and saved into a growing collection of stories your whole family can listen to and read — forever.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY VOICE -->
+<div class="pull">
+  <div class="wrap offset-left">
+    <div class="rise">
+      <p class="eyebrow">Why voice</p>
+      <blockquote style="margin-top:1.25rem">“…and your grandfather walked the whole way home in the rain, just so he could say he’d done it.”</blockquote>
+      <div class="wave" aria-hidden="true"></div>
+      <cite>Margaret, 78 — recorded on a Sunday afternoon</cite>
+    </div>
+    <div class="rise">
+      <h2 class="display" style="font-size:clamp(1.9rem,1.3rem + 2.4vw,3.4rem)">A transcript can’t laugh. Their voice can.</h2>
+      <p style="margin-top:1.5rem">The way they pause, the catch in their throat at the good part, the way they say your name — that’s the part you’ll miss most. We keep the real recording, not just the words.</p>
+      <ul class="checks">
+        <li>It’s their actual voice — saved, not summarized.</li>
+        <li>Nothing to learn: answer a prompt out loud, that’s it.</li>
+        <li>Works for the least tech-comfortable elder in the family.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION LIBRARY -->
+<section>
+  <div class="wrap offset-right">
+    <div class="marginalia rise">The library</div>
+    <div class="rise">
+      <h2 class="display" style="font-size:clamp(1.9rem,1.3rem + 2.4vw,3.4rem)">Twelve chapters of a life, already written as questions.</h2>
+      <div class="cats">
+        <span class="cat">Warm-Ups &amp; Icebreakers</span><span class="cat">Childhood &amp; Early Years</span>
+        <span class="cat">Family &amp; Roots</span><span class="cat">School &amp; Coming of Age</span>
+        <span class="cat">Young Adulthood &amp; Work</span><span class="cat">Love &amp; Relationships</span>
+        <span class="cat">Parenthood &amp; the Next Generation</span><span class="cat">Friendship &amp; Community</span>
+        <span class="cat">Hobbies, Joys &amp; Everyday Life</span><span class="cat">Hard Times &amp; Resilience</span>
+        <span class="cat">Reflection &amp; Wisdom</span><span class="cat">Legacy &amp; Things Left to Say</span>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <ul class="qlist">
+      <li class="rise"><span>001</span>What was your first car?</li>
+      <li class="rise"><span>002</span>What music did you love when you were twenty?</li>
+      <li class="rise"><span>003</span>What’s the first memory you can reach back and grab?</li>
+      <li class="rise"><span>004</span>Is there a smell or sound from childhood that takes you right back?</li>
+      <li class="rise"><span>005</span>Tell me about a friend from back then I’ve never heard about.</li>
+    </ul>
+  </div>
+</section>
+
+<figure class="plate rise">
+  <img src="https://cdn.creativeclaw.co/u/f117164b/images/c57d05eb-1ab0-4281-8134-acdbf7a83ed3.jpg" alt="A printed hardcover book of family stories open on an oak table in late sun, voice QR codes in the margins.">
+  <figcaption>A book you can hear — scan a page, hear the story</figcaption>
+</figure>
+
+<!-- WHAT YOU GET -->
+<section>
+  <div class="wrap">
+    <div class="offset-right">
+      <div class="marginalia rise">What you get</div>
+      <div class="rise">
+        <h2 class="display">A keepsake, not just a recording.</h2>
+        <p class="lede" style="margin-top:1.5rem">Their stories come back to you in the ways your family will actually use.</p>
+      </div>
+    </div>
+    <div class="keepsake">
+      <div class="keep rise"><h3>Every story, in their voice</h3><p>Listen back any time to the real recordings — gathered into one warm, private collection.</p></div>
+      <div class="keep rise"><h3>A book you can hear</h3><p>A beautifully laid-out digital book (PDF) of their stories, with voice QR codes — scan a page, hear the story.</p></div>
+      <div class="keep rise"><h3>Shared with the whole family</h3><p>Invite siblings, kids, and grandkids to read and listen together. One porch, the whole family on it.</p></div>
+      <div class="keep rise"><h3>Yours to keep, forever</h3><p>Download everything — every recording, transcript, and the book — in one click, any time. It’s your family’s, not ours.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- STORIES -->
+<section id="stories" class="pull">
+  <div class="wrap">
+    <div class="offset-right">
+      <div class="marginalia rise">Stories</div>
+      <div class="rise"><h2 class="display">Families are already keeping their stories.</h2></div>
+    </div>
+    <div class="voices">
+      <figure class="rise">
+        <blockquote>“I set it up for my dad in five minutes. Now I have hours of him telling stories I’d never heard — in his voice. I’ll have that forever.”</blockquote>
+        <figcaption><b>Dana R.</b><span>Daughter, set it up for her father</span></figcaption>
+      </figure>
+      <figure class="rise">
+        <blockquote>“My mom isn’t techy at all, but she just answers the phone and talks. The grandkids love hearing her tell it herself.”</blockquote>
+        <figcaption><b>Marcus T.</b><span>Son, recording his mother’s stories</span></figcaption>
+      </figure>
+      <figure class="rise">
+        <blockquote>“We gave it to Grandma for her birthday. It turned into the best gift our whole family has ever shared.”</blockquote>
+        <figcaption><b>The Alvarez family</b><span>A gift for their grandmother</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="offset-right">
+      <div class="marginalia rise">Pricing</div>
+      <div class="rise">
+        <h2 class="display">Simple plans. Keep everything, forever.</h2>
+        <p class="lede" style="margin-top:1.5rem">Cancel any time — your stories, recordings, and book are always yours to download and keep.</p>
+      </div>
+    </div>
+
+    <div class="ledger">
+      <div class="tier rise">
+        <div><h3>Keepsake</h3><p style="font-size:.95rem;color:rgba(44,34,27,.65)">Everything, kept forever.</p></div>
+        <ul>
+          <li>One storyteller</li>
+          <li>Unlimited stories and recordings</li>
+          <li>Full voice-nudge &amp; scheduling experience</li>
+          <li>Digital book (PDF) with bundled audio + voice QR codes</li>
+          <li>Forever access on cancellation</li>
+          <li>Printed book available as an add-on</li>
+        </ul>
+        <div class="amt">$99 <small>/ year</small><br><small style="letter-spacing:.06em;text-transform:none">or $14 / month</small></div>
+      </div>
+
+      <div class="tier pick rise">
+        <div><span class="flag">Most popular</span><h3>Keepsake + Book</h3><p style="font-size:.95rem;color:rgba(44,34,27,.65)">The book with their voice in it.</p></div>
+        <ul>
+          <li>Everything in Keepsake, plus:</li>
+          <li>One printed hardcover color book, included in your first year</li>
+          <li>Voice QR codes printed in the book</li>
+          <li>New editions and extra copies any time at add-on prices</li>
+        </ul>
+        <div class="amt">$189 <small>/ year</small></div>
+      </div>
+
+      <div class="tier rise">
+        <div><h3>Family</h3><p style="font-size:.95rem;color:rgba(44,34,27,.65)">For the whole family.</p></div>
+        <ul>
+          <li>Everything in Keepsake + Book, plus:</li>
+          <li>Up to 3 storytellers</li>
+          <li>Priority support</li>
+        </ul>
+        <div class="amt">$299 <small>/ year</small></div>
+      </div>
+    </div>
+
+    <div class="gift rise">
+      <div>
+        <p class="eyebrow" style="color:var(--honey)">The Gift · $199 one-time</p>
+        <h3 style="margin-top:.6rem">One price, prepaid. Nothing to renew.</h3>
+        <p>12 months of recording, prepaid · One printed hardcover color book included · Never auto-renews — no card left on file · They keep every story, always.</p>
+      </div>
+      <a class="btn btn-line" href="#">Give it as a gift</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="pull">
+  <div class="wrap offset-right">
+    <div class="marginalia rise">FAQ</div>
+    <div class="rise"><h2 class="display">Questions families ask.</h2></div>
+  </div>
+  <div class="wrap">
+    <div class="faq">
+      <details class="rise"><summary>Does the storyteller need a smartphone or app?</summary><p>No. It works over a normal phone with SMS. There is nothing to install, no account for them to manage, and no password to remember.</p></details>
+      <details class="rise"><summary>Can more than one person record?</summary><p>Yes, on the Family plan, or add a storyteller to any annual plan.</p></details>
+      <details class="rise"><summary>What are the voice QR codes?</summary><p>Printed codes in the book that play the original recording when scanned, so you can hear the story in their own voice.</p></details>
+      <details class="rise"><summary>Can I download all the recordings?</summary><p>Yes — any time, on every plan. One click gives you a ZIP with every audio recording, the transcripts, and your book. If you ever cancel, it’s all still yours to download and keep.</p></details>
+      <details class="rise"><summary>Can I order more printed copies?</summary><p>Yes, any time, softcover or hardcover.</p></details>
+      <details class="rise"><summary>What happens if I cancel?</summary><p>You keep all stories, audio, and your digital book. Nothing is deleted or locked.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER -->
+<section id="why" class="founder">
+  <div class="wrap offset-right">
+    <div class="marginalia rise">A letter from the founder</div>
+    <div class="rise">
+      <h2 class="display" style="font-size:clamp(1.9rem,1.3rem + 2.4vw,3.4rem)">It started with a Father’s Day gift I couldn’t find.</h2>
+      <p class="lede" style="margin-top:1.5rem">My Family Porch began at home, on a Sunday morning, with one simple wish: that my dad could just <em>tell</em> us the stories of his life.</p>
+      <p style="margin-top:1.25rem">He has a cell phone, and he knows how to use it. So why not make sharing his memories as easy as talking on the phone? And you don’t have to keep paying us forever to hold onto your loved one’s memories — they’re yours to keep.</p>
+      <p class="sig">I love you, Dad.</p>
+      <p style="font-size:.85rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(44,34,27,.55);margin-top:.5rem">Paul — Founder, My Family Porch</p>
+    </div>
+  </div>
+</section>
+
+<!-- NOT READY -->
+<section>
+  <div class="wrap offset-right">
+    <div class="marginalia rise">No pressure</div>
+    <div class="rise">
+      <h2 class="display" style="font-size:clamp(1.9rem,1.3rem + 2.4vw,3.4rem)">Not ready yet? Stay on the porch with us.</h2>
+      <p class="lede" style="margin-top:1.25rem">Leave your name and email and we’ll send a gentle note when the time feels right. No spam, ever.</p>
+      <form class="capture" onsubmit="event.preventDefault();this.querySelector('button').textContent='Thank you — we’ll write soon.'">
+        <input type="text" placeholder="Your name" aria-label="Your name" required>
+        <input type="email" placeholder="you@email.com" aria-label="Your email" required>
+        <button class="btn btn-solid" type="submit">Keep me posted</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section class="closing">
+  <div class="wrap">
+    <h2 class="display rise">The stories are still here. Start with one question.</h2>
+    <p class="lede rise">It takes a few minutes to set up, and there’s no better day than today to begin.</p>
+    <div class="hero-actions rise">
+      <a class="btn btn-solid" href="#">Get started</a>
+      <a class="btn btn-line" href="#pricing">See pricing</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <div>
+      <a class="mark" href="#"><span class="dot"></span>My Family Porch</a>
+      <p style="margin-top:1rem">Their stories, in their own voice.</p>
+      <p style="margin-top:1rem">Your family’s recordings are private — yours to keep, and never sold.</p>
+    </div>
+    <div><h4>Product</h4><ul><li><a href="#how">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#">What you get</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="#">Our story</a></li><li><a href="#why">Why I built this</a></li><li><a href="#">Gift a porch</a></li></ul></div>
+    <div><h4>Help</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">SMS reminders</a></li></ul></div>
+  </div>
+  <div class="wrap fbot">© 2026 My Family Porch — a service of Technology Leadership Group, LLC.</div>
+</footer>
+
+<script>
+// waveform bars (porch-railing motif) — built, not hand-written
+const wv=[6,10,15,9,19,25,17,28,21,13,23,11,16,8,5,12,20,26,14,7];
+document.querySelectorAll('.wave').forEach(w=>{
+  w.innerHTML=wv.map((h,i)=>`<i style="height:${h*3.4}%;animation-delay:${i*.11}s"></i>`).join('');
+});
+// slow cinematic reveal
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.rise').forEach((el,i)=>{el.style.transitionDelay=(i%4)*70+'ms';io.observe(el)});
+// header goes solid once past the photograph
+const hdr=document.getElementById('hdr');
+addEventListener('scroll',()=>hdr.classList.toggle('solid',scrollY>120),{passive:true});
+</script>
+</body>
+</html>

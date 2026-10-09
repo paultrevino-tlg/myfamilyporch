@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction 3 — Kitchen Table · My Family Porch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Caveat:wght@400;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   DIRECTION 3 — "KITCHEN TABLE"   ← the risky one
+   Lineage: maximalist analog collage — a shoebox of family ephemera emptied onto
+   a kitchen table. Scrapbook / mail-art / cassette J-card / index-card archive.
+   Nothing is a "component"; everything is a MATERIAL: masking tape, kraft,
+   ballpoint, rubber stamp, instant film, typewriter carbon.
+   Deliberately subverts the ban list: there IS no hero — the page opens as a
+   scattered tabletop, and nothing is centred or gridded.
+   Type: Instrument Serif (expressive high-contrast display, incl. italic) +
+   Caveat (real handwriting for annotations) + Courier Prime (typewriter, for
+   index cards and labels). No neutral UI sans anywhere.
+   Colour rule: only real pigments — aged paper, kraft, ballpoint blue, rubber-
+   stamp red, cassette orange. No screen colour, no gradient, no tint.
+   Motion: springy and physical. Taped things straighten and lift when touched;
+   the cassette reels turn while it plays.
+   ========================================================================== */
+
+:root{
+  --paper:#EFE6D2;
+  --kraft:#C9A66B;
+  --card:#FBF6E9;
+  --ink:#2B241C;
+  --pen:#2A4A8B;      /* ballpoint */
+  --stamp:#A31F1F;    /* rubber stamp */
+  --orange:#D4501E;   /* cassette label */
+  --tape:rgba(226,206,150,.72);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper) url("https://cdn.creativeclaw.co/u/f117164b/images/f690d9e3-a1cf-4ebb-a4d1-6e9845ccc924.jpg") center/1400px repeat;
+  color:var(--ink);
+  font-family:"Courier Prime","Courier New",monospace;
+  font-size:clamp(.95rem,.9rem + .25vw,1.0625rem);
+  line-height:1.65;
+  overflow-x:hidden;
+}
+body::before{ /* table shadow at the edges — the tabletop, not a page */
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  box-shadow:inset 0 0 14rem rgba(43,36,28,.28);
+}
+img{display:block;max-width:100%}
+a{color:var(--pen)}
+.wrap{width:min(100% - 2rem,78rem);margin-inline:auto;position:relative;z-index:1}
+
+/* --- materials ----------------------------------------------------------- */
+.paper{
+  background:var(--card);
+  box-shadow:0 1px 1px rgba(43,36,28,.18),0 10px 24px rgba(43,36,28,.16);
+  position:relative;
+}
+.paper::after{ /* torn-ish bottom edge */
+  content:"";position:absolute;left:0;right:0;bottom:-3px;height:4px;
+  background:repeating-linear-gradient(90deg,var(--card) 0 7px,transparent 7px 11px);
+}
+.tape{
+  position:absolute;width:7rem;height:1.9rem;background:var(--tape);
+  box-shadow:0 1px 2px rgba(43,36,28,.2);
+  border-left:1px dashed rgba(43,36,28,.16);border-right:1px dashed rgba(43,36,28,.16);
+  transition:transform .5s var(--spring);
+}
+.tape.tl{top:-.8rem;left:1.5rem;transform:rotate(-6deg)}
+.tape.tr{top:-.9rem;right:1.5rem;transform:rotate(5deg)}
+.tape.bl{bottom:-.8rem;left:2.5rem;transform:rotate(4deg)}
+.tilt{transition:transform .55s var(--spring),box-shadow .45s var(--spring)}
+.tilt:hover{transform:rotate(0deg) translateY(-6px)!important;box-shadow:0 3px 3px rgba(43,36,28,.16),0 22px 44px rgba(43,36,28,.24);z-index:20}
+.tilt:hover .tape{transform:rotate(0deg) translateY(-4px)}
+
+.hand{font-family:"Caveat",cursive;color:var(--pen);font-size:1.6rem;line-height:1.15;transform:rotate(-2deg)}
+.hand.red{color:var(--stamp)}
+.stamp{
+  display:inline-block;border:3px double var(--stamp);color:var(--stamp);
+  font-family:"Courier Prime",monospace;font-weight:700;font-size:.7rem;
+  letter-spacing:.22em;text-transform:uppercase;padding:.3rem .7rem;
+  transform:rotate(-7deg);opacity:.82;
+}
+.type{font-family:"Courier Prime",monospace;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(43,36,28,.62)}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;line-height:.98;letter-spacing:-.005em}
+h1.serif{font-size:clamp(3.2rem,1.4rem + 8vw,9rem)}
+h2.serif{font-size:clamp(2.2rem,1.3rem + 3.6vw,4.6rem);line-height:1}
+h3.serif{font-size:clamp(1.5rem,1.3rem + .9vw,2.1rem);line-height:1.05}
+.serif em{font-style:italic}
+
+/* --- masthead ------------------------------------------------------------ */
+header{position:sticky;top:0;z-index:80;background:var(--kraft);border-bottom:3px solid var(--ink);
+  box-shadow:0 3px 0 rgba(43,36,28,.18)}
+.mast{display:flex;flex-wrap:wrap;align-items:center;gap:1.25rem;padding:.55rem 0}
+.mast .name{font-family:"Instrument Serif",serif;font-size:1.5rem;letter-spacing:-.01em;text-decoration:none;color:var(--ink)}
+.mast nav{display:flex;gap:1.1rem;margin-left:auto;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+.mast nav a{color:var(--ink);text-decoration:none;padding-bottom:2px;border-bottom:2px solid transparent;transition:.25s var(--spring)}
+.mast nav a:hover{border-color:var(--stamp);transform:translateY(-2px);display:inline-block}
+.mast .go{background:var(--orange);color:#FFF6EB;padding:.4rem .9rem;border:2px solid var(--ink);
+  box-shadow:3px 3px 0 var(--ink);transition:.2s var(--spring)}
+.mast .go:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);border-color:var(--ink)}
+@media(max-width:800px){.mast nav a:not(.go){display:none}}
+
+/* --- the tabletop (opening spread — scattered, no hero) ------------------ */
+.tabletop{position:relative;padding:clamp(2.5rem,7vw,6rem) 0 clamp(3rem,8vw,7rem);z-index:1}
+.scatter{display:grid;gap:1.5rem;grid-template-columns:1fr}
+@media(min-width:960px){
+  .scatter{grid-template-columns:1.15fr .85fr;gap:2.5rem;align-items:start}
+}
+.headline-slab{position:relative}
+.headline-slab h1{margin:.35rem 0 .9rem;max-width:11ch}
+.headline-slab h1 .u{ /* highlighter swipe across "own voice" */
+  background:linear-gradient(transparent 34%,rgba(212,80,30,.34) 34% 74%,transparent 74%);
+  padding-inline:.1em;
+}
+.sub-card{position:relative;padding:1.5rem 1.5rem 1.75rem;transform:rotate(-.8deg);margin-top:1.5rem;max-width:34rem}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:1.5rem}
+.push{
+  font-family:"Courier Prime",monospace;font-weight:700;font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.85rem 1.6rem;text-decoration:none;border:2px solid var(--ink);background:var(--orange);color:#FFF6EB;
+  box-shadow:4px 4px 0 var(--ink);transition:.2s var(--spring);display:inline-block;
+}
+.push:hover{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.push.alt{background:var(--card);color:var(--ink)}
+
+/* polaroids */
+.snap{background:#fff;padding:.6rem .6rem 2.6rem;box-shadow:0 2px 2px rgba(43,36,28,.16),0 14px 30px rgba(43,36,28,.2);position:relative}
+.snap img{width:100%;aspect-ratio:1;object-fit:cover}
+.snap .cap{position:absolute;left:0;right:0;bottom:.55rem;text-align:center;font-family:"Caveat",cursive;
+  font-size:1.25rem;color:var(--pen)}
+.snap-a{transform:rotate(3deg)}
+.snap-b{transform:rotate(-4deg);margin-top:-2.5rem;margin-left:22%}
+@media(max-width:960px){.snap-b{margin-left:12%}}
+
+/* index card — the live question */
+.indexcard{
+  background:
+    repeating-linear-gradient(transparent 0 1.85rem,rgba(42,74,139,.16) 1.85rem 1.9rem) 0 2.6rem/100% 100% no-repeat,
+    var(--card);
+  border:1px solid rgba(43,36,28,.2);padding:1.4rem 1.4rem 1.2rem 3rem;position:relative;
+  box-shadow:0 2px 2px rgba(43,36,28,.14),0 14px 28px rgba(43,36,28,.16);
+  transform:rotate(1.4deg);
+}
+.indexcard::before{content:"";position:absolute;left:2.1rem;top:0;bottom:0;width:1px;background:rgba(163,31,31,.5)}
+.indexcard .q{font-family:"Caveat",cursive;font-size:2rem;color:var(--pen);line-height:1.15;margin:.4rem 0 .8rem}
+.rec{display:flex;align-items:center;gap:.6rem;color:var(--stamp);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase}
+.rec .dot{width:.6rem;height:.6rem;border-radius:50%;background:var(--stamp);animation:blip 1.4s steps(1) infinite}
+@keyframes blip{50%{opacity:.2}}
+.vu{display:flex;align-items:flex-end;gap:2px;height:1.2rem}
+.vu i{width:3px;background:var(--stamp);animation:jump .9s var(--spring) infinite alternate}
+@keyframes jump{to{transform:scaleY(.3)}}
+.counts{display:flex;gap:1.5rem;margin-top:1rem;padding-top:.8rem;border-top:1px dashed rgba(43,36,28,.3)}
+.counts b{font-family:"Instrument Serif",serif;font-size:2.2rem;line-height:.9;display:block;color:var(--orange)}
+
+/* --- spreads ------------------------------------------------------------- */
+section{padding-block:clamp(3rem,7vw,6rem);position:relative;z-index:1}
+.spread{display:grid;gap:2rem;grid-template-columns:1fr}
+@media(min-width:900px){.spread{grid-template-columns:repeat(12,1fr);gap:2rem}}
+.s3{grid-column:span 12}
+@media(min-width:900px){
+  .a{grid-column:1/8}.b{grid-column:8/13}.c{grid-column:2/9}.d{grid-column:1/6}.e{grid-column:6/13}
+}
+
+/* pinned note */
+.note{padding:1.6rem;position:relative}
+.note.n1{transform:rotate(-1.6deg)}
+.note.n2{transform:rotate(1.2deg)}
+.note.n3{transform:rotate(-.8deg)}
+
+/* the three steps as taped index cards, deliberately uneven */
+.steps{display:grid;gap:2.5rem;margin-top:3rem}
+@media(min-width:880px){.steps{grid-template-columns:repeat(3,1fr);gap:1.75rem;align-items:start}
+  .steps>*:nth-child(1){transform:rotate(-2deg)}
+  .steps>*:nth-child(2){transform:rotate(1.4deg);margin-top:2.5rem}
+  .steps>*:nth-child(3){transform:rotate(-.9deg);margin-top:.8rem}}
+.step{padding:2.2rem 1.5rem 1.6rem}
+.step .n{position:absolute;top:-1.4rem;left:-1rem;width:3.2rem;height:3.2rem;border-radius:50%;
+  background:var(--orange);color:#FFF6EB;display:grid;place-items:center;
+  font-family:"Instrument Serif",serif;font-size:1.7rem;border:2px solid var(--ink);
+  box-shadow:3px 3px 0 var(--ink)}
+
+/* cassette */
+.cassette{background:var(--ink);color:#F3E7CE;padding:1rem;box-shadow:0 16px 40px rgba(43,36,28,.4);transform:rotate(-1.2deg)}
+.cassette .win{background:#141010;border:2px solid #4A3F32;padding:1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.reel{width:3.4rem;height:3.4rem;border-radius:50%;border:.5rem solid #6B5B45;position:relative;flex:none;
+  background:radial-gradient(circle,#241d16 38%,#3a2f24 39%)}
+.reel::before,.reel::after{content:"";position:absolute;inset:.5rem;border-radius:50%;border-top:3px solid #C9A66B;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:3px solid transparent}
+.playing .reel{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cassette .lbl{background:var(--orange);color:#FFF6EB;padding:.35rem .6rem;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:.8rem;display:inline-block;transform:rotate(-1deg)}
+.cassette .hand{color:#E9D6A9}
+.playbtn{margin-top:1rem;width:100%;background:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 #6B5B45;
+  font-family:"Courier Prime",monospace;font-weight:700;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:.7rem;cursor:pointer;color:var(--ink);transition:.2s var(--spring)}
+.playbtn:hover{transform:translate(3px,3px);box-shadow:1px 1px 0 #6B5B45}
+
+/* question library as a pile of slips */
+.slips{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.5rem}
+.slip{background:var(--card);border:1px solid rgba(43,36,28,.24);padding:.4rem .8rem;font-size:.78rem;
+  box-shadow:2px 2px 0 rgba(43,36,28,.14);transition:.3s var(--spring);cursor:default}
+.slip:nth-child(3n){transform:rotate(-1.5deg)}
+.slip:nth-child(3n+1){transform:rotate(1.2deg)}
+.slip:hover{background:var(--orange);color:#FFF6EB;transform:rotate(0) translateY(-3px) scale(1.04);border-color:var(--ink)}
+.qs{margin-top:2rem;display:grid;gap:1rem}
+.qslip{padding:1rem 1.25rem;background:var(--card);border-left:5px solid var(--pen);
+  box-shadow:0 1px 1px rgba(43,36,28,.16),0 8px 18px rgba(43,36,28,.12);
+  font-family:"Caveat",cursive;font-size:1.5rem;color:var(--pen);transition:.4s var(--spring)}
+.qs>*:nth-child(odd){transform:rotate(-.6deg)}
+.qs>*:nth-child(even){transform:rotate(.7deg);margin-left:clamp(0px,4vw,3rem)}
+.qslip:hover{transform:rotate(0) translateX(6px);border-left-color:var(--orange)}
+.qslip small{display:block;font-family:"Courier Prime",monospace;font-size:.62rem;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(43,36,28,.5)}
+
+/* keepsake — four taped envelopes */
+.envs{display:grid;gap:2rem;margin-top:2.5rem}
+@media(min-width:760px){.envs{grid-template-columns:repeat(2,1fr);gap:2.25rem}}
+.env{padding:1.6rem 1.5rem}
+.env:nth-child(1){transform:rotate(-1.3deg)}
+.env:nth-child(2){transform:rotate(1.1deg)}
+.env:nth-child(3){transform:rotate(.8deg)}
+.env:nth-child(4){transform:rotate(-1deg)}
+
+/* testimonials — letters */
+.letters{display:grid;gap:2.5rem;margin-top:2.5rem}
+@media(min-width:900px){.letters{grid-template-columns:repeat(3,1fr);gap:2rem;align-items:start}
+  .letters>*:nth-child(2){margin-top:3rem;transform:rotate(-1.4deg)}
+  .letters>*:nth-child(3){margin-top:1.2rem;transform:rotate(.9deg)}
+  .letters>*:nth-child(1){transform:rotate(1.1deg)}}
+.letter{padding:1.75rem 1.5rem}
+.letter blockquote{font-family:"Caveat",cursive;font-size:1.45rem;line-height:1.28;color:var(--pen)}
+.letter figcaption{margin-top:1.25rem;padding-top:.75rem;border-top:1px dashed rgba(43,36,28,.3);font-size:.78rem}
+.letter figcaption b{font-family:"Instrument Serif",serif;font-size:1.15rem;font-weight:400;display:block;letter-spacing:.01em}
+
+/* pricing — hand-priced tags */
+.tags{display:grid;gap:2.5rem;margin-top:2.5rem}
+@media(min-width:900px){.tags{grid-template-columns:repeat(3,1fr);gap:1.75rem;align-items:start}
+  .tags>*:nth-child(1){transform:rotate(-1.5deg)}
+  .tags>*:nth-child(2){transform:rotate(.9deg);margin-top:-1.5rem}
+  .tags>*:nth-child(3){transform:rotate(-.7deg);margin-top:1rem}}
+.tag{padding:1.75rem 1.5rem 1.5rem;position:relative}
+.tag .price{font-family:"Instrument Serif",serif;font-size:3.6rem;line-height:.9;color:var(--orange);margin:.6rem 0}
+.tag .price sup{font-size:1rem;font-family:"Courier Prime",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);vertical-align:.9rem}
+.tag ul{list-style:none;margin:1rem 0;font-size:.83rem}
+.tag li{padding:.35rem 0;border-bottom:1px dotted rgba(43,36,28,.28);display:flex;gap:.6rem}
+.tag li::before{content:"✓";color:var(--pen);flex:none}
+.tag.best{background:#FFF9E8;outline:3px double var(--stamp);outline-offset:6px}
+.tag .best-flag{position:absolute;top:-1.2rem;right:1rem}
+.gift-band{margin-top:3.5rem;background:var(--ink);color:#F3E7CE;padding:clamp(1.75rem,4vw,2.75rem);
+  transform:rotate(-.5deg);box-shadow:0 16px 40px rgba(43,36,28,.35)}
+.gift-band h3{color:#FFF6EB}
+.gift-band .push{background:var(--card);color:var(--ink);box-shadow:4px 4px 0 #6B5B45}
+
+/* faq — folded slips */
+.folds{margin-top:2rem;display:grid;gap:.9rem}
+.folds details{background:var(--card);border:1px solid rgba(43,36,28,.22);box-shadow:2px 2px 0 rgba(43,36,28,.14);transition:.3s var(--spring)}
+.folds details:nth-child(odd){transform:rotate(-.4deg)}
+.folds details:nth-child(even){transform:rotate(.4deg)}
+.folds details[open],.folds details:hover{transform:rotate(0);box-shadow:4px 4px 0 rgba(43,36,28,.2)}
+.folds summary{list-style:none;cursor:pointer;padding:1rem 1.25rem;font-family:"Instrument Serif",serif;font-size:1.3rem;display:flex;gap:1rem;align-items:baseline}
+.folds summary::-webkit-details-marker{display:none}
+.folds summary::after{content:"↓";margin-left:auto;color:var(--stamp);font-family:"Courier Prime",monospace;transition:transform .35s var(--spring)}
+.folds details[open] summary::after{transform:rotate(180deg)}
+.folds p{padding:0 1.25rem 1.25rem;font-size:.9rem;color:rgba(43,36,28,.8)}
+
+/* founder */
+.letterhead{padding:clamp(1.75rem,4vw,3rem);transform:rotate(-.5deg)}
+.letterhead .sig{font-family:"Caveat",cursive;font-size:3rem;color:var(--pen);margin-top:1.5rem;transform:rotate(-3deg);display:inline-block}
+
+/* capture */
+.capture{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem;max-width:42rem}
+.capture input{flex:1 1 11rem;background:var(--card);border:2px solid var(--ink);padding:.8rem .9rem;
+  font:inherit;font-size:.9rem;color:var(--ink);box-shadow:3px 3px 0 rgba(43,36,28,.2);min-width:0}
+.capture input:focus{outline:none;border-color:var(--orange);box-shadow:3px 3px 0 var(--orange)}
+
+/* closing */
+.closing{background:var(--ink);color:#F3E7CE;position:relative;overflow:hidden}
+.closing::after{content:"";position:absolute;top:-6rem;left:8%;width:26rem;height:26rem;border-radius:50%;
+  background:radial-gradient(circle,rgba(212,80,30,.4),transparent 65%);filter:blur(12px)}
+.closing .wrap{position:relative;z-index:2}
+.closing h2{color:#FFF6EB;max-width:16ch}
+.closing .stamp{border-color:#E9D6A9;color:#E9D6A9}
+
+footer{background:var(--kraft);border-top:3px solid var(--ink);padding-block:3rem;font-size:.82rem;position:relative;z-index:1}
+.fgrid{display:grid;gap:2rem}
+@media(min-width:820px){.fgrid{grid-template-columns:1.7fr repeat(4,1fr);gap:2rem}}
+footer h4{font-family:"Courier Prime",monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.7rem;color:var(--stamp)}
+footer ul{list-style:none;display:grid;gap:.45rem}
+footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+footer a:hover{border-color:var(--stamp)}
+.fbot{margin-top:2.5rem;padding-top:1rem;border-top:2px dashed rgba(43,36,28,.35);font-size:.75rem}
+
+:focus-visible{outline:3px solid var(--stamp);outline-offset:3px}
+@media(max-width:640px){
+  /* small screens: the pile flattens — everything squares up so it stays readable */
+  .tilt,.snap-a,.snap-b,.indexcard,.note,.tag,.letter,.env,.step,.cassette,.letterhead,
+  .folds details,.qs>*,.gift-band{transform:none!important;margin-left:0!important;margin-top:0!important}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap mast">
+    <a class="name" href="#">My Family Porch</a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#stories">Stories</a>
+      <a href="#why">Our why</a>
+      <a href="#faq">FAQ</a>
+      <a class="go" href="#">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<!-- THE TABLETOP — no hero. Things laid out, not composed. -->
+<div class="tabletop">
+  <div class="wrap scatter">
+    <div class="headline-slab">
+      <span class="stamp">For families</span>
+      <h1 class="serif">Their stories, in their <span class="u">own voice.</span></h1>
+
+      <div class="paper sub-card tilt">
+        <span class="tape tl"></span>
+        <p style="font-size:1rem;line-height:1.6">My Family Porch records a loved one’s life stories through short, AI-guided voice interviews — gentle to use, and kept as a keepsake your whole family can hear.</p>
+        <div class="hero-cta">
+          <a class="push" href="#">Get started</a>
+          <a class="push alt" href="#how">See how it works</a>
+        </div>
+      </div>
+
+      <p class="hand" style="margin-top:2rem;margin-left:1rem">no app for them to install —<br>it works on the phone they already have</p>
+    </div>
+
+    <div>
+      <figure class="snap snap-a tilt">
+        <img src="https://cdn.creativeclaw.co/u/f117164b/images/d15660de-298c-459d-b7f4-9544511ac3dd.jpg" alt="Faded instant photo of a family gathered on a front porch in summer.">
+        <figcaption class="cap">everybody still fit on the steps</figcaption>
+      </figure>
+      <figure class="snap snap-b tilt">
+        <img src="https://cdn.creativeclaw.co/u/f117164b/images/75d475ac-991a-437e-92d1-e4438bd9de1e.jpg" alt="Faded 1960s snapshot of a young couple beside an old sedan in a driveway.">
+        <figcaption class="cap">before they were Mom &amp; Dad</figcaption>
+      </figure>
+
+      <div class="indexcard tilt" style="margin-top:2.5rem">
+        <p class="type">A question for you</p>
+        <p class="q">What was your first home like?</p>
+        <div class="rec"><span class="dot"></span><span class="vu" id="vu" aria-hidden="true"></span> Listening…</div>
+        <p style="font-size:.85rem;margin-top:.6rem;color:rgba(43,36,28,.7)">Take your time — there’s no rush, and no wrong answer.</p>
+        <div class="counts">
+          <div><b>31</b><span class="type">stories</span></div>
+          <div><b>12</b><span class="type">topics</span></div>
+          <div><b>2</b><span class="type">voices</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHY NOW -->
+<section>
+  <div class="wrap spread">
+    <div class="a">
+      <span class="stamp">Why now</span>
+      <h2 class="serif" style="margin-top:1rem">There are stories we always mean to ask about.</h2>
+    </div>
+    <div class="b">
+      <div class="paper note n1 tilt">
+        <span class="tape tr"></span>
+        <p>How they met. The house they grew up in. The job nobody talks about anymore. We tell ourselves we’ll sit down and ask one day — and then the chance quietly slips away.</p>
+        <p style="margin-top:1rem">My Family Porch is that conversation, made easy enough to actually happen, and saved before it’s gone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <span class="stamp">How it works</span>
+    <h2 class="serif" style="margin-top:1rem">Three simple steps.</h2>
+    <p class="hand" style="margin-top:.75rem">you do the easy setup. they just answer the phone. we keep the stories.</p>
+    <div class="steps">
+      <div class="paper step tilt"><span class="tape tl"></span><span class="n">1</span>
+        <h3 class="serif">Set it up in minutes</h3>
+        <p style="margin-top:.6rem;font-size:.9rem">Add your loved one and choose the topics you’d love to hear about. No app for them to install — it works over a normal phone.</p>
+      </div>
+      <div class="paper step tilt"><span class="tape tr"></span><span class="n">2</span>
+        <h3 class="serif">They get gentle prompts — and just talk</h3>
+        <p style="margin-top:.6rem;font-size:.9rem">Every so often, a warm, AI-guided question arrives. They answer out loud, in their own time. No typing, no screens to figure out.</p>
+      </div>
+      <div class="paper step tilt"><span class="tape bl"></span><span class="n">3</span>
+        <h3 class="serif">Their voice becomes a keepsake</h3>
+        <p style="margin-top:.6rem;font-size:.9rem">Each answer is transcribed and saved into a growing collection of stories your whole family can listen to and read — forever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY VOICE — the cassette -->
+<section>
+  <div class="wrap spread">
+    <div class="d">
+      <div class="cassette" id="tape">
+        <span class="lbl">Side A · Margaret, 78</span>
+        <div class="win">
+          <span class="reel"></span>
+          <span class="hand" style="font-size:1.2rem;transform:rotate(-1deg)">recorded on a<br>Sunday afternoon</span>
+          <span class="reel"></span>
+        </div>
+        <button class="playbtn" id="play">▶ Play the tape</button>
+      </div>
+      <p class="type" style="margin-top:1rem">04:12 · story no. 019 · hard times &amp; resilience</p>
+    </div>
+    <div class="e">
+      <span class="stamp">Why voice</span>
+      <h2 class="serif" style="margin-top:1rem">A transcript can’t laugh. Their voice can.</h2>
+      <p class="hand" style="font-size:2rem;margin-top:1.5rem;line-height:1.2">“…and your grandfather walked the whole way home in the rain, just so he could say he’d done it.”</p>
+      <p style="margin-top:1.5rem;font-size:.95rem">The way they pause, the catch in their throat at the good part, the way they say your name — that’s the part you’ll miss most. We keep the real recording, not just the words.</p>
+      <ul style="list-style:none;margin-top:1.25rem;font-size:.9rem">
+        <li style="display:flex;gap:.75rem;padding:.4rem 0;border-bottom:1px dotted rgba(43,36,28,.3)"><b style="color:var(--stamp)">✓</b>It’s their actual voice — saved, not summarized.</li>
+        <li style="display:flex;gap:.75rem;padding:.4rem 0;border-bottom:1px dotted rgba(43,36,28,.3)"><b style="color:var(--stamp)">✓</b>Nothing to learn: answer a prompt out loud, that’s it.</li>
+        <li style="display:flex;gap:.75rem;padding:.4rem 0;border-bottom:1px dotted rgba(43,36,28,.3)"><b style="color:var(--stamp)">✓</b>Works for the least tech-comfortable elder in the family.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- THE LIBRARY -->
+<section>
+  <div class="wrap spread">
+    <div class="a">
+      <span class="stamp">The question box</span>
+      <h2 class="serif" style="margin-top:1rem">Twelve chapters, already written as questions.</h2>
+      <div class="slips">
+        <span class="slip">Warm-Ups &amp; Icebreakers</span><span class="slip">Childhood &amp; Early Years</span>
+        <span class="slip">Family &amp; Roots</span><span class="slip">School &amp; Coming of Age</span>
+        <span class="slip">Young Adulthood &amp; Work</span><span class="slip">Love &amp; Relationships</span>
+        <span class="slip">Parenthood &amp; the Next Generation</span><span class="slip">Friendship &amp; Community</span>
+        <span class="slip">Hobbies, Joys &amp; Everyday Life</span><span class="slip">Hard Times &amp; Resilience</span>
+        <span class="slip">Reflection &amp; Wisdom</span><span class="slip">Legacy &amp; Things Left to Say</span>
+      </div>
+    </div>
+    <div class="b">
+      <div class="qs">
+        <div class="qslip"><small>warm-001</small>What was your first car?</div>
+        <div class="qslip"><small>warm-002</small>What music did you love when you were twenty?</div>
+        <div class="qslip"><small>child-003</small>What’s the first memory you can reach back and grab?</div>
+        <div class="qslip"><small>child-006</small>Is there a smell or sound from childhood that takes you right back?</div>
+        <div class="qslip"><small>school-004</small>Tell me about a friend from back then I’ve never heard about.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU GET -->
+<section>
+  <div class="wrap spread">
+    <div class="a">
+      <span class="stamp">What you get</span>
+      <h2 class="serif" style="margin-top:1rem">A keepsake, not just a recording.</h2>
+      <p class="hand" style="margin-top:.75rem">their stories come back in the ways your family will actually use</p>
+      <div class="envs">
+        <div class="paper env tilt"><span class="tape tl"></span><h3 class="serif">Every story, in their voice</h3><p style="margin-top:.5rem;font-size:.88rem">Listen back any time to the real recordings — gathered into one warm, private collection.</p></div>
+        <div class="paper env tilt"><span class="tape tr"></span><h3 class="serif">A book you can hear</h3><p style="margin-top:.5rem;font-size:.88rem">A beautifully laid-out digital book (PDF) of their stories, with voice QR codes — scan a page, hear the story.</p></div>
+        <div class="paper env tilt"><span class="tape bl"></span><h3 class="serif">Shared with the whole family</h3><p style="margin-top:.5rem;font-size:.88rem">Invite siblings, kids, and grandkids to read and listen together. One porch, the whole family on it.</p></div>
+        <div class="paper env tilt"><span class="tape tl"></span><h3 class="serif">Yours to keep, forever</h3><p style="margin-top:.5rem;font-size:.88rem">Download everything — every recording, transcript, and the book — in one click, any time. It’s your family’s, not ours.</p></div>
+      </div>
+    </div>
+    <div class="b">
+      <figure class="snap tilt" style="transform:rotate(2.2deg)">
+        <img src="https://cdn.creativeclaw.co/u/f117164b/images/f26eb32d-2076-4547-9a47-d35554aeec8c.jpg" alt="An old cassette tape and a felt-tip pen on a scuffed wooden kitchen table." style="aspect-ratio:5/4">
+        <figcaption class="cap">the way we used to keep a voice</figcaption>
+      </figure>
+      <p class="hand red" style="margin-top:1.5rem;margin-left:1rem">…and the way we keep one now.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STORIES -->
+<section id="stories">
+  <div class="wrap">
+    <span class="stamp">Stories</span>
+    <h2 class="serif" style="margin-top:1rem">Families are already keeping their stories.</h2>
+    <div class="letters">
+      <figure class="paper letter tilt"><span class="tape tl"></span>
+        <blockquote>“I set it up for my dad in five minutes. Now I have hours of him telling stories I’d never heard — in his voice. I’ll have that forever.”</blockquote>
+        <figcaption><b>Dana R.</b>Daughter, set it up for her father</figcaption>
+      </figure>
+      <figure class="paper letter tilt"><span class="tape tr"></span>
+        <blockquote>“My mom isn’t techy at all, but she just answers the phone and talks. The grandkids love hearing her tell it herself.”</blockquote>
+        <figcaption><b>Marcus T.</b>Son, recording his mother’s stories</figcaption>
+      </figure>
+      <figure class="paper letter tilt"><span class="tape bl"></span>
+        <blockquote>“We gave it to Grandma for her birthday. It turned into the best gift our whole family has ever shared.”</blockquote>
+        <figcaption><b>The Alvarez family</b>A gift for their grandmother</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <span class="stamp">Pricing</span>
+    <h2 class="serif" style="margin-top:1rem">Simple plans. Keep everything, forever.</h2>
+    <p class="hand" style="margin-top:.75rem">cancel any time — your stories, recordings &amp; book are always yours to download and keep</p>
+
+    <div class="tags">
+      <div class="paper tag tilt"><span class="tape tl"></span>
+        <p class="type">Keepsake</p>
+        <h3 class="serif">Everything, kept forever.</h3>
+        <p class="price">$99<sup>/ yr</sup></p>
+        <p class="type" style="margin-top:-.5rem">or $14 / month</p>
+        <ul>
+          <li>One storyteller</li><li>Unlimited stories and recordings</li>
+          <li>Full voice-nudge &amp; scheduling experience</li>
+          <li>Digital book (PDF) with bundled audio + voice QR codes</li>
+          <li>Forever access on cancellation</li><li>Printed book available as an add-on</li>
+        </ul>
+        <a class="push alt" href="#" style="width:100%;text-align:center">Start recording</a>
+      </div>
+
+      <div class="paper tag best tilt"><span class="tape tr"></span>
+        <span class="stamp best-flag">Most popular</span>
+        <p class="type">Keepsake + Book</p>
+        <h3 class="serif">The book with their voice in it.</h3>
+        <p class="price">$189<sup>/ yr</sup></p>
+        <ul>
+          <li>Everything in Keepsake, plus:</li>
+          <li>One printed hardcover color book, included in your first year</li>
+          <li>Voice QR codes printed in the book</li>
+          <li>New editions and extra copies any time at add-on prices</li>
+        </ul>
+        <a class="push" href="#" style="width:100%;text-align:center">Get the book</a>
+      </div>
+
+      <div class="paper tag tilt"><span class="tape bl"></span>
+        <p class="type">Family</p>
+        <h3 class="serif">For the whole family.</h3>
+        <p class="price">$299<sup>/ yr</sup></p>
+        <ul>
+          <li>Everything in Keepsake + Book, plus:</li>
+          <li>Up to 3 storytellers</li><li>Priority support</li>
+        </ul>
+        <a class="push alt" href="#" style="width:100%;text-align:center">Set up the family</a>
+      </div>
+    </div>
+
+    <div class="gift-band">
+      <p class="type" style="color:#C9A66B">The Gift · $199 one-time</p>
+      <h3 class="serif" style="margin-top:.5rem">One price, prepaid. Nothing to renew.</h3>
+      <p style="margin-top:.75rem;font-size:.9rem;color:#E0D2B4;max-width:52rem">12 months of recording, prepaid · One printed hardcover color book included · Never auto-renews — no card left on file · They keep every story, always.</p>
+      <a class="push" href="#" style="margin-top:1.5rem">Give it as a gift</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap spread">
+    <div class="a">
+      <span class="stamp">FAQ</span>
+      <h2 class="serif" style="margin-top:1rem">Questions families ask.</h2>
+      <div class="folds">
+        <details><summary>Does the storyteller need a smartphone or app?</summary><p>No. It works over a normal phone with SMS. There is nothing to install, no account for them to manage, and no password to remember.</p></details>
+        <details><summary>Can more than one person record?</summary><p>Yes, on the Family plan, or add a storyteller to any annual plan.</p></details>
+        <details><summary>What are the voice QR codes?</summary><p>Printed codes in the book that play the original recording when scanned, so you can hear the story in their own voice.</p></details>
+        <details><summary>Can I download all the recordings?</summary><p>Yes — any time, on every plan. One click gives you a ZIP with every audio recording, the transcripts, and your book. If you ever cancel, it’s all still yours to download and keep.</p></details>
+        <details><summary>Can I order more printed copies?</summary><p>Yes, any time, softcover or hardcover.</p></details>
+        <details><summary>What happens if I cancel?</summary><p>You keep all stories, audio, and your digital book. Nothing is deleted or locked.</p></details>
+      </div>
+    </div>
+    <div class="b">
+      <p class="hand red" style="font-size:2.1rem;margin-top:4rem">your family’s recordings are private —<br>yours to keep, and never sold.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER -->
+<section id="why">
+  <div class="wrap">
+    <div class="paper letterhead tilt">
+      <span class="tape tl"></span><span class="tape tr"></span>
+      <span class="stamp">A letter from the founder</span>
+      <h2 class="serif" style="margin-top:1rem;max-width:18ch">It started with a Father’s Day gift I couldn’t find.</h2>
+      <p style="margin-top:1.5rem;max-width:56ch">My Family Porch began at home, on a Sunday morning, with one simple wish: that my dad could just <em>tell</em> us the stories of his life.</p>
+      <p style="margin-top:1rem;max-width:56ch">He has a cell phone, and he knows how to use it. So why not make sharing his memories as easy as talking on the phone? And you don’t have to keep paying us forever to hold onto your loved one’s memories — they’re yours to keep.</p>
+      <p class="sig">I love you, Dad.</p>
+      <p class="type">Paul — Founder, My Family Porch</p>
+    </div>
+  </div>
+</section>
+
+<!-- NOT READY -->
+<section>
+  <div class="wrap spread">
+    <div class="a">
+      <span class="stamp">No pressure</span>
+      <h2 class="serif" style="margin-top:1rem">Not ready yet? Stay on the porch with us.</h2>
+      <p style="margin-top:1rem;font-size:.95rem">Leave your name and email and we’ll send a gentle note when the time feels right. No spam, ever.</p>
+      <form class="capture" onsubmit="event.preventDefault();this.querySelector('.push').textContent='Thank you!'">
+        <input type="text" placeholder="Your name" aria-label="Your name" required>
+        <input type="email" placeholder="you@email.com" aria-label="Your email" required>
+        <button class="push" type="submit">Keep me posted</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section class="closing">
+  <div class="wrap">
+    <span class="stamp">Start with one question</span>
+    <h2 class="serif" style="margin-top:1rem">The stories are still here. Start with one question.</h2>
+    <p style="margin-top:1rem;color:#E0D2B4;max-width:34rem">It takes a few minutes to set up, and there’s no better day than today to begin.</p>
+    <div class="hero-cta">
+      <a class="push" href="#">Get started</a>
+      <a class="push alt" href="#pricing">See pricing</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <div>
+      <p style="font-family:'Instrument Serif',serif;font-size:1.6rem">My Family Porch</p>
+      <p class="hand" style="font-size:1.35rem;margin-top:.4rem">Their stories, in their own voice.</p>
+      <p style="margin-top:1rem">Your family’s recordings are private — yours to keep, and never sold.</p>
+    </div>
+    <div><h4>Product</h4><ul><li><a href="#how">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#">What you get</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="#">Our story</a></li><li><a href="#why">Why I built this</a></li><li><a href="#">Gift a porch</a></li></ul></div>
+    <div><h4>Help</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#">Contact</a></li></ul></div>
+    <div><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">SMS reminders</a></li></ul></div>
+  </div>
+  <div class="wrap fbot">© 2026 My Family Porch — a service of Technology Leadership Group, LLC.</div>
+</footer>
+
+<script>
+// VU meter on the index card
+const vu=[6,10,15,9,19,25,17,28,21,13,23,11,16,8,5];
+document.getElementById('vu').innerHTML=vu.map((h,i)=>`<i style="height:${h/28*100}%;animation-delay:${i*.07}s"></i>`).join('');
+
+// The cassette actually plays: reels spin, button changes. Physical, not decorative.
+const tape=document.getElementById('tape'),play=document.getElementById('play');
+play.addEventListener('click',()=>{
+  const on=tape.classList.toggle('playing');
+  play.textContent=on?'❚❚ Playing — 00:41 / 04:12':'▶ Play the tape';
+});
+
+// Every taped item gets its own slight, stable rotation — a pile, not a grid.
+document.querySelectorAll('.tilt').forEach((el,i)=>{
+  if(getComputedStyle(el).transform!=='none') return;
+  el.style.transform=`rotate(${(((i*37)%9)-4)*.45}deg)`;
+});
+</script>
+</body>
+</html>

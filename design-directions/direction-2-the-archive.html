@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction 2 — The Archive · My Family Porch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   DIRECTION 2 — "THE ARCHIVE"
+   Lineage: Swiss / International Typographic Style, applied as an institutional
+   finding aid — a national-archive catalogue for one family. Müller-Brockmann
+   grid, Unimark signage discipline, catalogue numbering, tabular data.
+   Colour: HONORS THE CODE'S EXISTING TOKENS EXACTLY — paper #EBF1F8, ink
+   #15233B, brand #2563EB — but used Swiss: flat fields only. No gradient, no
+   shadow, no rounded corner, no blur, anywhere. Three values, nothing else.
+   Type: ONE family, Archivo (variable grotesk), across width + weight axes.
+   A deliberate grotesk choice, not a default.
+   Motion: dead-still, like print. State changes are instantaneous inversions.
+   ========================================================================== */
+
+:root{
+  --paper:#EBF1F8;
+  --surface:#FFFFFF;
+  --ink:#15233B;
+  --blue:#2563EB;
+  --rule:#C5D3E6;
+  --gut:1.5rem;
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:"Archivo",Helvetica,Arial,sans-serif;
+  font-variation-settings:"wdth" 100,"wght" 400;
+  font-size:clamp(1rem,.95rem + .22vw,1.0625rem);
+  line-height:1.5;-webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum" 1;
+}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+
+/* --- grid shell ---------------------------------------------------------- */
+.sheet{
+  width:100%;max-width:96rem;margin-inline:auto;
+  padding-inline:var(--gut);
+  border-left:1px solid var(--rule);border-right:1px solid var(--rule);
+  background:
+    linear-gradient(to right,var(--rule) 1px,transparent 1px) 0 0/ calc(100%/6) 100%;
+  background-attachment:local;
+}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gut);border-bottom:1px solid var(--rule)}
+.row.plain{border-bottom:0}
+@media(max-width:900px){.row{grid-template-columns:repeat(6,1fr)}.sheet{background-size:calc(100%/3) 100%}}
+@media(max-width:620px){.row{grid-template-columns:1fr;gap:.75rem}.sheet{background-image:none}}
+
+/* --- type ---------------------------------------------------------------- */
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.025em;line-height:1.02}
+h1{font-size:clamp(2.5rem,1.1rem + 5.8vw,6.5rem);font-variation-settings:"wdth" 88,"wght" 700}
+h2{font-size:clamp(1.75rem,1.2rem + 2.2vw,3.25rem);font-variation-settings:"wdth" 92,"wght" 650}
+h3{font-size:1.1875rem;font-variation-settings:"wdth" 100,"wght" 600;line-height:1.2}
+.meta{
+  font-size:.6875rem;font-variation-settings:"wdth" 112,"wght" 600;
+  text-transform:uppercase;letter-spacing:.14em;line-height:1.4;
+}
+.num{font-variation-settings:"wdth" 62,"wght" 700;font-size:.9rem;letter-spacing:.02em}
+.lede{font-size:clamp(1.0625rem,1rem + .5vw,1.3125rem);line-height:1.45;max-width:46ch;font-variation-settings:"wght" 400}
+p{max-width:64ch}
+.dim{color:#4A5D7E}
+
+/* --- nav ----------------------------------------------------------------- */
+header{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--paper)}
+.nav{display:flex;flex-wrap:wrap;align-items:center;gap:1.75rem;padding:.7rem var(--gut);max-width:96rem;margin-inline:auto}
+.logo{font-variation-settings:"wdth" 78,"wght" 800;font-size:1rem;letter-spacing:-.02em;text-transform:uppercase}
+.nav nav{display:flex;gap:1.4rem;margin-left:auto;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;font-variation-settings:"wdth" 106,"wght" 600}
+.nav nav a{padding:.25rem .15rem;border-bottom:2px solid transparent}
+.nav nav a:hover{border-color:var(--blue);color:#9FC0FF}
+.nav .go{background:var(--blue);color:#fff;padding:.45rem 1rem;border-bottom:0}
+.nav .go:hover{background:var(--paper);color:var(--ink)}
+@media(max-width:760px){.nav nav a:not(.go){display:none}}
+
+/* --- blocks -------------------------------------------------------------- */
+.pad{padding-block:clamp(2.5rem,5vw,4.5rem)}
+.padx{padding-block:clamp(1.5rem,3vw,2.5rem)}
+.c-1-2{grid-column:1/3}.c-3-8{grid-column:3/9}.c-9-13{grid-column:9/13}
+.c-1-7{grid-column:1/8}.c-8-13{grid-column:8/13}
+.c-3-13{grid-column:3/13}.c-1-13{grid-column:1/13}
+.c-3-6{grid-column:3/7}.c-7-10{grid-column:7/11}.c-10-13{grid-column:10/13}
+@media(max-width:900px){
+  .c-1-2{grid-column:1/7}.c-3-8,.c-9-13,.c-1-7,.c-8-13,.c-3-13,.c-1-13,.c-3-6,.c-7-10,.c-10-13{grid-column:1/7}
+}
+@media(max-width:620px){[class^="c-"]{grid-column:1/-1}}
+
+/* --- hero ---------------------------------------------------------------- */
+.hero{border-bottom:1px solid var(--rule)}
+.hero h1{margin:.75rem 0 1.5rem}
+/* Hard crop — an archive plate is cropped to the subject, never letterboxed. */
+.plate{position:relative;background:var(--ink);align-self:stretch;aspect-ratio:4/5;overflow:hidden}
+.plate img{width:100%;height:100%;object-fit:cover;
+  transform:scale(1.38);transform-origin:center 30%;  /* crops the plate's own printed matter — our caption is the caption */
+  filter:grayscale(1) contrast(1.15);mix-blend-mode:luminosity;opacity:.92}
+.plate .cap{position:absolute;left:0;bottom:0;right:0;background:var(--blue);color:#fff;padding:.5rem .75rem}
+.actions{display:flex;flex-wrap:wrap;gap:0;margin-top:2rem;border:1px solid var(--ink);width:max-content;max-width:100%}
+.actions a{padding:.85rem 1.75rem;font-variation-settings:"wdth" 100,"wght" 650;font-size:.9375rem;text-transform:uppercase;letter-spacing:.08em}
+.actions a:first-child{background:var(--ink);color:var(--paper)}
+.actions a:first-child:hover{background:var(--blue)}
+.actions a:last-child{border-left:1px solid var(--ink)}
+.actions a:last-child:hover{background:var(--ink);color:var(--paper)}
+
+/* --- record card (the live session, as a catalogue entry) ---------------- */
+.record{border:1px solid var(--ink);background:var(--surface)}
+.record .hd{background:var(--ink);color:var(--paper);padding:.45rem .75rem;display:flex;justify-content:space-between;gap:1rem}
+.record .bd{padding:1rem .75rem}
+.record .q{font-size:1.375rem;font-variation-settings:"wdth" 94,"wght" 650;line-height:1.1;letter-spacing:-.02em;margin-bottom:1rem}
+.lvl{display:flex;align-items:flex-end;gap:2px;height:1.5rem;margin-bottom:.5rem}
+.lvl i{width:4px;background:var(--blue)}
+.field{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule)}
+.field div{padding:.75rem;border-right:1px solid var(--rule)}
+.field div:last-child{border-right:0}
+.field b{display:block;font-size:2rem;font-variation-settings:"wdth" 70,"wght" 700;line-height:1;letter-spacing:-.03em}
+
+/* --- section head -------------------------------------------------------- */
+.shead{display:flex;gap:.75rem;align-items:baseline}
+.shead .num{color:var(--blue)}
+
+/* --- ruled index tables -------------------------------------------------- */
+table{width:100%;border-collapse:collapse;font-size:.9375rem}
+th,td{text-align:left;padding:.85rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:.6875rem;text-transform:uppercase;letter-spacing:.14em;font-variation-settings:"wdth" 112,"wght" 600;border-bottom:1px solid var(--ink);color:#4A5D7E}
+tbody tr:hover{background:var(--ink);color:var(--paper)}
+tbody tr:hover .dim{color:#9FB3D1}
+td.n{width:4rem;font-variation-settings:"wdth" 62,"wght" 700;color:var(--blue)}
+tbody tr:hover td.n{color:#9FC0FF}
+td.v{text-align:right;white-space:nowrap;font-variation-settings:"wdth" 70,"wght" 700;font-size:1.25rem;letter-spacing:-.02em}
+
+/* --- stack list ---------------------------------------------------------- */
+.stack{border-top:1px solid var(--ink)}
+.stack>div{display:grid;grid-template-columns:3.5rem 1fr;gap:var(--gut);padding:1.5rem 0;border-bottom:1px solid var(--rule)}
+.stack>div:hover{background:var(--surface)}
+.stack .num{color:var(--blue)}
+@media(min-width:900px){.stack>div{grid-template-columns:3.5rem 18rem 1fr}}
+
+/* --- quote plate --------------------------------------------------------- */
+.quote{background:var(--ink);color:var(--paper)}
+.quote blockquote{font-size:clamp(1.4rem,1rem + 2vw,2.75rem);font-variation-settings:"wdth" 92,"wght" 500;
+  line-height:1.1;letter-spacing:-.025em;max-width:24ch}
+.quote .lvl i{background:#5B8DEF}
+.quote .meta{color:#7FA3D8}
+
+/* --- pricing matrix ------------------------------------------------------ */
+.matrix td,.matrix th{border-right:1px solid var(--rule)}
+.matrix td:last-child,.matrix th:last-child{border-right:0}
+.matrix .hit{background:var(--blue);color:#fff;text-align:center;width:1.75rem}
+.matrix .miss{text-align:center;color:#9FB3D1}
+.matrix .val{text-align:center;font-variation-settings:"wght" 650}
+.tiers{display:grid;grid-template-columns:1fr;border:1px solid var(--ink)}
+@media(min-width:820px){.tiers{grid-template-columns:repeat(3,1fr)}}
+.tiers>div{padding:1.5rem;border-bottom:1px solid var(--ink)}
+@media(min-width:820px){.tiers>div{border-bottom:0;border-right:1px solid var(--ink)}.tiers>div:last-child{border-right:0}}
+.tiers>div:last-child{border-bottom:0}
+.tiers .rec{background:var(--blue);color:#fff}
+.tiers .rec .dim,.tiers .rec .meta{color:#D6E4FF}
+.tiers .price{font-size:2.75rem;font-variation-settings:"wdth" 70,"wght" 700;letter-spacing:-.04em;line-height:1;margin:1rem 0}
+.tiers ul{list-style:none;font-size:.875rem;margin-top:1rem}
+.tiers li{padding:.3rem 0;border-top:1px solid rgba(21,35,59,.14)}
+.tiers .rec li{border-color:rgba(255,255,255,.28)}
+.buy{display:block;margin-top:1.25rem;padding:.7rem;text-align:center;border:1px solid currentColor;
+  font-size:.8125rem;text-transform:uppercase;letter-spacing:.1em;font-variation-settings:"wght" 650}
+.buy:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tiers .rec .buy:hover{background:#fff;color:var(--blue);border-color:#fff}
+
+/* --- faq ----------------------------------------------------------------- */
+details{border-bottom:1px solid var(--rule)}
+summary{list-style:none;cursor:pointer;padding:1rem 0;display:grid;grid-template-columns:3.5rem 1fr auto;gap:var(--gut);
+  font-variation-settings:"wght" 600;font-size:1.0625rem}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--surface)}
+summary::after{content:"+";color:var(--blue);font-variation-settings:"wght" 700}
+details[open] summary::after{content:"–"}
+details p{padding:0 0 1.25rem 4.5rem;color:#4A5D7E;font-size:.9375rem}
+@media(max-width:620px){summary{grid-template-columns:2.5rem 1fr auto}details p{padding-left:2.5rem}}
+
+/* --- closing ------------------------------------------------------------- */
+.closing{background:var(--blue);color:#fff}
+.closing h2{max-width:20ch}
+.closing .actions{border-color:#fff;margin-top:2rem}
+.closing .actions a:first-child{background:#fff;color:var(--blue)}
+.closing .actions a:first-child:hover{background:var(--ink);color:#fff}
+.closing .actions a:last-child{border-left-color:#fff}
+.closing .actions a:last-child:hover{background:#fff;color:var(--blue)}
+
+/* --- capture ------------------------------------------------------------- */
+form{display:flex;flex-wrap:wrap;gap:0;margin-top:1.5rem;border:1px solid var(--ink);max-width:44rem}
+form input{flex:1 1 10rem;border:0;border-right:1px solid var(--ink);padding:.9rem .85rem;font:inherit;font-size:.9375rem;background:var(--surface);color:var(--ink);min-width:0}
+form input:focus{outline:2px solid var(--blue);outline-offset:-2px}
+form button{border:0;background:var(--ink);color:var(--paper);padding:.9rem 1.5rem;font:inherit;font-size:.8125rem;
+  text-transform:uppercase;letter-spacing:.1em;font-variation-settings:"wght" 650;cursor:pointer}
+form button:hover{background:var(--blue)}
+
+/* --- footer -------------------------------------------------------------- */
+footer{background:var(--ink);color:#9FB3D1;font-size:.875rem}
+.fgrid{display:grid;grid-template-columns:1fr;gap:2rem;padding-block:3rem}
+@media(min-width:820px){.fgrid{grid-template-columns:1.8fr repeat(4,1fr);gap:var(--gut)}}
+footer h4{color:#fff;font-size:.6875rem;text-transform:uppercase;letter-spacing:.14em;font-variation-settings:"wdth" 112,"wght" 600;margin-bottom:.75rem}
+footer ul{list-style:none;display:grid;gap:.4rem}
+footer a:hover{color:#fff;border-bottom:1px solid var(--blue)}
+.fbot{border-top:1px solid rgba(255,255,255,.16);padding:1rem 0;font-size:.75rem}
+
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="logo" href="#">My Family Porch</a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#stories">Stories</a>
+      <a href="#why">Our why</a>
+      <a href="#faq">FAQ</a>
+      <a class="go" href="#">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main class="sheet">
+
+  <!-- 00 HERO -->
+  <div class="row hero pad">
+    <div class="c-1-2"><p class="meta">Fonds<br>MFP · 2026</p></div>
+    <div class="c-3-8">
+      <p class="meta" style="color:var(--blue)">For families</p>
+      <h1>Their stories,<br>in their own voice.</h1>
+      <p class="lede">My Family Porch records a loved one’s life stories through short, AI-guided voice interviews — gentle to use, and kept as a keepsake your whole family can hear.</p>
+      <div class="actions">
+        <a href="#">Get started</a>
+        <a href="#how">See how it works</a>
+      </div>
+    </div>
+    <div class="c-9-13 plate">
+      <img src="https://cdn.creativeclaw.co/u/f117164b/images/f49ad95e-ed4d-4940-8461-b49284cc6baf.jpg" alt="Archival duotone portrait of an elderly woman seated, facing the camera.">
+      <div class="cap meta">Plate 01 · Storyteller, accession 0031</div>
+    </div>
+  </div>
+
+  <!-- LIVE RECORD -->
+  <div class="row padx">
+    <div class="c-1-7">
+      <p class="meta dim">Session in progress</p>
+      <p class="lede" style="margin-top:.75rem">Every answer enters the record the moment it is spoken: transcribed, timestamped, filed under a topic, and returned to the family unedited.</p>
+    </div>
+    <div class="c-8-13">
+      <div class="record">
+        <div class="hd"><span class="meta">A question for you</span><span class="meta">REC · 00:41</span></div>
+        <div class="bd">
+          <p class="q">What was your first home like?</p>
+          <div class="lvl" id="lvl" aria-hidden="true"></div>
+          <p class="meta" style="color:var(--blue)">Listening…</p>
+          <p class="dim" style="font-size:.875rem;margin-top:.5rem">Take your time — there’s no rush, and no wrong answer.</p>
+        </div>
+        <div class="field">
+          <div><b>31</b><span class="meta dim">Stories</span></div>
+          <div><b>12</b><span class="meta dim">Topics</span></div>
+          <div><b>02</b><span class="meta dim">Voices</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 01 WHY NOW -->
+  <div class="row pad">
+    <div class="c-1-2"><div class="shead"><span class="num">01</span><span class="meta">Why now</span></div></div>
+    <div class="c-3-13">
+      <h2>There are stories we always mean to ask about.</h2>
+      <p class="lede" style="margin-top:1.5rem">How they met. The house they grew up in. The job nobody talks about anymore. We tell ourselves we’ll sit down and ask one day — and then the chance quietly slips away. My Family Porch is that conversation, made easy enough to actually happen, and saved before it’s gone.</p>
+    </div>
+  </div>
+
+  <!-- 02 HOW IT WORKS -->
+  <div class="row pad" id="how">
+    <div class="c-1-2"><div class="shead"><span class="num">02</span><span class="meta">How it works</span></div></div>
+    <div class="c-3-13">
+      <h2>Three simple steps.</h2>
+      <p class="lede" style="margin-top:1rem">You do the easy setup. They just answer the phone. We keep the stories.</p>
+      <div class="stack" style="margin-top:2.5rem">
+        <div><span class="num">01</span><h3>Set it up in minutes</h3><p class="dim">Add your loved one and choose the topics you’d love to hear about. No app for them to install — it works over a normal phone.</p></div>
+        <div><span class="num">02</span><h3>They get gentle prompts — and just talk</h3><p class="dim">Every so often, a warm, AI-guided question arrives. They answer out loud, in their own time. No typing, no screens to figure out.</p></div>
+        <div><span class="num">03</span><h3>Their voice becomes a keepsake</h3><p class="dim">Each answer is transcribed and saved into a growing collection of stories your whole family can listen to and read — forever.</p></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 03 QUOTE PLATE — full bleed ink -->
+<div class="quote">
+  <div class="sheet" style="border-color:rgba(255,255,255,.18);background-image:linear-gradient(to right,rgba(255,255,255,.1) 1px,transparent 1px);background-size:calc(100%/6) 100%">
+    <div class="row plain pad">
+      <div class="c-1-2"><div class="shead"><span class="num" style="color:#5B8DEF">03</span><span class="meta">Why voice</span></div></div>
+      <div class="c-3-8">
+        <blockquote>“…and your grandfather walked the whole way home in the rain, just so he could say he’d done it.”</blockquote>
+        <div class="lvl" id="lvl2" style="height:2.5rem;margin-top:2rem" aria-hidden="true"></div>
+        <p class="meta" style="margin-top:.75rem">Margaret, 78 · Recorded on a Sunday afternoon · Duration 00:04:12</p>
+      </div>
+      <div class="c-9-13">
+        <h3 style="color:#fff">A transcript can’t laugh. Their voice can.</h3>
+        <p style="color:#9FB3D1;margin-top:1rem;font-size:.9375rem">The way they pause, the catch in their throat at the good part, the way they say your name — that’s the part you’ll miss most. We keep the real recording, not just the words.</p>
+        <table style="margin-top:1.5rem">
+          <tbody>
+            <tr style="pointer-events:none"><td class="n" style="color:#5B8DEF">a</td><td style="border-color:rgba(255,255,255,.18)">It’s their actual voice — saved, not summarized.</td></tr>
+            <tr style="pointer-events:none"><td class="n" style="color:#5B8DEF">b</td><td style="border-color:rgba(255,255,255,.18)">Nothing to learn: answer a prompt out loud, that’s it.</td></tr>
+            <tr style="pointer-events:none"><td class="n" style="color:#5B8DEF">c</td><td style="border-color:rgba(255,255,255,.18)">Works for the least tech-comfortable elder in the family.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="sheet">
+
+  <!-- 04 THE LIBRARY -->
+  <div class="row pad">
+    <div class="c-1-2"><div class="shead"><span class="num">04</span><span class="meta">The library</span></div></div>
+    <div class="c-3-8">
+      <h2>Twelve series. One life, indexed.</h2>
+      <table style="margin-top:2rem">
+        <thead><tr><th>№</th><th>Series</th></tr></thead>
+        <tbody>
+          <tr><td class="n">01</td><td>Warm-Ups &amp; Icebreakers</td></tr>
+          <tr><td class="n">02</td><td>Childhood &amp; Early Years</td></tr>
+          <tr><td class="n">03</td><td>Family &amp; Roots</td></tr>
+          <tr><td class="n">04</td><td>School &amp; Coming of Age</td></tr>
+          <tr><td class="n">05</td><td>Young Adulthood &amp; Work</td></tr>
+          <tr><td class="n">06</td><td>Love &amp; Relationships</td></tr>
+          <tr><td class="n">07</td><td>Parenthood &amp; the Next Generation</td></tr>
+          <tr><td class="n">08</td><td>Friendship &amp; Community</td></tr>
+          <tr><td class="n">09</td><td>Hobbies, Joys &amp; Everyday Life</td></tr>
+          <tr><td class="n">10</td><td>Hard Times &amp; Resilience</td></tr>
+          <tr><td class="n">11</td><td>Reflection &amp; Wisdom</td></tr>
+          <tr><td class="n">12</td><td>Legacy &amp; Things Left to Say</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="c-9-13">
+      <p class="meta dim">Specimen prompts</p>
+      <table style="margin-top:1rem">
+        <tbody>
+          <tr><td class="n">w-01</td><td>What was your first car?</td></tr>
+          <tr><td class="n">w-02</td><td>What music did you love when you were twenty?</td></tr>
+          <tr><td class="n">c-03</td><td>What’s the first memory you can reach back and grab?</td></tr>
+          <tr><td class="n">c-06</td><td>Is there a smell or sound from childhood that takes you right back?</td></tr>
+          <tr><td class="n">s-04</td><td>Tell me about a friend from back then I’ve never heard about.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 05 WHAT YOU GET -->
+  <div class="row pad">
+    <div class="c-1-2"><div class="shead"><span class="num">05</span><span class="meta">What you get</span></div></div>
+    <div class="c-3-13">
+      <h2>A keepsake, not just a recording.</h2>
+      <p class="lede" style="margin-top:1rem">Their stories come back to you in the ways your family will actually use.</p>
+      <div class="stack" style="margin-top:2.5rem">
+        <div><span class="num">A</span><h3>Every story, in their voice</h3><p class="dim">Listen back any time to the real recordings — gathered into one warm, private collection.</p></div>
+        <div><span class="num">B</span><h3>A book you can hear</h3><p class="dim">A beautifully laid-out digital book (PDF) of their stories, with voice QR codes — scan a page, hear the story.</p></div>
+        <div><span class="num">C</span><h3>Shared with the whole family</h3><p class="dim">Invite siblings, kids, and grandkids to read and listen together. One porch, the whole family on it.</p></div>
+        <div><span class="num">D</span><h3>Yours to keep, forever</h3><p class="dim">Download everything — every recording, transcript, and the book — in one click, any time. It’s your family’s, not ours.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 STORIES -->
+  <div class="row pad" id="stories">
+    <div class="c-1-2"><div class="shead"><span class="num">06</span><span class="meta">Stories</span></div></div>
+    <div class="c-3-6">
+      <blockquote style="font-size:1.0625rem;line-height:1.45">“I set it up for my dad in five minutes. Now I have hours of him telling stories I’d never heard — in his voice. I’ll have that forever.”</blockquote>
+      <p class="meta" style="margin-top:1.25rem;color:var(--blue)">Dana R.</p>
+      <p class="meta dim">Daughter, set it up for her father</p>
+    </div>
+    <div class="c-7-10">
+      <blockquote style="font-size:1.0625rem;line-height:1.45">“My mom isn’t techy at all, but she just answers the phone and talks. The grandkids love hearing her tell it herself.”</blockquote>
+      <p class="meta" style="margin-top:1.25rem;color:var(--blue)">Marcus T.</p>
+      <p class="meta dim">Son, recording his mother’s stories</p>
+    </div>
+    <div class="c-10-13">
+      <blockquote style="font-size:1.0625rem;line-height:1.45">“We gave it to Grandma for her birthday. It turned into the best gift our whole family has ever shared.”</blockquote>
+      <p class="meta" style="margin-top:1.25rem;color:var(--blue)">The Alvarez family</p>
+      <p class="meta dim">A gift for their grandmother</p>
+    </div>
+  </div>
+
+  <!-- 07 PRICING -->
+  <div class="row pad" id="pricing">
+    <div class="c-1-2"><div class="shead"><span class="num">07</span><span class="meta">Pricing</span></div></div>
+    <div class="c-3-13">
+      <h2>Simple plans. Keep everything, forever.</h2>
+      <p class="lede" style="margin-top:1rem">Cancel any time — your stories, recordings, and book are always yours to download and keep.</p>
+
+      <div class="tiers" style="margin-top:2.5rem">
+        <div>
+          <p class="meta dim">Plan 01</p>
+          <h3>Keepsake</h3>
+          <p class="dim" style="font-size:.875rem">Everything, kept forever.</p>
+          <div class="price">$99<span style="font-size:.8125rem;font-variation-settings:'wdth' 112,'wght' 600;letter-spacing:.14em;text-transform:uppercase"> / yr</span></div>
+          <p class="meta dim">or $14 / month</p>
+          <ul>
+            <li>One storyteller</li><li>Unlimited stories and recordings</li>
+            <li>Full voice-nudge &amp; scheduling experience</li>
+            <li>Digital book (PDF) with bundled audio + voice QR codes</li>
+            <li>Forever access on cancellation</li><li>Printed book available as an add-on</li>
+          </ul>
+          <a class="buy" href="#">Start recording</a>
+        </div>
+        <div class="rec">
+          <p class="meta">Plan 02 · Most popular</p>
+          <h3>Keepsake + Book</h3>
+          <p style="font-size:.875rem;color:#D6E4FF">The book with their voice in it.</p>
+          <div class="price">$189<span style="font-size:.8125rem;font-variation-settings:'wdth' 112,'wght' 600;letter-spacing:.14em;text-transform:uppercase"> / yr</span></div>
+          <p class="meta">Recommended</p>
+          <ul>
+            <li>Everything in Keepsake, plus:</li>
+            <li>One printed hardcover color book, included in your first year</li>
+            <li>Voice QR codes printed in the book</li>
+            <li>New editions and extra copies any time at add-on prices</li>
+          </ul>
+          <a class="buy" href="#">Get the book</a>
+        </div>
+        <div>
+          <p class="meta dim">Plan 03</p>
+          <h3>Family</h3>
+          <p class="dim" style="font-size:.875rem">For the whole family.</p>
+          <div class="price">$299<span style="font-size:.8125rem;font-variation-settings:'wdth' 112,'wght' 600;letter-spacing:.14em;text-transform:uppercase"> / yr</span></div>
+          <p class="meta dim">Up to three storytellers</p>
+          <ul>
+            <li>Everything in Keepsake + Book, plus:</li>
+            <li>Up to 3 storytellers</li><li>Priority support</li>
+          </ul>
+          <a class="buy" href="#">Set up the family</a>
+        </div>
+      </div>
+
+      <table class="matrix" style="margin-top:2.5rem">
+        <thead><tr><th>Feature</th><th style="text-align:center">Keepsake</th><th style="text-align:center">+ Book</th><th style="text-align:center">Family</th></tr></thead>
+        <tbody>
+          <tr><td>Storytellers</td><td class="val">1</td><td class="val">1</td><td class="val">up to 3</td></tr>
+          <tr><td>Unlimited stories &amp; recordings</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Voice nudges &amp; smart scheduling</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Digital book (PDF)</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Voice QR codes</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Download everything (audio + transcripts + book, one click)</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Forever access on cancel</td><td class="hit">●</td><td class="hit">●</td><td class="hit">●</td></tr>
+          <tr><td>Printed hardcover color book (first year)</td><td class="miss">—</td><td class="val">1</td><td class="val">1</td></tr>
+          <tr><td>Extra copies &amp; new editions</td><td class="val">add-on</td><td class="val">add-on</td><td class="val">add-on</td></tr>
+          <tr><td>Priority support</td><td class="miss">—</td><td class="miss">—</td><td class="hit">●</td></tr>
+        </tbody>
+      </table>
+
+      <div style="border:1px solid var(--ink);margin-top:2.5rem;display:grid;grid-template-columns:1fr">
+        <div style="background:var(--ink);color:var(--paper);padding:.5rem .75rem" class="meta">The Gift · $199 one-time · Never auto-renews</div>
+        <div style="padding:1.5rem .75rem;display:grid;gap:1.25rem;align-items:center">
+          <div>
+            <h3>One price, prepaid. Nothing to renew.</h3>
+            <p class="dim" style="margin-top:.5rem;font-size:.9375rem">12 months of recording, prepaid · One printed hardcover color book included · Never auto-renews — no card left on file · They keep every story, always.</p>
+          </div>
+          <a class="buy" style="width:max-content;padding-inline:2rem" href="#">Give it as a gift</a>
+        </div>
+      </div>
+
+      <p class="meta dim" style="margin-top:1.25rem;max-width:70ch;letter-spacing:.06em;text-transform:none;font-size:.8125rem">
+        Printed books ship right away on any yearly plan. On the monthly plan, they can be ordered after six months. Downloading your own recordings is always free, on every plan, from day one.
+      </p>
+    </div>
+  </div>
+
+  <!-- 08 FAQ -->
+  <div class="row pad" id="faq">
+    <div class="c-1-2"><div class="shead"><span class="num">08</span><span class="meta">FAQ</span></div></div>
+    <div class="c-3-13">
+      <h2>Questions families ask.</h2>
+      <div style="margin-top:2rem;border-top:1px solid var(--ink)">
+        <details><summary><span class="num">01</span><span>Does the storyteller need a smartphone or app?</span></summary><p>No. It works over a normal phone with SMS. There is nothing to install, no account for them to manage, and no password to remember.</p></details>
+        <details><summary><span class="num">02</span><span>Can more than one person record?</span></summary><p>Yes, on the Family plan, or add a storyteller to any annual plan.</p></details>
+        <details><summary><span class="num">03</span><span>What are the voice QR codes?</span></summary><p>Printed codes in the book that play the original recording when scanned, so you can hear the story in their own voice.</p></details>
+        <details><summary><span class="num">04</span><span>Can I download all the recordings?</span></summary><p>Yes — any time, on every plan. One click gives you a ZIP with every audio recording, the transcripts, and your book. If you ever cancel, it’s all still yours to download and keep.</p></details>
+        <details><summary><span class="num">05</span><span>Can I order more printed copies?</span></summary><p>Yes, any time, softcover or hardcover.</p></details>
+        <details><summary><span class="num">06</span><span>What happens if I cancel?</span></summary><p>You keep all stories, audio, and your digital book. Nothing is deleted or locked.</p></details>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 OUR WHY -->
+  <div class="row pad" id="why">
+    <div class="c-1-2"><div class="shead"><span class="num">09</span><span class="meta">Our why</span></div></div>
+    <div class="c-3-8">
+      <h2>It started with a Father’s Day gift I couldn’t find.</h2>
+      <p class="lede" style="margin-top:1.5rem">My Family Porch began at home, on a Sunday morning, with one simple wish: that my dad could just <em>tell</em> us the stories of his life.</p>
+      <p class="dim" style="margin-top:1rem">He has a cell phone, and he knows how to use it. So why not make sharing his memories as easy as talking on the phone? And you don’t have to keep paying us forever to hold onto your loved one’s memories — they’re yours to keep.</p>
+    </div>
+    <div class="c-9-13">
+      <div style="border-left:2px solid var(--blue);padding-left:1.25rem">
+        <p style="font-size:1.5rem;font-variation-settings:'wdth' 92,'wght' 600;letter-spacing:-.02em;line-height:1.1">I love you, Dad.</p>
+        <p class="meta dim" style="margin-top:.75rem">Paul — Founder, My Family Porch</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 CAPTURE -->
+  <div class="row pad plain">
+    <div class="c-1-2"><div class="shead"><span class="num">10</span><span class="meta">No pressure</span></div></div>
+    <div class="c-3-13">
+      <h2>Not ready yet? Stay on the porch with us.</h2>
+      <p class="lede" style="margin-top:1rem">Leave your name and email and we’ll send a gentle note when the time feels right. No spam, ever.</p>
+      <form onsubmit="event.preventDefault();this.querySelector('button').textContent='Thank you'">
+        <input type="text" placeholder="Your name" aria-label="Your name" required>
+        <input type="email" placeholder="you@email.com" aria-label="Your email" required>
+        <button type="submit">Keep me posted</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<div class="closing">
+  <div class="sheet" style="border-color:rgba(255,255,255,.28);background-image:linear-gradient(to right,rgba(255,255,255,.16) 1px,transparent 1px);background-size:calc(100%/6) 100%">
+    <div class="row plain pad">
+      <div class="c-1-2"><p class="meta">End of record</p></div>
+      <div class="c-3-13">
+        <h2>The stories are still here. Start with one question.</h2>
+        <p class="lede" style="margin-top:1rem">It takes a few minutes to set up, and there’s no better day than today to begin.</p>
+        <div class="actions"><a href="#">Get started</a><a href="#pricing">See pricing</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="sheet" style="border-color:rgba(255,255,255,.16);background-image:none">
+    <div class="fgrid">
+      <div>
+        <p class="logo" style="color:#fff">My Family Porch</p>
+        <p style="margin-top:.75rem">Their stories, in their own voice.</p>
+        <p style="margin-top:.75rem">Your family’s recordings are private — yours to keep, and never sold.</p>
+      </div>
+      <div><h4>Product</h4><ul><li><a href="#how">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#">What you get</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">Our story</a></li><li><a href="#why">Why I built this</a></li><li><a href="#">Gift a porch</a></li></ul></div>
+      <div><h4>Help</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">SMS reminders</a></li></ul></div>
+    </div>
+    <div class="fbot">© 2026 My Family Porch — a service of Technology Leadership Group, LLC.</div>
+  </div>
+</footer>
+
+<script>
+// Level meters: rendered as data, not decoration. No easing — Swiss, mechanical.
+const bars=[6,10,15,9,19,25,17,28,21,13,23,11,16,8,5,12,20,26,14,7,18,9,22,15];
+document.querySelectorAll('#lvl,#lvl2').forEach(el=>{
+  el.innerHTML=bars.map(h=>`<i style="height:${Math.round(h/28*100)}%"></i>`).join('');
+});
+</script>
+</body>
+</html>
