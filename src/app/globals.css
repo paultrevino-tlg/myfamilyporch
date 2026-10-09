@@ -3,43 +3,45 @@
 @tailwind utilities;
 
 :root {
-  /* Blue theme tokens (mirror tailwind.config.ts for raw CSS use). */
-  --paper:    #EBF1F8;
-  --surface:  #FFFFFF;
-  --surface-2:#F4F8FC;
-  --ink:      #15233B;
-  --line:     #E1E9F2;
-  --brand:    #2563EB;
-  --accent:   #0284C7;
+  /* Porchlight tokens (mirror tailwind.config.ts for raw CSS use). */
+  --paper:    #FBF6EC;
+  --surface:  #FFFDF8;
+  --surface-2:#F3EADA;
+  --ink:      #2C221B;
+  --line:     #E4D9C7;
+  --brand:    #9A4A30;
+  --accent:   #8A5A12;
+  --honey:    #D9962F;
+  --ease:     cubic-bezier(.16,.84,.3,1);
 }
 
+/* Flat cream, no gradient wash: in Porchlight the only "accent" is real
+   photographic light, so the page itself stays quiet. */
 html, body {
   color: var(--ink);
-  background:
-    radial-gradient(1200px 600px at 80% -10%, #F6FAFD, transparent),
-    radial-gradient(900px 500px at -10% 110%, #DCE6F4, transparent),
-    var(--paper);
-  background-attachment: fixed;
+  background: var(--paper);
 }
 
 body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans), Verdana, ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Reusable design-system pieces — keep page markup lean and consistent. */
 @layer components {
+  /* Hairline-ruled, barely lifted: "nothing floats". */
   .card {
-    @apply rounded-2xl border border-line bg-surface shadow-sm;
+    @apply rounded-2xl border border-line bg-surface;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
-           text-sm font-semibold transition disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+           text-sm font-semibold transition duration-300 ease-porch disabled:opacity-50;
   }
-  .btn-primary { @apply btn bg-brand text-white shadow-sm hover:brightness-110; }
-  .btn-ink     { @apply btn bg-ink text-white shadow-sm hover:brightness-125; }
-  .btn-ghost   { @apply btn border border-line bg-surface text-ink/70 hover:bg-surface2; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand2; }
+  .btn-ink     { @apply btn bg-ink text-cream hover:bg-brand; }
+  .btn-ghost   { @apply btn border border-ink/25 bg-transparent text-ink hover:bg-ink hover:text-cream; }
   .btn-danger  { @apply btn bg-red-600 text-white hover:brightness-110; }
 
   .input {

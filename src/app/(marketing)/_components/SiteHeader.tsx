@@ -14,7 +14,7 @@ export function SiteHeader() {
           className="flex items-center gap-2.5 font-bold tracking-tight"
           aria-label="My Family Porch — home"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-lg shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-lg shadow-sm">
             🏡
           </span>
           <span className="font-serif text-lg font-semibold">My Family Porch</span>

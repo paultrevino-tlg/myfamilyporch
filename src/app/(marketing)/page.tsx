@@ -94,9 +94,9 @@ function Hero() {
         </div>
 
         <div className="card relative overflow-hidden p-7 shadow-lg">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand/20 to-sky2/20 blur-2xl" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-brand/20 to-honey/20 blur-2xl" />
           <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-[#6366F1] to-sky2 text-2xl shadow-sm">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-brand to-honey text-2xl shadow-sm">
               🏡
             </div>
             <div>
@@ -190,7 +190,7 @@ function HowItWorks() {
       <div className="mt-12 grid gap-6 sm:grid-cols-3">
         {STEPS.map((s) => (
           <div key={s.n} className="card flex flex-col p-7">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand to-sky2 font-serif text-lg font-semibold text-white shadow-sm">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand to-accent font-serif text-lg font-semibold text-white shadow-sm">
               {s.n}
             </div>
             <h3 className="mt-5 font-serif text-xl font-semibold">{s.title}</h3>
@@ -235,7 +235,7 @@ function WhyVoice() {
         </div>
 
         <div className="card relative overflow-hidden p-8 shadow-lg">
-          <div className="pointer-events-none absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-gradient-to-br from-accent/15 to-sky2/15 blur-2xl" />
+          <div className="pointer-events-none absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-gradient-to-br from-accent/15 to-honey/15 blur-2xl" />
           <p className="font-serif text-xl font-semibold leading-relaxed text-ink/85">
             “…and your grandfather walked the whole way home in the rain, just so he
             could say he&apos;d done it.”
@@ -248,7 +248,7 @@ function WhyVoice() {
             {[5, 9, 14, 8, 18, 24, 16, 28, 20, 12, 22, 10, 16, 7, 4].map((h, i) => (
               <span
                 key={i}
-                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-sky2"
+                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-honey"
                 style={{ height: `${h * 4}%` }}
               />
             ))}
@@ -357,7 +357,7 @@ function SocialProof() {
             <figcaption className="mt-6 flex items-center gap-3">
               <span
                 aria-hidden
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand/20 to-sky2/20 font-serif text-lg font-semibold text-brand"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand/20 to-honey/20 font-serif text-lg font-semibold text-brand"
               >
                 {t.name.charAt(0)}
               </span>
@@ -490,7 +490,7 @@ function FinalCta() {
       <Container>
         <div className="relative overflow-hidden rounded-3xl bg-ink px-8 py-16 text-center text-white shadow-lg sm:px-12 sm:py-20">
           {/* porch-light glow */}
-          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-[#FCD34D]/35 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-honey/35 to-transparent blur-3xl" />
           <div className="relative">
             <h2 className="mx-auto max-w-xl font-serif text-3xl font-semibold leading-tight sm:text-4xl">
               The stories are still here. Start with one question.

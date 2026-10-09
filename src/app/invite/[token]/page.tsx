@@ -34,7 +34,7 @@ export default async function InvitePage({
   const Shell = ({ children }: { children: React.ReactNode }) => (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
       <div className="mb-6 flex items-center gap-2.5">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-xl shadow-sm">🏡</span>
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-xl shadow-sm">🏡</span>
         <span className="font-bold tracking-tight">My Family Porch</span>
       </div>
       <div className="card p-8">{children}</div>

@@ -76,14 +76,14 @@ export function renderEmail(params: EmailParams): string {
                 <tr>
                   <td align="center">
                     <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${buttonUrl}" style="height:48px; v-text-anchor:middle; width:260px;" arcsize="25%" stroke="f" fillcolor="#2563EB">
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${buttonUrl}" style="height:48px; v-text-anchor:middle; width:260px;" arcsize="50%" stroke="f" fillcolor="#9A4A30">
                       <w:anchorlock/>
                       <center style="color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold;">${buttonLabel}</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-- -->
                     <a href="${buttonUrl}" target="_blank"
-                       style="display:inline-block; background-color:#2563EB; padding:14px 32px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; line-height:20px; color:#ffffff; text-decoration:none; border-radius:12px;">${buttonLabel}</a>
+                       style="display:inline-block; background-color:#9A4A30; padding:14px 32px; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; line-height:20px; color:#ffffff; text-decoration:none; border-radius:999px;">${buttonLabel}</a>
                     <!--<![endif]-->
                   </td>
                 </tr>
@@ -92,7 +92,7 @@ export function renderEmail(params: EmailParams): string {
 
   const footnote = params.footnote
     ? `
-              <p style="margin:24px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.5; color:#5b6b85;">
+              <p style="margin:24px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.5; color:#6B5A4C;">
                 ${escapeHtml(params.footnote)}
               </p>`
     : "";
@@ -100,9 +100,9 @@ export function renderEmail(params: EmailParams): string {
   // Plain-link fallback: the button can be stripped, blocked or unclickable.
   const linkFallback = hasButton
     ? `
-              <p style="margin:20px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#8a98ad;">
+              <p style="margin:20px 0 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#7A6757;">
                 If the button doesn&rsquo;t work, copy and paste this link into your browser:<br>
-                <a href="${buttonUrl}" target="_blank" style="color:#2563EB; text-decoration:underline; word-break:break-all;">${buttonUrl}</a>
+                <a href="${buttonUrl}" target="_blank" style="color:#9A4A30; text-decoration:underline; word-break:break-all;">${buttonUrl}</a>
               </p>`
     : "";
 
@@ -120,13 +120,13 @@ export function renderEmail(params: EmailParams): string {
   </style>
   <![endif]-->
 </head>
-<body style="margin:0; padding:0; background-color:#EBF1F8; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+<body style="margin:0; padding:0; background-color:#F3EADA; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
   <!-- Preheader (hidden preview text). -->
-  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#EBF1F8; opacity:0;">
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F3EADA; opacity:0;">
     ${headline}
   </div>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EBF1F8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F3EADA;">
     <tr>
       <td align="center" style="padding:32px 16px;">
 
@@ -142,14 +142,14 @@ export function renderEmail(params: EmailParams): string {
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center" valign="middle"
-                            style="width:44px; height:44px; border-radius:12px; background-color:#2563EB; background-image:linear-gradient(135deg,#2563EB,#38BDF8); font-size:22px; line-height:44px; text-align:center;">
+                            style="width:44px; height:44px; border-radius:12px; background-color:#9A4A30; background-image:linear-gradient(135deg,#9A4A30,#D9962F); font-size:22px; line-height:44px; text-align:center;">
                           &#127969;
                         </td>
                       </tr>
                     </table>
                   </td>
                   <td valign="middle"
-                      style="font-family:Arial,Helvetica,sans-serif; font-size:19px; font-weight:bold; letter-spacing:-0.2px; color:#15233B;">
+                      style="font-family:Arial,Helvetica,sans-serif; font-size:19px; font-weight:bold; letter-spacing:-0.2px; color:#2C221B;">
                     My Family Porch
                   </td>
                 </tr>
@@ -159,14 +159,14 @@ export function renderEmail(params: EmailParams): string {
 
           <!-- Card -->
           <tr>
-            <td style="background-color:#FFFFFF; border:1px solid #E1E9F2; border-radius:20px; padding:40px 40px 36px 40px; box-shadow:0 4px 10px rgba(21,35,59,0.07);">
+            <td style="background-color:#FFFDF8; border:1px solid #E4D9C7; border-radius:20px; padding:40px 40px 36px 40px; box-shadow:0 4px 10px rgba(44,34,27,0.07);">
 
-              <h1 style="margin:0 0 16px 0; font-family:Arial,Helvetica,sans-serif; font-size:24px; line-height:1.25; font-weight:bold; letter-spacing:-0.4px; color:#15233B;">
+              <h1 style="margin:0 0 16px 0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.2; font-weight:normal; letter-spacing:-0.3px; color:#2C221B;">
                 ${headline}
               </h1>
 
               <!-- Body copy: RAW HTML from the call site, escaped there. -->
-              <div style="font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.6; color:#15233B;">
+              <div style="font-family:Arial,Helvetica,sans-serif; font-size:16px; line-height:1.6; color:#2C221B;">
                 ${params.message_html}
               </div>
 ${button}${footnote}${linkFallback}
@@ -177,10 +177,10 @@ ${button}${footnote}${linkFallback}
           <!-- Footer -->
           <tr>
             <td align="center" style="padding:24px 16px 8px 16px;">
-              <p style="margin:0 0 4px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#8a98ad;">
+              <p style="margin:0 0 4px 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#7A6757;">
                 Sent to ${toEmail}
               </p>
-              <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#8a98ad;">
+              <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#7A6757;">
                 My Family Porch &middot; recording your family&rsquo;s stories
               </p>
             </td>

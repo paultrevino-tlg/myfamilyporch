@@ -1,20 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces } from "next/font/google";
+import { Atkinson_Hyperlegible, Fraunces } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
-// Site-wide type: Inter for UI, Fraunces for warm display lines. Exposed as CSS
-// variables so Tailwind's font-sans / font-serif resolve everywhere. The
-// (storyteller) route group overrides --font-sans with Atkinson Hyperlegible for
-// the elder-facing surface.
-const sans = Inter({
+// Site-wide type (Porchlight): Atkinson Hyperlegible for all UI and body text —
+// a legibility face, since buyers and storytellers alike skew 60+ — and Fraunces
+// for display lines. Exposed as CSS variables so Tailwind's font-sans /
+// font-serif resolve everywhere, the storyteller surface included.
+const sans = Atkinson_Hyperlegible({
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
+// Variable weight plus the SOFT/WONK/opsz axes the editorial display style uses.
 const serif = Fraunces({
-  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  axes: ["SOFT", "WONK", "opsz"],
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
@@ -44,7 +48,7 @@ export const metadata: Metadata = {
 // Next already injects width=device-width; themeColor tints the mobile browser
 // chrome to match the paper background (Best Practices / brand polish, 8.11).
 export const viewport: Viewport = {
-  themeColor: "#EBF1F8",
+  themeColor: "#FBF6EC",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

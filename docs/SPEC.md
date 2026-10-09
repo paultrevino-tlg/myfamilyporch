@@ -140,6 +140,17 @@ the keepsake survives independently.
   **webhooks** that persist subscription/entitlement state on the family. Billing
   and transactional email move to **Resend** at launch.
 
+## Visual design (Porchlight)
+Site-wide look = design direction 1, "Porchlight" (`design-directions/`,
+`PLAN-porchlight.md`): warm photographic editorial, honoring the website brief §5.
+Four warm pigments, no blue — cream `#FBF6EC` page, paper `#F3EADA` inset, umber
+`#2C221B` ink, clay `#9A4A30` primary, honey `#D9962F` light (decoration only;
+`#8A5A12` honey-ink when the accent must read as text). Clay is deepened from the
+direction's `#B45B3E` to pass AA. Fraunces for display, Atkinson Hyperlegible for
+all body/UI text site-wide. Pill buttons, hairline-ruled cards, slow easing.
+Tokens live in `tailwind.config.ts` (names kept from the old blue theme); the
+master email template and printed book use the same palette.
+
 ## Elder-facing UX principles
 Large targets, single tap, no precision gestures, high-contrast large type, speak
 everything (don't rely on reading), radical consistency, forgiving (no scolding

@@ -87,7 +87,7 @@ export default function TopNav({
     <header className="sticky top-0 z-40 border-b border-line bg-surface/80 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center gap-3 px-5 py-3 sm:px-7">
         <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-tight">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-sky2 text-lg shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-honey text-lg shadow-sm">
             🏡
           </span>
           <span className="hidden sm:inline">My Family Porch</span>

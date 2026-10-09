@@ -31,7 +31,7 @@ function styles(): string {
 html, body { margin: 0; padding: 0; }
 body {
   font-family: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
-  color: #15233B;
+  color: #2C221B;
   font-size: 11.5pt;
   line-height: 1.55;
   -webkit-print-color-adjust: exact;
@@ -62,8 +62,8 @@ h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 .chapter-title {
   font-size: 20pt;
   font-weight: 600;
-  color: #0284C7;
-  border-bottom: 1.5px solid #E1E9F2;
+  color: #8A5A12;
+  border-bottom: 1.5px solid #E4D9C7;
   padding-bottom: 0.08in;
   margin: 0 0 0.22in;
 }
@@ -76,27 +76,27 @@ h1, h2, h3, .serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 
 /* Optional English translation of a Spanish transcript (7.4) — quieter, labeled,
    printed under the elder's own words. */
-.translation { margin: 0.04in 0 0.1in; white-space: pre-wrap; color: #5a6b85; font-size: 10.5pt; }
-.tlabel { display: block; font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-size: 8pt; letter-spacing: 0.07em; text-transform: uppercase; color: #0284C7; margin-bottom: 0.02in; }
+.translation { margin: 0.04in 0 0.1in; white-space: pre-wrap; color: #6B5A4C; font-size: 10.5pt; }
+.tlabel { display: block; font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-size: 8pt; letter-spacing: 0.07em; text-transform: uppercase; color: #8A5A12; margin-bottom: 0.02in; }
 
 /* Follow-up thread — indented, quieter. */
-.followups { margin: 0.1in 0 0 0.2in; padding-left: 0.18in; border-left: 2px solid #E1E9F2; }
+.followups { margin: 0.1in 0 0 0.2in; padding-left: 0.18in; border-left: 2px solid #E4D9C7; }
 .followup { margin: 0 0 0.12in; }
-.followup-q { font-style: italic; color: #15233B; margin: 0 0 0.02in; }
-.followup .transcript { color: #15233B; }
+.followup-q { font-style: italic; color: #2C221B; margin: 0 0 0.02in; }
+.followup .transcript { color: #2C221B; }
 
 /* Photos. */
 .photos { display: flex; flex-wrap: wrap; gap: 0.16in; margin: 0.12in 0; }
 .photo { break-inside: avoid; max-width: 2.4in; }
-.photo img { max-width: 2.4in; max-height: 2.4in; border: 1px solid #E1E9F2; border-radius: 8px; object-fit: cover; display: block; }
-.photo figcaption { font-size: 9pt; color: #5a6b85; margin-top: 0.03in; }
+.photo img { max-width: 2.4in; max-height: 2.4in; border: 1px solid #E4D9C7; border-radius: 8px; object-fit: cover; display: block; }
+.photo figcaption { font-size: 9pt; color: #6B5A4C; margin-top: 0.03in; }
 
 /* Voice QR. */
 .qr { break-inside: avoid; display: inline-flex; flex-direction: column; align-items: center; gap: 0.04in; margin: 0.1in 0; }
 .qr svg { width: 1.1in; height: 1.1in; }
-.qr figcaption { font-size: 8.5pt; color: #5a6b85; max-width: 1.4in; text-align: center; line-height: 1.2; }
+.qr figcaption { font-size: 8.5pt; color: #6B5A4C; max-width: 1.4in; text-align: center; line-height: 1.2; }
 
-.empty { text-align: center; color: #5a6b85; padding: 2in 0; font-size: 12pt; }
+.empty { text-align: center; color: #6B5A4C; padding: 2in 0; font-size: 12pt; }
 `;
 }
 

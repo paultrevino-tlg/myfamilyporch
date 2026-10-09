@@ -77,7 +77,7 @@ function WhyThePorch() {
         </div>
 
         <div className="card relative overflow-hidden p-8 shadow-lg">
-          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-[#FCD34D]/25 to-accent/10 blur-2xl" />
+          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-honey/25 to-accent/10 blur-2xl" />
           <p className="font-serif text-2xl font-semibold leading-relaxed text-ink/85">
             “Pull up a chair. Stay a while. Tell me about it.”
           </p>
@@ -86,7 +86,7 @@ function WhyThePorch() {
             {[6, 10, 15, 9, 19, 25, 17, 28, 21, 13, 23, 11, 16, 8, 5].map((h, i) => (
               <span
                 key={i}
-                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-sky2"
+                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-honey"
                 style={{ height: `${h * 4}%` }}
               />
             ))}
@@ -205,7 +205,7 @@ function FinalCta() {
     <Section bleed className="pb-20">
       <Container>
         <div className="relative overflow-hidden rounded-3xl bg-ink px-8 py-16 text-center text-white shadow-lg sm:px-12 sm:py-20">
-          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-[#FCD34D]/35 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-honey/35 to-transparent blur-3xl" />
           <div className="relative">
             <h2 className="mx-auto max-w-xl font-serif text-3xl font-semibold leading-tight sm:text-4xl">
               There&apos;s a chair waiting. Start the conversation.

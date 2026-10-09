@@ -101,7 +101,7 @@ function Steps() {
       <div className="mx-auto mt-14 max-w-3xl space-y-8">
         {STEPS.map((s) => (
           <div key={s.n} className="card flex flex-col gap-5 p-7 sm:flex-row sm:p-8">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-sky2 font-serif text-xl font-semibold text-white shadow-sm">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-accent font-serif text-xl font-semibold text-white shadow-sm">
               {s.n}
             </div>
             <div>
@@ -205,7 +205,7 @@ function WhatYouGet() {
         </div>
 
         <div className="card relative overflow-hidden p-8 shadow-lg">
-          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-brand/15 to-sky2/15 blur-2xl" />
+          <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-br from-brand/15 to-honey/15 blur-2xl" />
           <div className="text-xs font-bold uppercase tracking-widest text-accent">
             From the book
           </div>
@@ -218,7 +218,7 @@ function WhatYouGet() {
             {[4, 8, 13, 7, 17, 23, 15, 27, 19, 11, 21, 9, 15, 6, 4].map((h, i) => (
               <span
                 key={i}
-                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-sky2"
+                className="w-1.5 rounded-full bg-gradient-to-t from-brand to-honey"
                 style={{ height: `${h * 4}%` }}
               />
             ))}
@@ -265,7 +265,7 @@ function FinalCta() {
     <Section bleed className="pb-20">
       <Container>
         <div className="relative overflow-hidden rounded-3xl bg-ink px-8 py-16 text-center text-white shadow-lg sm:px-12 sm:py-20">
-          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-[#FCD34D]/35 to-transparent blur-3xl" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/3 rounded-full bg-gradient-to-b from-honey/35 to-transparent blur-3xl" />
           <div className="relative">
             <h2 className="mx-auto max-w-xl font-serif text-3xl font-semibold leading-tight sm:text-4xl">
               Ready when you are. So are their stories.

@@ -28,12 +28,12 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// Stable avatar gradient per storyteller, from a small blue-family palette.
+// Stable avatar gradient per storyteller, from the warm Porchlight pigments.
 const AVATARS = [
-  "from-[#3B82F6] to-[#1D4ED8]",
-  "from-[#0EA5E9] to-[#0369A1]",
-  "from-[#6366F1] to-[#4338CA]",
-  "from-[#22A6B3] to-[#0E7490]",
+  "from-brand to-brand2",
+  "from-[#A0621F] to-accent",
+  "from-[#6B5A4C] to-ink",
+  "from-[#A5603F] to-[#6E3A26]",
 ];
 function avatarClass(seed: string): string {
   let h = 0;
@@ -80,11 +80,11 @@ function Ring({ value, total, tone }: { value: number; total: number | null; ton
   const r = 24;
   const c = 2 * Math.PI * r;
   const pct = total && total > 0 ? Math.min(1, value / total) : 0;
-  const stroke = tone === "warn" ? "#B5791A" : "#2563EB";
+  const stroke = tone === "warn" ? "#B5791A" : "#9A4A30";
   return (
     <div className="relative h-14 w-14 flex-none">
       <svg width="56" height="56" className="-rotate-90">
-        <circle cx="28" cy="28" r={r} fill="none" stroke="#E1E9F2" strokeWidth="6" />
+        <circle cx="28" cy="28" r={r} fill="none" stroke="#E4D9C7" strokeWidth="6" />
         <circle
           cx="28"
           cy="28"

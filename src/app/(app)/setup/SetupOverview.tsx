@@ -23,12 +23,12 @@ function circleClasses(group: Group, state: "done" | "active" | "upcoming"): str
   if (state === "done") {
     return you
       ? "border-emerald-600 bg-emerald-600 text-white"
-      : "border-sky-600 bg-sky-600 text-white";
+      : "border-brand bg-brand text-white";
   }
   const base = you
     ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-    : "border-sky-500 bg-sky-50 text-sky-700";
-  const ring = state === "active" ? (you ? " ring-4 ring-emerald-200" : " ring-4 ring-sky-200") : "";
+    : "border-brand bg-surface2 text-brand";
+  const ring = state === "active" ? (you ? " ring-4 ring-emerald-200" : " ring-4 ring-brand/20") : "";
   return base + ring;
 }
 
@@ -85,7 +85,7 @@ export default function SetupOverview({
             {t(lang, "setup_ov_legend_you")}
           </span>
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-sky-600" />
+            <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-brand" />
             {t(lang, "setup_ov_legend_them")}
           </span>
         </div>
